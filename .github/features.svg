@@ -33,7 +33,7 @@
     <g transform="translate(856 116)">
       <rect class="card" width="376" height="190" rx="22"/>
       <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">🌐</text>
-      <text x="96" y="48" class="h">Developer API</text><text x="96" y="76" class="fa">API سازگار با OpenAI</text>
+      <text x="96" y="48" class="h">Developer API</text><text x="96" y="76" class="fa">سازگار با OpenAI</text>
       <text x="28" y="122" class="d">Drop-in base_url for the official OpenAI SDKs:</text>
       <text x="28" y="146" class="d">chat, images, audio, embeddings, web search.</text>
     </g>

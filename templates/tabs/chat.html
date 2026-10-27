@@ -1,0 +1,32 @@
+<link rel="stylesheet" href="/static/css/chat.css">
+<div class="lac" id="lac">
+  <div class="lac-side" id="lacSide">
+    <button class="btn" id="lacNew" style="width:100%;margin-bottom:10px">+ گفتگوی جدید</button>
+    <div class="lac-convs" id="lacConvs"></div>
+  </div>
+  <div class="lac-main">
+    <div class="lac-head">
+      <div class="lac-model" id="lacModelWrap">
+        <button class="lac-model-btn" id="lacModelBtn"><span id="lacModelName">انتخاب مدل</span> ▾</button>
+        <div class="lac-model-drop" id="lacModelDrop">
+          {% for g in chat_providers %}
+          <div class="lac-mg-label">{{ g.label }}</div>
+          {% for m in g.models %}
+          <div class="lac-mo" data-model="{{ m.key }}">{% if m.icon %}<img src="{{ m.icon }}" onerror="this.style.display='none'">{% endif %}<span>{{ m.name }}</span></div>
+          {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+      {% if user %}<div class="lac-bal">💰 <span id="chatBal">{{ balance|comma }}</span></div>{% endif %}
+    </div>
+    <div class="lac-msgs" id="lacMsgs">
+      <div class="lac-empty" id="lacEmpty"><div style="font-size:40px">🗨️</div><span>چطور می‌تونم کمکتون کنم؟</span></div>
+    </div>
+    <div class="lac-input">
+      <textarea id="lacText" rows="1" placeholder="پیام خود را بنویسید..."></textarea>
+      <button class="lac-send" id="lacSend">➤</button>
+    </div>
+  </div>
+</div>
+<script>window.LAC_DEFAULT_MODEL={{ chat_default|tojson }};window.LAC_LOGGED={{ 'true' if user else 'false' }};</script>
+<script src="/static/js/chat.js"></script>

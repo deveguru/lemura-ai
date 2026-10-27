@@ -1,0 +1,45 @@
+<h2 class="tab-head">👛 کیف پول</h2>
+<div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(124,58,237,.85),rgba(91,33,182,.85) 62%,rgba(64,32,112,.9));border-color:var(--p-hi)">
+  <div style="font-size:.82rem;opacity:.9">موجودی کیف پول</div>
+  <div style="font-size:2rem;font-weight:800">{{ balance|fa }} <small style="font-size:.8rem;opacity:.8">تومان</small></div>
+</div>
+{% set wmsg = request.args.get('wallet_msg') %}
+{% if wmsg == 'success' %}<div class="card" style="border-color:var(--green);margin-bottom:14px;color:var(--green)">✅ پرداخت موفق! کیف پول شارژ شد.{% if request.args.get('ref_id') %} کد پیگیری: {{ request.args.get('ref_id') }}{% endif %}</div>
+{% elif wmsg in ['failed','error','expired'] %}<div class="card" style="border-color:var(--red);margin-bottom:14px;color:var(--red)">❌ پرداخت ناموفق بود.</div>
+{% elif wmsg == 'cancelled' %}<div class="card" style="border-color:var(--warn);margin-bottom:14px;color:var(--warn)">پرداخت لغو شد.</div>{% endif %}
+<div class="card" style="margin-bottom:16px">
+  <h3 style="margin-top:0">شارژ کیف پول</h3>
+  <form method="post" action="/wallet/charge" id="chargeForm">
+    <input type="hidden" name="charge_amount" id="chargeAmt">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px" id="presets">
+      {% for amt in [100000,200000,300000,600000,900000] %}
+      <button type="button" class="preset" data-v="{{ amt }}" style="padding:16px;border:2px solid var(--bd);background:var(--input);border-radius:12px;color:var(--t);cursor:pointer;font-family:inherit">
+        <div style="font-weight:800">{{ amt|fa }}</div><div style="font-size:.7rem;color:var(--t3)">تومان</div></button>
+      {% endfor %}
+    </div>
+    <input type="number" class="input" id="customAmt" placeholder="مبلغ دلخواه (تومان)" min="{{ wallet_settings.min_charge }}" max="{{ wallet_settings.max_charge }}" style="margin-bottom:12px">
+    <button type="submit" class="btn" style="width:100%" id="payBtn" disabled>پرداخت و شارژ</button>
+  </form>
+</div>
+<div class="card">
+  <h3 style="margin-top:0">تراکنش‌ها</h3>
+  <div id="txList" style="max-height:420px;overflow-y:auto"><p style="color:var(--t3)">در حال بارگذاری...</p></div>
+</div>
+<script>
+(function(){
+  var sel=0,presets=document.querySelectorAll('.preset'),hidden=document.getElementById('chargeAmt'),pay=document.getElementById('payBtn'),custom=document.getElementById('customAmt');
+  function upd(){hidden.value=sel;pay.disabled=!(sel>0);}
+  presets.forEach(function(b){b.onclick=function(){presets.forEach(function(x){x.style.borderColor='var(--bd)';});b.style.borderColor='var(--p-hi)';sel=parseInt(b.dataset.v);custom.value='';upd();};});
+  custom.oninput=function(){presets.forEach(function(x){x.style.borderColor='var(--bd)';});sel=parseInt(this.value)||0;upd();};
+  fetch('/panel/wallet-tx',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById('txList');
+    if(!d.rows||!d.rows.length){el.innerHTML='<p style="color:var(--t3)">تراکنشی یافت نشد</p>';return;}
+    var labels={deposit:'واریز',withdraw:'برداشت',purchase:'خرید',refund:'بازگشت'};
+    el.innerHTML=d.rows.map(function(t){var plus=(t.type==='deposit'||t.type==='refund');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--bd-soft);border-radius:12px;margin-bottom:8px;background:var(--input)">'+
+        '<div><div style="font-weight:700">'+(labels[t.type]||t.type)+'</div><div style="font-size:.7rem;color:var(--t3)">'+(t.description||'')+'</div><div style="font-size:.65rem;color:var(--t3)">'+t.created_at_j+'</div></div>'+
+        '<div style="font-weight:800;color:'+(plus?'var(--green)':'var(--red)')+'">'+(plus?'+':'−')+commaNum(t.amount)+'</div></div>';
+    }).join('');
+  });
+})();
+</script>

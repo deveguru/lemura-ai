@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 560" width="1280" height="560" role="img" aria-label="Lemura features">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0718"/><stop offset="1" stop-color="#090611"/></linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#f87171"/></linearGradient>
+    <style>
+      .t{font-family:Vazirmatn,Vazir,Tahoma,"Segoe UI",sans-serif}
+      .h{fill:#fff;font-size:24px;font-weight:800}
+      .fa{fill:#e9d5ff;font-size:19px;font-weight:700}
+      .d{fill:#a78bfa;font-size:15.5px}
+      .card{fill:#140b22;stroke:#7c3aed;stroke-opacity:.35}
+    </style>
+  </defs>
+  <rect width="1280" height="560" rx="28" fill="url(#bg)"/>
+  <text x="640" y="62" text-anchor="middle" class="t" fill="#fff" font-size="30" font-weight="800">Everything in one panel · همه‌چیز در یک پنل</text>
+  <rect x="560" y="80" width="160" height="4" rx="2" fill="url(#acc)"/>
+
+  <g class="t">
+    <!-- row 1 -->
+    <g transform="translate(48 116)">
+      <rect class="card" width="376" height="190" rx="22"/>
+      <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">🗨️</text>
+      <text x="96" y="48" class="h">AI Chat</text><text x="96" y="76" class="fa">گفتگوی هوشمند</text>
+      <text x="28" y="122" class="d">Real-time streaming answers from 150+ models,</text>
+      <text x="28" y="146" class="d">grouped by provider, with conversation history.</text>
+    </g>
+    <g transform="translate(452 116)">
+      <rect class="card" width="376" height="190" rx="22"/>
+      <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">🎨</text>
+      <text x="96" y="48" class="h">Image Studio</text><text x="96" y="76" class="fa">ساخت و ویرایش تصویر</text>
+      <text x="28" y="122" class="d">Generate and edit images from Persian prompts,</text>
+      <text x="28" y="146" class="d">with a job queue, retries and a personal gallery.</text>
+    </g>
+    <g transform="translate(856 116)">
+      <rect class="card" width="376" height="190" rx="22"/>
+      <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">🌐</text>
+      <text x="96" y="48" class="h">Developer API</text><text x="96" y="76" class="fa">API سازگار با OpenAI</text>
+      <text x="28" y="122" class="d">Drop-in base_url for the official OpenAI SDKs:</text>
+      <text x="28" y="146" class="d">chat, images, audio, embeddings, web search.</text>
+    </g>
+    <!-- row 2 -->
+    <g transform="translate(48 334)">
+      <rect class="card" width="376" height="190" rx="22"/>
+      <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">👛</text>
+      <text x="96" y="48" class="h">Wallet</text><text x="96" y="76" class="fa">کیف پول تومانی</text>
+      <text x="28" y="122" class="d">Top up online, pay per use and see every</text>
+      <text x="28" y="146" class="d">transaction in a clear ledger.</text>
+    </g>
+    <g transform="translate(452 334)">
+      <rect class="card" width="376" height="190" rx="22"/>
+      <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">📱</text>
+      <text x="96" y="48" class="h">One-tap sign-in</text><text x="96" y="76" class="fa">ورود با پیامک</text>
+      <text x="28" y="122" class="d">Mobile OTP or password sign-in and sign-up</text>
+      <text x="28" y="146" class="d">from a single dialog.</text>
+    </g>
+    <g transform="translate(856 334)">
+      <rect class="card" width="376" height="190" rx="22"/>
+      <circle cx="52" cy="52" r="28" fill="url(#acc)"/><text x="52" y="61" text-anchor="middle" font-size="26">🌙</text>
+      <text x="96" y="48" class="h">Made for Persian</text><text x="96" y="76" class="fa">راست‌چین و فارسی</text>
+      <text x="28" y="122" class="d">RTL layout, Vazir font, Persian digits and</text>
+      <text x="28" y="146" class="d">a dark purple theme on every screen size.</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<h2 class="tab-head">🎨 تولید تصویر با هوش مصنوعی</h2>
+<div class="card" style="margin-bottom:16px">
+  <div class="fg"><label>مدل</label>
+    <select class="input" id="aivModel">
+      {% for m in vision_models %}<option value="{{ m.id }}" data-price="{{ m.price }}">{{ m.name }} — {{ m.price|fa }} تومان</option>{% endfor %}
+    </select>
+  </div>
+  <div class="fg"><label>اندازه</label>
+    <select class="input" id="aivSize"><option value="1024x1024">۱۰۲۴×۱۰۲۴</option><option value="1024x1792">عمودی</option><option value="1792x1024">افقی</option></select>
+  </div>
+  <div class="fg"><label>توضیح تصویر (پرامپت)</label>
+    <textarea class="input" id="aivPrompt" rows="3" placeholder="مثلاً: یک گربه فضانورد در حال نواختن پیانو"></textarea></div>
+  <button class="btn" style="width:100%" id="aivGo">تولید تصویر</button>
+  <div id="aivStatus" style="margin-top:12px;color:var(--t3);font-size:.82rem"></div>
+</div>
+<div id="aivResult"></div>
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">تاریخچه</h3></div>
+  <div id="aivHistory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px"></div>
+</div>
+{% if not vision_models %}<script>document.getElementById('aivGo').disabled=true;document.getElementById('aivStatus').textContent='هنوز مدلی توسط مدیر فعال نشده است.';</script>{% endif %}
+<script src="/static/js/vision.js"></script>

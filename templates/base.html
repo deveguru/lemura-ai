@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#090611">
+<title>{% block title %}هوش مصنوعی لمورا{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/theme.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<div class="toast" id="globalToast"></div>
+<script>
+window.lemuraToast=function(t,err){var el=document.getElementById('globalToast');el.textContent=t;el.classList.toggle('error',!!err);el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);};
+window.faNum=function(n){return String(n).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+window.commaNum=function(n){return Number(n||0).toLocaleString('en-US');};
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

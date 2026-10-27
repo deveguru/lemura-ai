@@ -1,0 +1,63 @@
+<h2 class="tab-head">🌐 مستندات و وب‌سرویس API</h2>
+<div class="card" style="margin-bottom:16px">
+  <h3 style="margin-top:0">🔑 کلیدهای API</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <input class="input" id="tokName" placeholder="نام کلید (مثلاً: پروژه وب)" style="flex:1;min-width:180px">
+    <button class="btn" id="tokCreate">+ ایجاد کلید</button>
+  </div>
+  <div id="tokNew" style="display:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:12px;margin-bottom:12px">
+    <p style="margin:0 0 6px;color:var(--green);font-weight:700">✅ کلید ایجاد شد. فقط یک بار نمایش داده می‌شود:</p>
+    <input class="input ltr mono" id="tokNewVal" readonly onclick="this.select()">
+  </div>
+  <div id="tokList">
+    {% for t in api_tokens %}
+    <div class="tok-row" data-id="{{ t.id }}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;border:1px solid var(--bd-soft);border-radius:12px;margin-bottom:8px;background:var(--input)">
+      <div><div style="font-weight:700">{{ t.token_name }} <span class="badge {{ 'badge-green' if t.is_active else 'badge-red' }}">{{ 'فعال' if t.is_active else 'غیرفعال' }}</span></div>
+        <div class="ltr mono" style="font-size:.7rem;color:var(--t3)">{{ t.token_key[:10] }}••••••{{ t.token_key[-4:] }}</div>
+        <div style="font-size:.68rem;color:var(--t3)">{{ t.total_requests|fa }} درخواست · {{ t.total_cost|fa }} تومان</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm btn-ghost" data-toggle>{{ 'غیرفعال' if t.is_active else 'فعال' }}</button>
+        <button class="btn btn-sm btn-danger" data-del>حذف</button></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if not api_tokens %}<p id="tokEmpty" style="color:var(--t3)">هنوز کلیدی نساخته‌اید.</p>{% endif %}
+</div>
+<div class="card">
+  <h3 style="margin-top:0">📖 شروع سریع</h3>
+  <p style="font-size:.86rem">این API با کتابخانه رسمی OpenAI سازگار است. فقط <code>base_url</code> و <code>api_key</code> را تغییر دهید.</p>
+  <div style="font-size:.82rem;margin-bottom:8px">آدرس پایه: <code class="ltr">{{ api_base }}</code></div>
+  <pre style="background:#0b0713;padding:14px;border-radius:10px;overflow-x:auto;direction:ltr;text-align:left;font-size:.78rem;border:1px solid var(--bd-soft)">from openai import OpenAI
+client = OpenAI(base_url="{{ api_base }}", api_key="lsk-YOUR-KEY")
+r = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role":"user","content":"سلام!"}])
+print(r.choices[0].message.content)</pre>
+  <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--accent)">لیست کامل اندپوینت‌ها</summary>
+    <table class="tbl" style="margin-top:10px"><thead><tr><th>Endpoint</th><th>Method</th></tr></thead><tbody>
+      <tr><td class="ltr mono">/chat/completions</td><td>POST</td></tr>
+      <tr><td class="ltr mono">/completions</td><td>POST</td></tr>
+      <tr><td class="ltr mono">/responses</td><td>POST</td></tr>
+      <tr><td class="ltr mono">/images/generations</td><td>POST</td></tr>
+      <tr><td class="ltr mono">/embeddings</td><td>POST</td></tr>
+      <tr><td class="ltr mono">/moderations</td><td>POST</td></tr>
+      <tr><td class="ltr mono">/models</td><td>GET</td></tr>
+      <tr><td class="ltr mono">/balance · /me · /usage</td><td>GET</td></tr>
+    </tbody></table></details>
+</div>
+<script>
+(function(){
+  function post(url,data){var fd=new FormData();for(var k in data)fd.append(k,data[k]);return fetch(url,{method:'POST',body:fd,credentials:'same-origin'}).then(function(r){return r.json();});}
+  document.getElementById('tokCreate').onclick=function(){
+    var name=document.getElementById('tokName').value.trim();if(!name){lemuraToast('نام کلید را وارد کنید',true);return;}
+    post('/panel/api/token-create',{token_name:name}).then(function(r){
+      if(r.success){document.getElementById('tokNew').style.display='block';document.getElementById('tokNewVal').value=r.data.token_key;document.getElementById('tokName').value='';setTimeout(function(){location.reload();},4000);}
+      else lemuraToast(r.data&&r.data.message?r.data.message:'خطا',true);
+    });
+  };
+  document.getElementById('tokList').addEventListener('click',function(e){
+    var row=e.target.closest('.tok-row');if(!row)return;var id=row.dataset.id;
+    if(e.target.hasAttribute('data-toggle'))post('/panel/api/token-toggle',{token_id:id}).then(function(){location.reload();});
+    if(e.target.hasAttribute('data-del')&&confirm('حذف این کلید؟'))post('/panel/api/token-delete',{token_id:id}).then(function(){location.reload();});
+  });
+})();
+</script>

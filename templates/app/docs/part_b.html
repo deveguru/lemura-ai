@@ -1,0 +1,82 @@
+{% from "app/docs/m.html" import code, ep %}
+<section class="dsec" id="d-img">
+  <h2>تولید تصویر</h2>
+  {{ ep('POST','/images/generations') }}
+  <ul>
+    <li><code>model</code> (الزامی) — مثل <code>gpt-image-1</code>، <code>imagen-4.0-generate-001</code>، <code>flux-1.1-pro</code>. فهرست کامل در <a href="#models">/models</a>.</li>
+    <li><code>prompt</code> (الزامی، حداکثر ۱۰۰۰ کاراکتر) — توصیف تصویر. برای کیفیت بهتر انگلیسی بنویسید.</li>
+    <li><code>size</code> — مثل <code>1024x1024</code>، <code>1024x1792</code>، <code>1792x1024</code>.</li>
+    <li><code>n</code> — تعداد تصاویر (هزینه × n).</li>
+    <li>اختیاری: <code>quality</code>، <code>style</code>، <code>background</code>، <code>output_format</code>، <code>response_format</code> (<code>url</code> یا <code>b64_json</code>).</li>
+  </ul>
+  {% call code('bash') %}curl {{ B }}/images/generations \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "gpt-image-1", "prompt": "a cozy reading nook with warm light, watercolor", "size": "1024x1024"}'{% endcall %}
+  {% call code('python') %}img = client.images.generate(model="gpt-image-1", prompt="a futuristic Tehran skyline at night", size="1792x1024")
+print(img.data[0].url or "base64 length: %d" % len(img.data[0].b64_json)){% endcall %}
+  <div class="note">هزینه قبل از ارسال برآورد و بررسی می‌شود؛ اگر موجودی کافی نباشد خطای <code>402</code> برمی‌گردد.</div>
+</section>
+
+<section class="dsec" id="d-audio">
+  <h2>صوت</h2>
+  <h3>متن به گفتار (TTS)</h3>
+  {{ ep('POST','/audio/speech') }}
+  <p>پارامترها: <code>model</code> (مثل <code>gpt-4o-mini-tts</code>، <code>tts-1</code>، <code>tts-1-hd</code>)، <code>input</code> (متن)، <code>voice</code> (مثل <code>alloy</code>، <code>nova</code>، <code>shimmer</code>، <code>echo</code>). خروجی فایل صوتی است. هزینه هر درخواست: حدود <b>{{ pr.audio_tts_price|int|fa }}</b> تومان (پیش از سود).</p>
+  {% call code('bash') %}curl {{ B }}/audio/speech \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4o-mini-tts", "input": "سلام، به لمورا خوش آمدید", "voice": "nova"}' \
+  --output speech.mp3{% endcall %}
+  <h3>گفتار به متن</h3>
+  {{ ep('POST','/audio/transcriptions') }}
+  <p>ارسال به‌صورت <code>multipart/form-data</code> با فیلدهای <code>file</code> و <code>model</code> (<code>whisper-1</code>، <code>gpt-4o-transcribe</code>، <code>gpt-4o-mini-transcribe</code>). اختیاری: <code>language</code>، <code>prompt</code>، <code>response_format</code>، <code>temperature</code>.</p>
+  {% call code('bash') %}curl {{ B }}/audio/transcriptions \
+  -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -F file=@voice.mp3 -F model=whisper-1 -F language=fa{% endcall %}
+  <h3>ترجمه گفتار به انگلیسی</h3>
+  {{ ep('POST','/audio/translations') }}
+  <p>مانند transcriptions، با مدل <code>whisper-1</code>؛ خروجی متن انگلیسی است.</p>
+</section>
+
+<section class="dsec" id="d-video">
+  <h2>تولید ویدیو</h2>
+  <p>تولید ویدیو ناهمگام است: ابتدا کار را بسازید، سپس وضعیت را بررسی و در پایان فایل را دریافت کنید.</p>
+  {{ ep('POST','/videos') }}
+  <p>پارامترها: <code>model</code> (<code>sora-2</code>، <code>sora-2-pro</code>، <code>veo-3.1-generate-001</code>، <code>veo-3.1-fast-generate-001</code>، ...)، <code>prompt</code>، <code>seconds</code> (یا <code>duration</code>) و <code>size</code>. هزینه = قیمت هر ثانیه × مدت.</p>
+  {% call code('bash') %}curl {{ B }}/videos \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "sora-2", "prompt": "a paper boat drifting on a rainy street, cinematic", "seconds": 8}'{% endcall %}
+  {{ ep('GET','/videos/{video_id}') }}
+  <p>وضعیت کار (<code>queued</code>، <code>in_progress</code>، <code>completed</code>، <code>failed</code>).</p>
+  {{ ep('GET','/videos/{video_id}/content') }}
+  <p>دریافت فایل ویدیو پس از تکمیل.</p>
+  {% call code('bash') %}curl {{ B }}/videos/VIDEO_ID/content -H "Authorization: Bearer lsk-YOUR_KEY" --output video.mp4{% endcall %}
+  {{ ep('POST','/videos/{video_id}/remix') }}{{ ep('GET','/videos') }}{{ ep('DELETE','/videos/{video_id}') }}
+</section>
+
+<section class="dsec" id="d-ws">
+  <h2>جستجو و تحقیق وب</h2>
+  <h3>جستجوی وب با پاسخ هوشمند</h3>
+  {{ ep('POST','/web-search') }}
+  <p>ارسال <code>query</code> (یا <code>messages</code>) و مدل جستجو (پیش‌فرض <code>gpt-4o-search-preview</code>). پارامتر <code>search_context_size</code>: <code>low</code>، <code>medium</code> یا <code>high</code> (هزینه بیشتر، منابع بیشتر).</p>
+  {% call code('bash') %}curl {{ B }}/web-search \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"query": "آخرین اخبار هوش مصنوعی این هفته", "search_context_size": "medium"}'{% endcall %}
+  <h3>استخراج محتوای صفحه</h3>
+  {{ ep('POST','/web-scrape') }}
+  <p><code>url</code> یا آرایه <code>urls</code>؛ اختیاری <code>max_chars_per_url</code> (۵۰۰ تا ۵۰٬۰۰۰). خروجی متن تمیزشده هر صفحه است.</p>
+  {% call code('json') %}{"urls": ["https://example.com/article"], "max_chars_per_url": 8000}{% endcall %}
+  <h3>تحقیق خودکار</h3>
+  {{ ep('POST','/research') }}
+  <p><code>query</code> (یا <code>topic</code>)؛ اختیاری <code>model</code> و <code>max_results</code>. گزارشی جمع‌بندی‌شده با منابع برمی‌گرداند.</p>
+</section>
+
+<section class="dsec" id="d-emb">
+  <h2>Embedding و Moderation</h2>
+  {{ ep('POST','/embeddings') }}
+  <p>تبدیل متن به بردار برای جستجوی معنایی و RAG. مدل‌ها: <code>text-embedding-3-small</code>، <code>text-embedding-3-large</code>، <code>text-embedding-ada-002</code>. هزینه: حدود <b>{{ pr.embeddings_price_per_1k|int|fa }}</b> تومان به ازای هر ۱۰۰۰ توکن.</p>
+  {% call code('python') %}e = client.embeddings.create(model="text-embedding-3-small", input=["سلام دنیا", "hello world"])
+print(len(e.data[0].embedding)){% endcall %}
+  {{ ep('POST','/moderations') }}
+  <p>بررسی محتوای نامناسب. مدل پیش‌فرض <code>omni-moderation-latest</code>؛ فیلد <code>input</code> الزامی است.</p>
+  {% call code('json') %}{"model": "omni-moderation-latest", "input": "متنی برای بررسی"}{% endcall %}
+</section>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090611">
+<title>مستندات وب‌سرویس لمورا — Lemura AI Gateway API</title>
+<meta name="description" content="مستندات کامل وب‌سرویس هوش مصنوعی لمورا؛ سازگار با OpenAI: چت، تصویر، صوت، ویدیو، جستجوی وب، Embedding">
+<style>
+@font-face{font-family:'Vazir';src:url('../static/fonts/Vazir.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Vazir';src:url('../static/fonts/Vazir-Bold.woff2') format('woff2');font-weight:700;font-display:swap}
+:root{--bg:#090611;--surface:#120c20;--surface2:#1a1230;--line:rgba(186,151,255,.16);--hover:rgba(124,58,237,.14);
+--p:#7c3aed;--accent:#c5a8ff;--t:#fffaff;--t2:#e4d6f4;--t3:#b9a8d2;--red:#f87171;--green:#55e6b0;--blue:#60a5fa;--warn:#fbbf24}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,rgba(124,58,237,.14),transparent 60%),var(--bg);color:var(--t);font-family:'Vazir',Tahoma,sans-serif;line-height:1.9}
+a{color:var(--accent)}
+header{position:sticky;top:0;z-index:10;background:rgba(9,6,17,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hin{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#7c3aed,#32165f 65%,#f87171);display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(124,58,237,.5)}
+.brand{font-weight:800;font-size:1.05rem;color:#fff;text-decoration:none;display:flex;gap:10px;align-items:center}
+.grow{flex:1}
+.hbtn{padding:7px 14px;border-radius:10px;border:1px solid var(--line);color:var(--t2);text-decoration:none;font-size:.82rem}
+.hbtn.pri{background:linear-gradient(110deg,#7c3aed,#5b21b6);color:#fff;border-color:#b89aff}
+.hero{max-width:1180px;margin:0 auto;padding:34px 20px 10px}
+.hero h1{margin:0 0 6px;font-size:1.7rem;background:linear-gradient(90deg,#fff,#c5a8ff 60%,#f87171);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--t3);margin:0}
+.base{display:inline-flex;gap:8px;align-items:center;margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;direction:ltr;font-family:ui-monospace,Consolas,monospace;font-size:.85rem}
+.base button{all:unset;cursor:pointer;color:var(--accent);font-family:'Vazir';font-size:.78rem}
+.wrap{max-width:1180px;margin:0 auto;padding:20px;display:flex;gap:24px;align-items:flex-start}
+nav{width:230px;flex:none;position:sticky;top:76px;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 96px);overflow:auto}
+nav button{all:unset;cursor:pointer;padding:8px 12px;border-radius:9px;font-size:.86rem;color:var(--t2)}
+nav button:hover{background:var(--hover);color:#fff}nav button.on{background:rgba(124,58,237,.28);color:#fff;font-weight:700}
+main{flex:1;min-width:0;background:rgba(18,12,32,.6);border:1px solid var(--line);border-radius:18px;padding:22px 26px}
+.dsec{display:none}.dsec.on{display:block}
+.dsec h2{font-size:1.3rem;margin:0 0 8px}.dsec h3{font-size:1.02rem;margin:24px 0 8px;color:#fff}
+.dsec p,.dsec li{color:var(--t2);font-size:.92rem}
+.dsec ul,.dsec ol{padding-right:1.4em}
+code{background:rgba(124,58,237,.2);padding:1px 6px;border-radius:6px;font-size:.84em;direction:ltr;unicode-bidi:embed;font-family:ui-monospace,Consolas,monospace}
+pre{position:relative;background:#07040d;border:1px solid var(--line);border-radius:12px;padding:38px 14px 14px;overflow-x:auto;direction:ltr;text-align:left}
+pre code{background:none;padding:0;font-size:.82rem;line-height:1.7}
+pre .cp{position:absolute;top:6px;left:8px;font-size:.7rem;padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface2);color:var(--t2);cursor:pointer;font-family:'Vazir'}
+pre .lang{position:absolute;top:8px;right:12px;font-size:.7rem;color:var(--t3)}
+.ep{display:flex;gap:8px;align-items:center;font-family:ui-monospace,Consolas,monospace;direction:ltr;justify-content:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:.82rem;flex-wrap:wrap}
+.m{font-weight:800;padding:2px 8px;border-radius:6px;font-size:.72rem}.m.get{background:rgba(85,230,176,.15);color:var(--green)}.m.post{background:rgba(96,165,250,.15);color:var(--blue)}.m.del{background:rgba(248,113,113,.15);color:var(--red)}
+.note{border-right:3px solid var(--warn);background:rgba(251,191,36,.07);padding:10px 14px;border-radius:8px;font-size:.86rem;color:var(--t2);margin:10px 0}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right}th{color:var(--t3);font-size:.78rem}
+.ltr{direction:ltr}
+footer{text-align:center;color:var(--t3);font-size:.8rem;padding:30px 20px 40px}
+.hljs{color:#e4d6f4}.hljs-comment,.hljs-quote{color:#7d6b9a;font-style:italic}.hljs-keyword,.hljs-literal,.hljs-built_in{color:#c792ea}
+.hljs-string,.hljs-regexp{color:#a5e8b5}.hljs-number{color:#f8a07a}.hljs-title,.hljs-title.function_{color:#82aaff}.hljs-attr,.hljs-attribute,.hljs-property{color:#ffcb6b}.hljs-meta{color:#89ddff}
+@media (max-width:860px){.wrap{flex-direction:column;padding:12px}nav{position:static;width:100%;flex-direction:row;overflow-x:auto;max-height:none}nav button{white-space:nowrap}main{padding:16px}.hero h1{font-size:1.35rem}}
+</style>
+</head>
+<body>
+<header><div class="hin">
+  <a class="brand" href="https://lemura.ir"><span class="logo">⚡</span>لمورا · مستندات API</a>
+  <span class="grow"></span>
+  <a class="hbtn" href="lemura-gateway-api.txt">نسخه متنی (TXT)</a>
+  <a class="hbtn pri" href="https://lemura.ir/developers">دریافت کلید API</a>
+</div></header>
+<section class="hero">
+  <h1>📘 مستندات وب‌سرویس لمورا (Lemura AI Gateway)</h1>
+  <p>API کاملاً سازگار با OpenAI SDK — چت، تصویر، صوت، ویدیو، جستجوی وب و Embedding با یک کلید و پرداخت تومانی.</p>
+  <div class="base"><span id="baseUrl">https://lemura.ir/wp-json/lemuraai/v1</span><button onclick="cp(document.getElementById('baseUrl').textContent,this)">کپی</button></div>
+</section>
+<div class="wrap">
+  <nav id="dnav">
+<button data-t="docs">🏠 معرفی</button>
+<button data-t="auth">🔐 احراز هویت</button>
+<button data-t="endpoints">🗂 فهرست Endpointها</button>
+<button data-t="chat">💬 چت</button>
+<button data-t="responses">🧩 Responses API</button>
+<button data-t="img">🎨 تولید تصویر</button>
+<button data-t="audio">🎙 صوت</button>
+<button data-t="video">🎬 ویدیو</button>
+<button data-t="ws">🌐 جستجو و تحقیق وب</button>
+<button data-t="emb">🔢 Embedding و Moderation</button>
+<button data-t="bal">💰 موجودی</button>
+<button data-t="models">🧠 مدل‌ها</button>
+<button data-t="tokens">🔑 کلیدها و قیمت‌گذاری</button>
+<button data-t="usage">📊 گزارش مصرف</button>
+<button data-t="examples">🧪 نمونه کدها</button>
+<button data-t="troubleshooting">🛠 خطاها و رفع اشکال</button>
+<button data-t="faq">❓ سوالات متداول</button>
+  </nav>
+  <main>
+
+<section class="dsec" id="d-docs">
+  <h2>معرفی وب‌سرویس لمورا</h2>
+  <p>وب‌سرویس لمورا یک درگاه یکپارچه و <b>سازگار با OpenAI</b> است که با یک کلید، به صدها مدل هوش مصنوعی از OpenAI، Anthropic، Google، DeepSeek، xAI، Meta، Qwen و ... دسترسی می‌دهد. هزینه هر درخواست به تومان محاسبه و از کیف پول شما کسر می‌شود.</p>
+  <h3>ویژگی‌ها</h3>
+  <ul>
+    <li>سازگار با کتابخانه‌های رسمی OpenAI (Python، Node.js و ...) — فقط <code>base_url</code> را عوض کنید.</li>
+    <li>چت با پشتیبانی کامل از Streaming (SSE)، تصویر ورودی (Vision) و Function Calling.</li>
+    <li>تولید تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو، Embedding و Moderation.</li>
+    <li>جستجوی وب، استخراج محتوای صفحات و تحقیق خودکار.</li>
+    <li>پرداخت ریالی از کیف پول، بدون نیاز به کارت ارزی.</li>
+  </ul>
+  <h3>Base URL</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">text</span><code class="language-text">https://lemura.ir/wp-json/lemuraai/v1</code></pre>
+  <p>آدرس جایگزین (معادل): <code class="ltr">https://lemura.ir/api/lemuraai/v1</code></p>
+  <h3>شروع در سه قدم</h3>
+  <ol>
+    <li><a href="https://lemura.ir/wallet">کیف پول</a> خود را شارژ کنید.</li>
+    <li>از صفحه <a href="https://lemura.ir/developers">توسعه‌دهندگان</a> یک کلید API (با پیشوند <code>lsk-</code>) بسازید.</li>
+    <li>اولین درخواست را بفرستید:</li>
+  </ol>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/chat/completions \
+  -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "سلام!"}]}'</code></pre>
+</section>
+
+<section class="dsec" id="d-auth">
+  <h2>احراز هویت</h2>
+  <p>همه درخواست‌ها (به‌جز <code>/ping</code>) باید کلید API را در هدر <code>Authorization</code> ارسال کنند:</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">http</span><code class="language-http">Authorization: Bearer lsk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+  <div class="note">⚠️ کلید API را هرگز در کد سمت کاربر (مرورگر یا اپ موبایل منتشرشده) قرار ندهید. درخواست‌ها را از سرور خود ارسال کنید.</div>
+  <h3>بررسی کلید</h3>
+  <div class="ep"><span>/me</span><span class="m get">GET</span></div>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/me -H "Authorization: Bearer lsk-YOUR_KEY"</code></pre>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "object": "me",
+  "user_id": 123,
+  "username": "09123456789",
+  "token": {"id": 7, "name": "my-app", "is_active": true, "created_at": "...", "last_used": "..."}
+}</code></pre>
+  <h3>محدودیت نرخ</h3>
+  <p>هر کلید حداکثر <b>۳۰</b> درخواست در دقیقه و <b>۳,۰۰۰</b> درخواست در روز. در صورت عبور، کد <code>429</code> برگردانده می‌شود.</p>
+</section>
+
+<section class="dsec" id="d-endpoints">
+  <h2>فهرست Endpointها</h2>
+  <h3>عمومی و حساب</h3>
+  <div class="ep"><span>/ping</span><span class="m get">GET</span></div><div class="ep"><span>/me</span><span class="m get">GET</span></div><div class="ep"><span>/balance</span><span class="m get">GET</span></div><div class="ep"><span>/usage?days=30</span><span class="m get">GET</span></div>
+  <h3>مدل‌ها</h3>
+  <div class="ep"><span>/models</span><span class="m get">GET</span></div><div class="ep"><span>/models/{model_id}</span><span class="m get">GET</span></div>
+  <h3>متن</h3>
+  <div class="ep"><span>/chat/completions</span><span class="m post">POST</span></div><div class="ep"><span>/completions</span><span class="m post">POST</span></div><div class="ep"><span>/responses</span><span class="m post">POST</span></div>
+  <h3>تصویر، صوت و ویدیو</h3>
+  <div class="ep"><span>/images/generations</span><span class="m post">POST</span></div><div class="ep"><span>/audio/speech</span><span class="m post">POST</span></div><div class="ep"><span>/audio/transcriptions</span><span class="m post">POST</span></div><div class="ep"><span>/audio/translations</span><span class="m post">POST</span></div>
+  <div class="ep"><span>/videos</span><span class="m post">POST</span></div><div class="ep"><span>/videos</span><span class="m get">GET</span></div><div class="ep"><span>/videos/{video_id}</span><span class="m get">GET</span></div><div class="ep"><span>/videos/{video_id}</span><span class="m del">DELETE</span></div>
+  <div class="ep"><span>/videos/{video_id}/remix</span><span class="m post">POST</span></div><div class="ep"><span>/videos/{video_id}/content</span><span class="m get">GET</span></div>
+  <h3>وب</h3>
+  <div class="ep"><span>/web-search</span><span class="m post">POST</span></div><div class="ep"><span>/web-scrape</span><span class="m post">POST</span></div><div class="ep"><span>/research</span><span class="m post">POST</span></div>
+  <h3>بردار و ایمنی</h3>
+  <div class="ep"><span>/embeddings</span><span class="m post">POST</span></div><div class="ep"><span>/moderations</span><span class="m post">POST</span></div>
+</section>
+
+<section class="dsec" id="d-chat">
+  <h2>چت (Chat Completions)</h2>
+  <div class="ep"><span>/chat/completions</span><span class="m post">POST</span></div>
+  <p>دقیقاً مطابق OpenAI. پارامترهای اصلی:</p>
+  <ul>
+    <li><code>model</code> (الزامی) — شناسه مدل، مثل <code>gpt-4o</code>، <code>claude-sonnet-4-5</code>، <code>gemini-2.5-flash</code>، <code>deepseek-chat</code>.</li>
+    <li><code>messages</code> (الزامی) — آرایه پیام‌ها با نقش‌های <code>system</code>، <code>user</code>، <code>assistant</code>، <code>tool</code>.</li>
+    <li><code>stream</code> — با <code>true</code> پاسخ به‌صورت SSE ارسال می‌شود.</li>
+    <li><code>temperature</code>، <code>max_tokens</code>، <code>max_completion_tokens</code>، <code>top_p</code>، <code>stop</code>، <code>tools</code>، <code>tool_choice</code>، <code>response_format</code>، <code>seed</code>، <code>reasoning_effort</code> و <code>n</code>.</li>
+  </ul>
+  <h3>درخواست ساده</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/chat/completions \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role": "system", "content": "تو یک دستیار مفید فارسی‌زبان هستی."},
+      {"role": "user", "content": "سه نکته برای تمرکز بیشتر بگو"}
+    ],
+    "temperature": 0.7
+  }'</code></pre>
+  <h3>پاسخ</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "model": "gpt-4o-mini",
+  "choices": [{"index": 0, "message": {"role": "assistant", "content": "..."}, "finish_reason": "stop"}],
+  "usage": {"prompt_tokens": 32, "completion_tokens": 120, "total_tokens": 152}
+}</code></pre>
+  <p>هزینه بر اساس <code>usage</code> محاسبه و از کیف پول کسر می‌شود. موجودی و هزینه‌ها را با <a href="#bal">/balance</a> و <a href="#usage">/usage</a> ببینید. هدرهای <code>X-RateLimit-Limit</code>، <code>X-RateLimit-Remaining</code> و <code>X-RateLimit-Reset</code> وضعیت محدودیت نرخ را نشان می‌دهند.</p>
+  <h3>Streaming</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">python</span><code class="language-python">stream = client.chat.completions.create(
+    model="gpt-4o-mini", stream=True,
+    messages=[{"role": "user", "content": "یک داستان کوتاه بنویس"}])
+for chunk in stream:
+    print(chunk.choices[0].delta.content or "", end="", flush=True)</code></pre>
+  <h3>تصویر ورودی (Vision)</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "model": "gpt-4o",
+  "messages": [{"role": "user", "content": [
+    {"type": "text", "text": "در این تصویر چه می‌بینی؟"},
+    {"type": "image_url", "image_url": {"url": "https://example.com/photo.jpg"}}
+  ]}]
+}</code></pre>
+  <h3>Function Calling</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "model": "gpt-4o-mini",
+  "messages": [{"role": "user", "content": "هوای تهران چطوره؟"}],
+  "tools": [{"type": "function", "function": {
+    "name": "get_weather",
+    "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
+  }}]
+}</code></pre>
+</section>
+
+<section class="dsec" id="d-responses">
+  <h2>Responses API</h2>
+  <div class="ep"><span>/responses</span><span class="m post">POST</span></div>
+  <p>رابط جدید OpenAI برای مدل‌های استدلالی و ابزارها. ورودی می‌تواند متن ساده یا آرایه‌ای از پیام‌ها باشد.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/responses \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "gpt-5-mini", "input": "تفاوت هوش مصنوعی و یادگیری ماشین چیست؟"}'</code></pre>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">python</span><code class="language-python">r = client.responses.create(model="gpt-5-mini", input="یک شعر کوتاه درباره پاییز")
+print(r.output_text)</code></pre>
+  <h3>Completions (قدیمی)</h3>
+  <div class="ep"><span>/completions</span><span class="m post">POST</span></div>
+  <p>برای سازگاری با کدهای قدیمی؛ پارامتر <code>prompt</code> به‌جای <code>messages</code>.</p>
+</section>
+<section class="dsec" id="d-img">
+  <h2>تولید تصویر</h2>
+  <div class="ep"><span>/images/generations</span><span class="m post">POST</span></div>
+  <ul>
+    <li><code>model</code> (الزامی) — مثل <code>gpt-image-1</code>، <code>imagen-4.0-generate-001</code>، <code>flux-1.1-pro</code>. فهرست کامل در <a href="#models">/models</a>.</li>
+    <li><code>prompt</code> (الزامی، حداکثر ۱۰۰۰ کاراکتر) — توصیف تصویر. برای کیفیت بهتر انگلیسی بنویسید.</li>
+    <li><code>size</code> — مثل <code>1024x1024</code>، <code>1024x1792</code>، <code>1792x1024</code>.</li>
+    <li><code>n</code> — تعداد تصاویر (هزینه × n).</li>
+    <li>اختیاری: <code>quality</code>، <code>style</code>، <code>background</code>، <code>output_format</code>، <code>response_format</code> (<code>url</code> یا <code>b64_json</code>).</li>
+  </ul>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/images/generations \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "gpt-image-1", "prompt": "a cozy reading nook with warm light, watercolor", "size": "1024x1024"}'</code></pre>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">python</span><code class="language-python">img = client.images.generate(model="gpt-image-1", prompt="a futuristic Tehran skyline at night", size="1792x1024")
+print(img.data[0].url or "base64 length: %d" % len(img.data[0].b64_json))</code></pre>
+  <div class="note">هزینه قبل از ارسال برآورد و بررسی می‌شود؛ اگر موجودی کافی نباشد خطای <code>402</code> برمی‌گردد.</div>
+</section>
+
+<section class="dsec" id="d-audio">
+  <h2>صوت</h2>
+  <h3>متن به گفتار (TTS)</h3>
+  <div class="ep"><span>/audio/speech</span><span class="m post">POST</span></div>
+  <p>پارامترها: <code>model</code> (مثل <code>gpt-4o-mini-tts</code>، <code>tts-1</code>، <code>tts-1-hd</code>)، <code>input</code> (متن)، <code>voice</code> (مثل <code>alloy</code>، <code>nova</code>، <code>shimmer</code>، <code>echo</code>). خروجی فایل صوتی است. هزینه هر درخواست: حدود <b>۵۰۰</b> تومان (پیش از سود).</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/audio/speech \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4o-mini-tts", "input": "سلام، به لمورا خوش آمدید", "voice": "nova"}' \
+  --output speech.mp3</code></pre>
+  <h3>گفتار به متن</h3>
+  <div class="ep"><span>/audio/transcriptions</span><span class="m post">POST</span></div>
+  <p>ارسال به‌صورت <code>multipart/form-data</code> با فیلدهای <code>file</code> و <code>model</code> (<code>whisper-1</code>، <code>gpt-4o-transcribe</code>، <code>gpt-4o-mini-transcribe</code>). اختیاری: <code>language</code>، <code>prompt</code>، <code>response_format</code>، <code>temperature</code>.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/audio/transcriptions \
+  -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -F file=@voice.mp3 -F model=whisper-1 -F language=fa</code></pre>
+  <h3>ترجمه گفتار به انگلیسی</h3>
+  <div class="ep"><span>/audio/translations</span><span class="m post">POST</span></div>
+  <p>مانند transcriptions، با مدل <code>whisper-1</code>؛ خروجی متن انگلیسی است.</p>
+</section>
+
+<section class="dsec" id="d-video">
+  <h2>تولید ویدیو</h2>
+  <p>تولید ویدیو ناهمگام است: ابتدا کار را بسازید، سپس وضعیت را بررسی و در پایان فایل را دریافت کنید.</p>
+  <div class="ep"><span>/videos</span><span class="m post">POST</span></div>
+  <p>پارامترها: <code>model</code> (<code>sora-2</code>، <code>sora-2-pro</code>، <code>veo-3.1-generate-001</code>، <code>veo-3.1-fast-generate-001</code>، ...)، <code>prompt</code>، <code>seconds</code> (یا <code>duration</code>) و <code>size</code>. هزینه = قیمت هر ثانیه × مدت.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/videos \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "sora-2", "prompt": "a paper boat drifting on a rainy street, cinematic", "seconds": 8}'</code></pre>
+  <div class="ep"><span>/videos/{video_id}</span><span class="m get">GET</span></div>
+  <p>وضعیت کار (<code>queued</code>، <code>in_progress</code>، <code>completed</code>، <code>failed</code>).</p>
+  <div class="ep"><span>/videos/{video_id}/content</span><span class="m get">GET</span></div>
+  <p>دریافت فایل ویدیو پس از تکمیل.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/videos/VIDEO_ID/content -H "Authorization: Bearer lsk-YOUR_KEY" --output video.mp4</code></pre>
+  <div class="ep"><span>/videos/{video_id}/remix</span><span class="m post">POST</span></div><div class="ep"><span>/videos</span><span class="m get">GET</span></div><div class="ep"><span>/videos/{video_id}</span><span class="m del">DELETE</span></div>
+</section>
+
+<section class="dsec" id="d-ws">
+  <h2>جستجو و تحقیق وب</h2>
+  <h3>جستجوی وب با پاسخ هوشمند</h3>
+  <div class="ep"><span>/web-search</span><span class="m post">POST</span></div>
+  <p>ارسال <code>query</code> (یا <code>messages</code>) و مدل جستجو (پیش‌فرض <code>gpt-4o-search-preview</code>). پارامتر <code>search_context_size</code>: <code>low</code>، <code>medium</code> یا <code>high</code> (هزینه بیشتر، منابع بیشتر).</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/web-search \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"query": "آخرین اخبار هوش مصنوعی این هفته", "search_context_size": "medium"}'</code></pre>
+  <h3>استخراج محتوای صفحه</h3>
+  <div class="ep"><span>/web-scrape</span><span class="m post">POST</span></div>
+  <p><code>url</code> یا آرایه <code>urls</code>؛ اختیاری <code>max_chars_per_url</code> (۵۰۰ تا ۵۰٬۰۰۰). خروجی متن تمیزشده هر صفحه است.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{"urls": ["https://example.com/article"], "max_chars_per_url": 8000}</code></pre>
+  <h3>تحقیق خودکار</h3>
+  <div class="ep"><span>/research</span><span class="m post">POST</span></div>
+  <p><code>query</code> (یا <code>topic</code>)؛ اختیاری <code>model</code> و <code>max_results</code>. گزارشی جمع‌بندی‌شده با منابع برمی‌گرداند.</p>
+</section>
+
+<section class="dsec" id="d-emb">
+  <h2>Embedding و Moderation</h2>
+  <div class="ep"><span>/embeddings</span><span class="m post">POST</span></div>
+  <p>تبدیل متن به بردار برای جستجوی معنایی و RAG. مدل‌ها: <code>text-embedding-3-small</code>، <code>text-embedding-3-large</code>، <code>text-embedding-ada-002</code>. هزینه: حدود <b>۲۰</b> تومان به ازای هر ۱۰۰۰ توکن.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">python</span><code class="language-python">e = client.embeddings.create(model="text-embedding-3-small", input=["سلام دنیا", "hello world"])
+print(len(e.data[0].embedding))</code></pre>
+  <div class="ep"><span>/moderations</span><span class="m post">POST</span></div>
+  <p>بررسی محتوای نامناسب. مدل پیش‌فرض <code>omni-moderation-latest</code>؛ فیلد <code>input</code> الزامی است.</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{"model": "omni-moderation-latest", "input": "متنی برای بررسی"}</code></pre>
+</section>
+<section class="dsec" id="d-bal">
+  <h2>موجودی</h2>
+  <div class="ep"><span>/balance</span><span class="m get">GET</span></div>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">bash</span><code class="language-bash">curl https://lemura.ir/wp-json/lemuraai/v1/balance -H "Authorization: Bearer lsk-YOUR_KEY"</code></pre>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "object": "balance",
+  "user_id": 123,
+  "balance": 152000,
+  "currency": "toman",
+  "token_info": {"id": 7, "name": "my-app", "total_requests": 420, "total_tokens_used": 381200, "total_cost": 21500},
+  "rate_limits": {"per_minute": 30, "per_day": 3000},
+  "stats": {"total_spent": 48000, "total_requests": 1300, "total_tokens_used": 920000,
+            "today": {"spent": 1200, "requests": 18}, "this_month": {"spent": 22000, "requests": 610}}
+}</code></pre>
+  <p>برای افزایش موجودی به <a href="https://lemura.ir/wallet">کیف پول</a> بروید. موجودی بین چت سایت، تولید تصویر و API مشترک است.</p>
+</section>
+
+<section class="dsec" id="d-models">
+  <h2>مدل‌ها</h2>
+  <div class="ep"><span>/models</span><span class="m get">GET</span></div>
+  <p>فهرست همه مدل‌های فعال همراه با نوع و قیمت تومانی:</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "object": "list",
+  "data": [
+    {"id": "gpt-4o-mini", "object": "model", "type": "chat", "owned_by": "openai",
+     "input_toman_per_1m": 46800, "output_toman_per_1m": 187200, "cached_toman_per_1m": 23400},
+    {"id": "gpt-image-1", "object": "model", "type": "image", "price": 12000},
+    {"id": "sora-2", "object": "model", "type": "video", "price_per_second": 26000, "max_seconds": 12}
+  ]
+}</code></pre>
+  <p>انواع: <code>chat</code>، <code>image</code>، <code>web_search</code>، <code>audio_tts</code>، <code>audio_transcription</code>، <code>audio_translation</code>، <code>video</code>، <code>embedding</code>، <code>moderation</code>.</p>
+  <div class="note">اعداد بالا نمونه هستند؛ قیمت‌های واقعی و به‌روز را همیشه از خود <code>/models</code> بخوانید.</div>
+  <div class="ep"><span>/models/{model_id}</span><span class="m get">GET</span></div>
+  <p>جزئیات یک مدل؛ اگر وجود نداشته باشد کد <code>404</code> با نوع <code>model_not_found</code>.</p>
+</section>
+
+<section class="dsec" id="d-tokens">
+  <h2>کلیدها و قیمت‌گذاری</h2>
+  <h3>مدیریت کلید</h3>
+  <ul>
+    <li>کلیدها از صفحه <a href="https://lemura.ir/developers">توسعه‌دهندگان</a> ساخته، غیرفعال یا حذف می‌شوند.</li>
+    <li>برای هر برنامه یک کلید جدا بسازید تا مصرف را جدا ببینید و در صورت لو رفتن فقط همان را حذف کنید.</li>
+    <li>حداکثر تعداد کلید برای هر کاربر: <b>۱۰</b>.</li>
+  </ul>
+  <h3>نحوه محاسبه هزینه</h3>
+  <ul>
+    <li><b>مدل‌های متنی:</b> بر اساس توکن ورودی، خروجی و ورودی کش‌شده، با قیمت تومانی هر مدل (در <code>/models</code>).</li>
+    <li><b>تصویر:</b> قیمت ثابت به ازای هر تصویر.</li>
+    <li><b>ویدیو:</b> قیمت هر ثانیه × مدت ویدیو.</li>
+    <li><b>صوت:</b> قیمت ثابت به ازای هر درخواست.</li>
+    <li><b>جستجوی وب:</b> بر اساس <code>search_context_size</code>.</li>
+  </ul>
+  <p>قیمت‌ها بر اساس نرخ روز دلار محاسبه می‌شوند و ممکن است تغییر کنند. درخواست‌های ناموفق هزینه‌ای ندارند.</p>
+</section>
+
+<section class="dsec" id="d-usage">
+  <h2>گزارش مصرف</h2>
+  <div class="ep"><span>/usage?days=30</span><span class="m get">GET</span></div>
+  <p>مصرف روزانه (حداکثر ۹۰ روز) برای کاربرِ صاحب کلید:</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{
+  "object": "usage", "user_id": 123, "days": 30,
+  "data": [{"day": "2026-10-20", "requests": 42, "tokens": 51200, "cost": 2900}]
+}</code></pre>
+  <h3>وضعیت سرویس</h3>
+  <div class="ep"><span>/ping</span><span class="m get">GET</span></div>
+  <p>بدون نیاز به کلید؛ برای مانیتورینگ.</p>
+</section>
+
+<section class="dsec" id="d-examples">
+  <h2>نمونه کدها</h2>
+  <h3>Python (کتابخانه openai)</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">python</span><code class="language-python"># pip install openai
+from openai import OpenAI
+
+client = OpenAI(api_key="lsk-YOUR_KEY", base_url="https://lemura.ir/wp-json/lemuraai/v1")
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "یک تابع مرتب‌سازی سریع بنویس"}],
+)
+print(resp.choices[0].message.content)</code></pre>
+  <h3>Node.js</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">javascript</span><code class="language-javascript">// npm i openai
+import OpenAI from "openai";
+
+const client = new OpenAI({ apiKey: process.env.LEMURA_KEY, baseURL: "https://lemura.ir/wp-json/lemuraai/v1" });
+const stream = await client.chat.completions.create({
+  model: "gpt-4o-mini", stream: true,
+  messages: [{ role: "user", content: "سلام!" }],
+});
+for await (const part of stream) process.stdout.write(part.choices[0]?.delta?.content || "");</code></pre>
+  <h3>PHP</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">php</span><code class="language-php">$ch = curl_init("https://lemura.ir/wp-json/lemuraai/v1/chat/completions");
+curl_setopt_array($ch, [
+  CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true,
+  CURLOPT_HTTPHEADER => ["Authorization: Bearer lsk-YOUR_KEY", "Content-Type: application/json"],
+  CURLOPT_POSTFIELDS => json_encode(["model" => "gpt-4o-mini",
+    "messages" => [["role" => "user", "content" => "سلام"]]]),
+]);
+$res = json_decode(curl_exec($ch), true);
+echo $res["choices"][0]["message"]["content"];</code></pre>
+  <h3>LangChain</h3>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">python</span><code class="language-python">from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(model="gpt-4o-mini", api_key="lsk-YOUR_KEY", base_url="https://lemura.ir/wp-json/lemuraai/v1")
+print(llm.invoke("سلام").content)</code></pre>
+</section>
+
+<section class="dsec" id="d-troubleshooting">
+  <h2>خطاها و رفع اشکال</h2>
+  <p>خطاها در قالب استاندارد OpenAI برمی‌گردند:</p>
+  <pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">json</span><code class="language-json">{"error": {"message": "Insufficient balance. Available: 120 toman", "type": "insufficient_balance", "code": 402}}</code></pre>
+  <div class="tw"><table class="tbl">
+    <thead><tr><th>کد</th><th>نوع</th><th>علت و راه‌حل</th></tr></thead>
+    <tbody>
+      <tr><td>400</td><td class="ltr">invalid_request_error</td><td>بدنه نامعتبر یا فیلد الزامی (مثل <code>model</code>، <code>messages</code>) ارسال نشده.</td></tr>
+      <tr><td>401</td><td class="ltr">authentication_error</td><td>کلید ارسال نشده، اشتباه است یا غیرفعال شده. هدر <code>Authorization: Bearer lsk-...</code> را بررسی کنید.</td></tr>
+      <tr><td>402</td><td class="ltr">insufficient_balance</td><td>موجودی کافی نیست؛ <a href="https://lemura.ir/wallet">کیف پول را شارژ کنید</a>.</td></tr>
+      <tr><td>404</td><td class="ltr">model_not_found</td><td>شناسه مدل اشتباه یا غیرفعال است؛ از <code>/models</code> استفاده کنید.</td></tr>
+      <tr><td>429</td><td class="ltr">rate_limit_error</td><td>عبور از محدودیت نرخ؛ به مقدار هدر <code>Retry-After</code> صبر کنید.</td></tr>
+      <tr><td>5xx</td><td class="ltr">server_error / upstream</td><td>خطای موقت ارائه‌دهنده مدل؛ با تأخیر دوباره تلاش کنید. هزینه‌ای کسر نمی‌شود.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>نکات</h3>
+  <ul>
+    <li>اگر کتابخانه OpenAI خطای اتصال می‌دهد، مطمئن شوید <code>base_url</code> دقیقاً <code class="ltr">https://lemura.ir/wp-json/lemuraai/v1</code> است (بدون <code>/chat/completions</code>).</li>
+    <li>برای درخواست‌های طولانی (تصویر و ویدیو) timeout کلاینت را حداقل ۱۸۰ ثانیه بگذارید.</li>
+    <li>در صورت تکرار خطای 5xx، مدل جایگزین را امتحان کنید.</li>
+  </ul>
+</section>
+
+<section class="dsec" id="d-faq">
+  <h2>سوالات متداول</h2>
+  <h3>آیا با کدهای فعلی OpenAI سازگار است؟</h3>
+  <p>بله. فقط <code>api_key</code> را با کلید لمورا و <code>base_url</code> را با آدرس لمورا جایگزین کنید.</p>
+  <h3>هزینه درخواست‌های ناموفق کسر می‌شود؟</h3>
+  <p>خیر. فقط درخواست‌های موفق هزینه دارند.</p>
+  <h3>موجودی API و چت سایت جداست؟</h3>
+  <p>خیر، یک کیف پول مشترک برای همه سرویس‌هاست.</p>
+  <h3>چطور بفهمم هر درخواست چقدر هزینه داشته؟</h3>
+  <p>از <a href="#usage">/usage</a> و <a href="#bal">/balance</a> یا تاریخچه <a href="https://lemura.ir/wallet">کیف پول</a> استفاده کنید.</p>
+  <h3>کلیدم لو رفته، چه کنم؟</h3>
+  <p>فوراً از صفحه <a href="https://lemura.ir/developers">توسعه‌دهندگان</a> آن را حذف و کلید جدید بسازید.</p>
+  <h3>پشتیبانی</h3>
+  <p>برای سوالات فنی از چت سایت یا راه‌های ارتباطی لمورا با ما در تماس باشید.</p>
+</section>
+  </main>
+</div>
+<footer>هوش مصنوعی لمورا · <a href="https://lemura.ir">lemura.ir</a> · <a href="https://lemura.ir/docs">نسخه آنلاین مستندات</a></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+function cp(t,b){navigator.clipboard.writeText(t).then(function(){var o=b.textContent;b.textContent='✓ کپی شد';setTimeout(function(){b.textContent=o;},1400);});}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-copy]');if(b)cp(b.parentNode.querySelector('code').innerText,b);});
+(function(){var nav=document.getElementById('dnav');
+  function show(t){if(!document.getElementById('d-'+t))t='docs';
+    nav.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});
+    document.querySelectorAll('.dsec').forEach(function(s){s.classList.toggle('on',s.id==='d-'+t);});}
+  nav.onclick=function(e){var b=e.target.closest('button');if(!b)return;var t=b.getAttribute('data-t');history.replaceState(null,'','#'+t);show(t);scrollTo(0,0);};
+  document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(!a)return;var t=a.getAttribute('href').slice(1);
+    if(document.getElementById('d-'+t)){e.preventDefault();history.replaceState(null,'','#'+t);show(t);scrollTo(0,0);}});
+  show((location.hash||'#docs').slice(1));
+  if(window.hljs)document.querySelectorAll('pre code').forEach(function(c){try{hljs.highlightElement(c);}catch(x){}});
+})();
+</script>
+</body>
+</html>

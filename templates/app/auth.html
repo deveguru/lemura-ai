@@ -1,0 +1,48 @@
+<div class="modal-ov" id="authModal">
+  <div class="modal">
+    <button class="ibtn modal-cls" onclick="Auth.close()" aria-label="بستن">✕</button>
+    <div style="text-align:center;margin-bottom:16px">
+      <div class="auth-logo">⚡</div>
+      <h2 style="font-size:1.2rem;margin:0 0 4px" id="aTitle">ورود یا ثبت‌نام</h2>
+      <p style="font-size:.8rem;color:var(--t3);margin:0" id="aSub">با یک حساب، به همه مدل‌های هوش مصنوعی دسترسی داشته باشید</p>
+    </div>
+    <div class="amsg" id="aMsg"></div>
+
+    <div id="aStep1">
+      {% if google_login %}
+      <a class="gbtn" href="/auth/google?next={{ request.path|urlencode }}">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+        ادامه با گوگل</a>
+      <div class="or">یا</div>
+      {% endif %}
+      <div class="fg"><label>شماره موبایل یا ایمیل</label>
+        <input class="input ltr" id="aId" inputmode="email" autocomplete="username" placeholder="09123456789"></div>
+      <button class="btn" style="width:100%" id="aNext">ادامه</button>
+    </div>
+
+    <div id="aPass" style="display:none">
+      <div class="fg"><label>رمز عبور</label><input type="password" class="input ltr" id="aPw" autocomplete="current-password"></div>
+      <button class="btn" style="width:100%" id="aPassBtn">ورود</button>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <button class="linkbtn" id="aUseOtp">ورود با کد پیامکی</button>
+        <button class="linkbtn" data-back>تغییر شماره</button>
+      </div>
+    </div>
+
+    <div id="aOtp" style="display:none">
+      <div style="text-align:center;font-size:.85rem;color:var(--t2)">کد ارسال‌شده به <b class="ltr" id="aPhoneShow" style="display:inline-block"></b> را وارد کنید</div>
+      <div class="otp-row" id="aOtpRow" data-len="{{ otp_len or 6 }}"></div>
+      <div id="aNames" style="display:none">
+        <div class="fg"><label>نام و نام خانوادگی</label><input class="input" id="aName" autocomplete="name"></div>
+      </div>
+      <button class="btn" style="width:100%" id="aVerify">تأیید و ورود</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <button class="linkbtn" id="aResend" disabled>ارسال مجدد</button>
+        <span id="aTimer" style="font-size:.78rem;color:var(--t3)"></span>
+        <button class="linkbtn" data-back>تغییر شماره</button>
+      </div>
+      <div id="aGift" style="display:none;text-align:center;margin-top:12px;padding:9px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;font-size:.78rem;color:var(--warn)">🎁 با ثبت‌نام، اعتبار هدیه به کیف پول شما اضافه می‌شود</div>
+    </div>
+    <p style="font-size:.7rem;color:var(--t3);text-align:center;margin:16px 0 0">ورود شما به منزله پذیرش قوانین استفاده از لمورا است.</p>
+  </div>
+</div>

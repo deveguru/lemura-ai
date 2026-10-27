@@ -1,0 +1,131 @@
+{% from "app/docs/m.html" import code, ep %}
+<section class="dsec" id="d-docs">
+  <h2>معرفی وب‌سرویس لمورا</h2>
+  <p>وب‌سرویس لمورا یک درگاه یکپارچه و <b>سازگار با OpenAI</b> است که با یک کلید، به صدها مدل هوش مصنوعی از OpenAI، Anthropic، Google، DeepSeek، xAI، Meta، Qwen و ... دسترسی می‌دهد. هزینه هر درخواست به تومان محاسبه و از کیف پول شما کسر می‌شود.</p>
+  <h3>ویژگی‌ها</h3>
+  <ul>
+    <li>سازگار با کتابخانه‌های رسمی OpenAI (Python، Node.js و ...) — فقط <code>base_url</code> را عوض کنید.</li>
+    <li>چت با پشتیبانی کامل از Streaming (SSE)، تصویر ورودی (Vision) و Function Calling.</li>
+    <li>تولید تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو، Embedding و Moderation.</li>
+    <li>جستجوی وب، استخراج محتوای صفحات و تحقیق خودکار.</li>
+    <li>پرداخت ریالی از کیف پول، بدون نیاز به کارت ارزی.</li>
+  </ul>
+  <h3>Base URL</h3>
+  {% call code('text') %}{{ B }}{% endcall %}
+  <p>آدرس جایگزین (معادل): <code class="ltr">{{ B|replace('/wp-json/', '/api/') }}</code></p>
+  <h3>شروع در سه قدم</h3>
+  <ol>
+    <li><a href="/wallet">کیف پول</a> خود را شارژ کنید.</li>
+    <li>از صفحه <a href="/developers">توسعه‌دهندگان</a> یک کلید API (با پیشوند <code>lsk-</code>) بسازید.</li>
+    <li>اولین درخواست را بفرستید:</li>
+  </ol>
+  {% call code('bash') %}curl {{ B }}/chat/completions \
+  -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "سلام!"}]}'{% endcall %}
+</section>
+
+<section class="dsec" id="d-auth">
+  <h2>احراز هویت</h2>
+  <p>همه درخواست‌ها (به‌جز <code>/ping</code>) باید کلید API را در هدر <code>Authorization</code> ارسال کنند:</p>
+  {% call code('http') %}Authorization: Bearer lsk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx{% endcall %}
+  <div class="note">⚠️ کلید API را هرگز در کد سمت کاربر (مرورگر یا اپ موبایل منتشرشده) قرار ندهید. درخواست‌ها را از سرور خود ارسال کنید.</div>
+  <h3>بررسی کلید</h3>
+  {{ ep('GET', '/me') }}
+  {% call code('bash') %}curl {{ B }}/me -H "Authorization: Bearer lsk-YOUR_KEY"{% endcall %}
+  {% call code('json') %}{
+  "object": "me",
+  "user_id": 123,
+  "username": "09123456789",
+  "token": {"id": 7, "name": "my-app", "is_active": true, "created_at": "...", "last_used": "..."}
+}{% endcall %}
+  <h3>محدودیت نرخ</h3>
+  <p>هر کلید حداکثر <b>{{ pr.rate_limit_per_minute|int|fa }}</b> درخواست در دقیقه و <b>{{ pr.rate_limit_per_day|int|fa }}</b> درخواست در روز. در صورت عبور، کد <code>429</code> برگردانده می‌شود.</p>
+</section>
+
+<section class="dsec" id="d-endpoints">
+  <h2>فهرست Endpointها</h2>
+  <h3>عمومی و حساب</h3>
+  {{ ep('GET','/ping') }}{{ ep('GET','/me') }}{{ ep('GET','/balance') }}{{ ep('GET','/usage?days=30') }}
+  <h3>مدل‌ها</h3>
+  {{ ep('GET','/models') }}{{ ep('GET','/models/{model_id}') }}
+  <h3>متن</h3>
+  {{ ep('POST','/chat/completions') }}{{ ep('POST','/completions') }}{{ ep('POST','/responses') }}
+  <h3>تصویر، صوت و ویدیو</h3>
+  {{ ep('POST','/images/generations') }}{{ ep('POST','/audio/speech') }}{{ ep('POST','/audio/transcriptions') }}{{ ep('POST','/audio/translations') }}
+  {{ ep('POST','/videos') }}{{ ep('GET','/videos') }}{{ ep('GET','/videos/{video_id}') }}{{ ep('DELETE','/videos/{video_id}') }}
+  {{ ep('POST','/videos/{video_id}/remix') }}{{ ep('GET','/videos/{video_id}/content') }}
+  <h3>وب</h3>
+  {{ ep('POST','/web-search') }}{{ ep('POST','/web-scrape') }}{{ ep('POST','/research') }}
+  <h3>بردار و ایمنی</h3>
+  {{ ep('POST','/embeddings') }}{{ ep('POST','/moderations') }}
+</section>
+
+<section class="dsec" id="d-chat">
+  <h2>چت (Chat Completions)</h2>
+  {{ ep('POST','/chat/completions') }}
+  <p>دقیقاً مطابق OpenAI. پارامترهای اصلی:</p>
+  <ul>
+    <li><code>model</code> (الزامی) — شناسه مدل، مثل <code>gpt-4o</code>، <code>claude-sonnet-4-5</code>، <code>gemini-2.5-flash</code>، <code>deepseek-chat</code>.</li>
+    <li><code>messages</code> (الزامی) — آرایه پیام‌ها با نقش‌های <code>system</code>، <code>user</code>، <code>assistant</code>، <code>tool</code>.</li>
+    <li><code>stream</code> — با <code>true</code> پاسخ به‌صورت SSE ارسال می‌شود.</li>
+    <li><code>temperature</code>، <code>max_tokens</code>، <code>max_completion_tokens</code>، <code>top_p</code>، <code>stop</code>، <code>tools</code>، <code>tool_choice</code>، <code>response_format</code>، <code>seed</code>، <code>reasoning_effort</code> و <code>n</code>.</li>
+  </ul>
+  <h3>درخواست ساده</h3>
+  {% call code('bash') %}curl {{ B }}/chat/completions \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role": "system", "content": "تو یک دستیار مفید فارسی‌زبان هستی."},
+      {"role": "user", "content": "سه نکته برای تمرکز بیشتر بگو"}
+    ],
+    "temperature": 0.7
+  }'{% endcall %}
+  <h3>پاسخ</h3>
+  {% call code('json') %}{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "model": "gpt-4o-mini",
+  "choices": [{"index": 0, "message": {"role": "assistant", "content": "..."}, "finish_reason": "stop"}],
+  "usage": {"prompt_tokens": 32, "completion_tokens": 120, "total_tokens": 152}
+}{% endcall %}
+  <p>هزینه بر اساس <code>usage</code> محاسبه و از کیف پول کسر می‌شود. موجودی و هزینه‌ها را با <a href="#bal">/balance</a> و <a href="#usage">/usage</a> ببینید. هدرهای <code>X-RateLimit-Limit</code>، <code>X-RateLimit-Remaining</code> و <code>X-RateLimit-Reset</code> وضعیت محدودیت نرخ را نشان می‌دهند.</p>
+  <h3>Streaming</h3>
+  {% call code('python') %}stream = client.chat.completions.create(
+    model="gpt-4o-mini", stream=True,
+    messages=[{"role": "user", "content": "یک داستان کوتاه بنویس"}])
+for chunk in stream:
+    print(chunk.choices[0].delta.content or "", end="", flush=True){% endcall %}
+  <h3>تصویر ورودی (Vision)</h3>
+  {% call code('json') %}{
+  "model": "gpt-4o",
+  "messages": [{"role": "user", "content": [
+    {"type": "text", "text": "در این تصویر چه می‌بینی؟"},
+    {"type": "image_url", "image_url": {"url": "https://example.com/photo.jpg"}}
+  ]}]
+}{% endcall %}
+  <h3>Function Calling</h3>
+  {% call code('json') %}{
+  "model": "gpt-4o-mini",
+  "messages": [{"role": "user", "content": "هوای تهران چطوره؟"}],
+  "tools": [{"type": "function", "function": {
+    "name": "get_weather",
+    "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
+  }}]
+}{% endcall %}
+</section>
+
+<section class="dsec" id="d-responses">
+  <h2>Responses API</h2>
+  {{ ep('POST','/responses') }}
+  <p>رابط جدید OpenAI برای مدل‌های استدلالی و ابزارها. ورودی می‌تواند متن ساده یا آرایه‌ای از پیام‌ها باشد.</p>
+  {% call code('bash') %}curl {{ B }}/responses \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "gpt-5-mini", "input": "تفاوت هوش مصنوعی و یادگیری ماشین چیست؟"}'{% endcall %}
+  {% call code('python') %}r = client.responses.create(model="gpt-5-mini", input="یک شعر کوتاه درباره پاییز")
+print(r.output_text){% endcall %}
+  <h3>Completions (قدیمی)</h3>
+  {{ ep('POST','/completions') }}
+  <p>برای سازگاری با کدهای قدیمی؛ پارامتر <code>prompt</code> به‌جای <code>messages</code>.</p>
+</section>

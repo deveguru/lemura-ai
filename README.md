@@ -13,11 +13,16 @@
 
 ## ⚡ لمورا چیست؟
 
-**هوش مصنوعی لمورا** یک پلتفرم فارسی هوش مصنوعی است: یک پنل تمام‌صفحه که در آن می‌توانی با ده‌ها مدل
-هوش مصنوعی گفتگو کنی، تصویر بسازی و ویرایش کنی، برای برنامه‌هایت کلید API بگیری و هزینه‌ها را از
+**هوش مصنوعی لمورا** یک پلتفرم فارسی هوش مصنوعی به سبک ChatGPT است: با بهترین مدل‌های دنیا گفتگو کن،
+وسط همان گفتگو بگو «یک تصویر بساز» تا تصویر ساخته شود، برای برنامه‌هایت کلید API بگیری و هزینه‌ها را از
 کیف پول تومانی خودت پرداخت کنی؛ همه با رابط راست‌چین، فونت وزیر و تم تیره بنفش.
 
 <p align="center"><b>👈 همین حالا امتحان کن: <a href="https://lemura.ir">lemura.ir</a></b></p>
+
+> [!TIP]
+> **📘 مستندات کامل وب‌سرویس:** [`docs/index.html`](docs/index.html) (نسخه گرافیکی، ۱۷ بخش) ·
+> [`docs/lemura-gateway-api.txt`](docs/lemura-gateway-api.txt) (نسخه متنی ساده) ·
+> [نسخه آنلاین روی lemura.ir/docs](https://lemura.ir/docs)
 
 > [!NOTE]
 > این مخزن فقط **بخش فرانت‌اند** لمورا است: قالب‌های صفحه (Jinja2)، استایل‌ها، اسکریپت‌های مرورگر و فونت‌ها.
@@ -35,19 +40,22 @@
 
 | | بخش | توضیح |
 |:-:|---|---|
-| 🗨️ | **گفتگوی هوشمند** | پاسخ‌های زنده و جریانی (streaming) از بیش از ۱۵۰ مدل، دسته‌بندی بر اساس سازنده، تاریخچه گفتگو |
-| 🎨 | **استودیو تصویر** | ساخت و ویرایش تصویر با متن فارسی، صف پردازش، تلاش مجدد خودکار و گالری شخصی |
-| 🌐 | **کنسول API** | کلیدهای `lsk-` اختصاصی و مستندات کامل؛ سازگار با کتابخانه رسمی OpenAI |
-| 👛 | **کیف پول** | شارژ آنلاین به تومان، پرداخت به اندازه مصرف و دفتر تراکنش‌های شفاف |
-| 📱 | **ورود و ثبت‌نام** | ورود با کد یک‌بار مصرف پیامکی یا رمز عبور، همه در یک پنجره |
-| 👤 | **پروفایل** | تصویر پروفایل، نام نمایشی و تغییر رمز |
+| 🗨️ | **گفتگوی هوشمند** | رابط به سبک ChatGPT، پاسخ زنده (streaming)، انتخاب مدل بر اساس سازنده، Markdown و کد رنگی، جستجوی وب، اشتراک‌گذاری گفتگو |
+| 🎨 | **تصویر داخل گفتگو** | کافی است بنویسی «یک تصویر بساز از …»؛ تصویر در همان گفتگو ساخته می‌شود |
+| 🖼️ | **استودیو تصویر** | ساخت تصویر با متن فارسی، انتخاب مدل و ابعاد، گالری شخصی |
+| 🧑‍💻 | **توسعه‌دهندگان** | کلیدهای `lsk-`، آمار مصرف، شروع سریع و [مستندات کامل](docs/index.html)؛ سازگار با OpenAI SDK |
+| 👛 | **کیف پول** | شارژ آنلاین به تومان، پرداخت به اندازه مصرف و تاریخچه تراکنش‌ها |
+| 🔐 | **ورود و ثبت‌نام یکپارچه** | یک فرم واحد: موبایل یا ایمیل ← رمز عبور یا کد پیامکی؛ ورود با گوگل |
+| 👤 | **حساب کاربری** | تصویر پروفایل، نام نمایشی و رمز عبور |
 
 </div>
 
 ## 🧑‍💻 Developer API · <span dir="rtl">API برای توسعه‌دهندگان</span>
 
 Lemura exposes an **OpenAI-compatible** gateway. Point the official SDK at Lemura and use your
-`lsk-` key from the **API** tab of the panel — nothing else changes.
+`lsk-` key from [lemura.ir/developers](https://lemura.ir/developers) — nothing else changes.
+
+📘 **Full API reference:** [`docs/index.html`](docs/index.html) · plain text: [`docs/lemura-gateway-api.txt`](docs/lemura-gateway-api.txt) · online: [lemura.ir/docs](https://lemura.ir/docs)
 
 ```python
 from openai import OpenAI
@@ -71,33 +79,40 @@ for chunk in reply:
 | `POST /embeddings` · `/moderations` | Embeddings and moderation |
 | `POST /web-search` · `/web-scrape` · `/research` | Live web search, page reading and research |
 | `POST /videos` | Video generation (create, remix, download) |
-| `GET /models` · `/balance` · `/usage` | Model list, wallet balance, usage history |
+| `GET /models` · `/balance` · `/usage` · `/me` · `/ping` | Models & prices, balance, usage history, key info, health |
 
 <div dir="rtl">
 
-> هزینه هر درخواست به تومان از کیف پول کم می‌شود و در تب **کیف پول** قابل مشاهده است.
+> هزینه هر درخواست به تومان از کیف پول کم می‌شود؛ درخواست‌های ناموفق هزینه‌ای ندارند.
 
 </div>
 
 ## 🗂️ Repository layout · <span dir="rtl">ساختار مخزن</span>
 
 ```text
+docs/
+├── index.html               # standalone API reference (17 sections) — open in any browser
+└── lemura-gateway-api.txt   # the same reference as plain text
 templates/
-├── base.html            # page shell: RTL, theme colour, global toast + Persian number helpers
-├── panel.html           # full-screen user panel: sidebar, tabs, balance, mobile menu
-└── tabs/
-    ├── chat.html        # AI chat (home)
-    ├── imagen.html      # image studio
-    ├── api_console.html # API keys + documentation
-    ├── wallet.html      # wallet, top-up, transactions
-    ├── profile.html     # avatar, display name, password
-    ├── login_modal.html # OTP / password / sign-up dialog
-    └── login_req.html   # "sign in to continue" placeholder
+├── app/
+│   ├── base.html            # app shell: sidebar (new chat, pages, conversations), top bar, account menu
+│   ├── chat.html            # ChatGPT-style chat (home "/"), model picker, in-chat image generation
+│   ├── images.html          # image studio + personal gallery
+│   ├── developers.html      # API keys, usage stats, quick start
+│   ├── docs.html + docs/    # API documentation page (rendered at /docs)
+│   ├── wallet.html          # balance, top-up, transactions
+│   ├── account.html         # profile, password, sign-in methods
+│   ├── auth.html            # unified sign-in / sign-up dialog (+ Google)
+│   ├── login_req.html       # "sign in to continue"
+│   └── icons.html           # inline SVG icon macro
+├── base.html · shared.html  # read-only shared-conversation page
 static/
-├── css/   theme.css · panel.css · chat.css
-├── js/    chat.js (streaming chat) · vision.js (image jobs) · login.js (sign-in dialog)
-├── fonts/ Vazir (Light · Regular · Medium · Bold, woff2)
-└── img/   avatar.svg
+├── css/    theme.css (tokens) · app.css (app layout) · chat.css (shared page)
+├── js/     app.js (shell, sidebar, conversations) · app-chat.js (streaming chat + images)
+│           md.js (safe Markdown rendering) · auth.js (sign-in dialog)
+├── vendor/ marked · highlight.js
+├── fonts/  Vazir (woff2)
+└── img/    avatar.svg
 ```
 
 ## 🎨 Design tokens · <span dir="rtl">رنگ‌ها و فونت</span>
@@ -113,7 +128,7 @@ static/
 ## 🛠️ Tech · <span dir="rtl">فناوری</span>
 
 - **Templates:** Jinja2 (rendered by a Python / Flask backend that is not part of this repository)
-- **Front-end:** dependency-free vanilla JavaScript and CSS, Server-Sent Events for streaming
+- **Front-end:** vanilla JavaScript and CSS (plus marked + highlight.js for Markdown and code), Server-Sent Events for streaming
 - **Layout:** RTL-first, responsive from phones to wide screens, dark theme
 
 <div dir="rtl">
@@ -132,4 +147,4 @@ static/
 
 </div>
 
-<sub>Vazir font © Saber Rastikerdar, released under the SIL Open Font License 1.1.</sub>
+<sub>Vazir font © Saber Rastikerdar, SIL Open Font License 1.1 · marked (MIT) · highlight.js (BSD-3-Clause).</sub>

@@ -1,0 +1,468 @@
+LEMURA AI GATEWAY — API DOCUMENTATION  |  مستندات وب‌سرویس لمورا
+Base URL: https://lemura.ir/wp-json/lemuraai/v1
+OpenAI-compatible  ·  Auth: Authorization: Bearer lsk-...
+Web version: https://lemura.ir/docs
+
+========================================================================
+
+معرفی وب‌سرویس لمورا
+========================================================================
+
+وب‌سرویس لمورا یک درگاه یکپارچه و سازگار با OpenAI است که با یک کلید، به صدها مدل هوش مصنوعی از OpenAI، Anthropic، Google، DeepSeek، xAI، Meta، Qwen و ... دسترسی می‌دهد. هزینه هر درخواست به تومان محاسبه و از کیف پول شما کسر می‌شود.
+
+## ویژگی‌ها
+  - سازگار با کتابخانه‌های رسمی OpenAI (Python، Node.js و ...) — فقط base_url را عوض کنید.
+  - چت با پشتیبانی کامل از Streaming (SSE)، تصویر ورودی (Vision) و Function Calling.
+  - تولید تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو، Embedding و Moderation.
+  - جستجوی وب، استخراج محتوای صفحات و تحقیق خودکار.
+  - پرداخت ریالی از کیف پول، بدون نیاز به کارت ارزی.
+
+## Base URL
+
+    https://lemura.ir/wp-json/lemuraai/v1
+
+آدرس جایگزین (معادل): https://lemura.ir/api/lemuraai/v1
+
+## شروع در سه قدم
+  - کیف پول خود را شارژ کنید.
+  - از صفحه توسعه‌دهندگان یک کلید API (با پیشوند lsk-) بسازید.
+  - اولین درخواست را بفرستید:
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/chat/completions \
+      -H "Authorization: Bearer lsk-YOUR_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "سلام!"}]}'
+
+========================================================================
+
+احراز هویت
+========================================================================
+
+همه درخواست‌ها (به‌جز /ping) باید کلید API را در هدر Authorization ارسال کنند:
+
+    Authorization: Bearer lsk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+⚠️ کلید API را هرگز در کد سمت کاربر (مرورگر یا اپ موبایل منتشرشده) قرار ندهید. درخواست‌ها را از سرور خود ارسال کنید.
+
+## بررسی کلید
+    GET /me
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/me -H "Authorization: Bearer lsk-YOUR_KEY"
+
+    {
+      "object": "me",
+      "user_id": 123,
+      "username": "09123456789",
+      "token": {"id": 7, "name": "my-app", "is_active": true, "created_at": "...", "last_used": "..."}
+    }
+
+## محدودیت نرخ
+هر کلید حداکثر ۳۰ درخواست در دقیقه و ۳,۰۰۰ درخواست در روز. در صورت عبور، کد 429 برگردانده می‌شود.
+
+========================================================================
+
+فهرست Endpointها
+========================================================================
+
+## عمومی و حساب
+    GET /ping
+    GET /me
+    GET /balance
+    GET /usage?days=30
+
+## مدل‌ها
+    GET /models
+    GET /models/{model_id}
+
+## متن
+    POST /chat/completions
+    POST /completions
+    POST /responses
+
+## تصویر، صوت و ویدیو
+    POST /images/generations
+    POST /audio/speech
+    POST /audio/transcriptions
+    POST /audio/translations
+    POST /videos
+    GET /videos
+    GET /videos/{video_id}
+    DELETE /videos/{video_id}
+    POST /videos/{video_id}/remix
+    GET /videos/{video_id}/content
+
+## وب
+    POST /web-search
+    POST /web-scrape
+    POST /research
+
+## بردار و ایمنی
+    POST /embeddings
+    POST /moderations
+
+========================================================================
+
+چت (Chat Completions)
+========================================================================
+
+    POST /chat/completions
+دقیقاً مطابق OpenAI. پارامترهای اصلی:
+  - model (الزامی) — شناسه مدل، مثل gpt-4o، claude-sonnet-4-5، gemini-2.5-flash، deepseek-chat.
+  - messages (الزامی) — آرایه پیام‌ها با نقش‌های system، user، assistant، tool.
+  - stream — با true پاسخ به‌صورت SSE ارسال می‌شود.
+  - temperature، max_tokens، max_completion_tokens، top_p، stop، tools، tool_choice، response_format، seed، reasoning_effort و n.
+
+## درخواست ساده
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/chat/completions \
+      -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+      -d '{
+        "model": "gpt-4o-mini",
+        "messages": [
+          {"role": "system", "content": "تو یک دستیار مفید فارسی‌زبان هستی."},
+          {"role": "user", "content": "سه نکته برای تمرکز بیشتر بگو"}
+        ],
+        "temperature": 0.7
+      }'
+
+## پاسخ
+
+    {
+      "id": "chatcmpl-...",
+      "object": "chat.completion",
+      "model": "gpt-4o-mini",
+      "choices": [{"index": 0, "message": {"role": "assistant", "content": "..."}, "finish_reason": "stop"}],
+      "usage": {"prompt_tokens": 32, "completion_tokens": 120, "total_tokens": 152}
+    }
+
+هزینه بر اساس usage محاسبه و از کیف پول کسر می‌شود. موجودی و هزینه‌ها را با /balance و /usage ببینید. هدرهای X-RateLimit-Limit، X-RateLimit-Remaining و X-RateLimit-Reset وضعیت محدودیت نرخ را نشان می‌دهند.
+
+## Streaming
+
+    stream = client.chat.completions.create(
+        model="gpt-4o-mini", stream=True,
+        messages=[{"role": "user", "content": "یک داستان کوتاه بنویس"}])
+    for chunk in stream:
+        print(chunk.choices[0].delta.content or "", end="", flush=True)
+
+## تصویر ورودی (Vision)
+
+    {
+      "model": "gpt-4o",
+      "messages": [{"role": "user", "content": [
+        {"type": "text", "text": "در این تصویر چه می‌بینی؟"},
+        {"type": "image_url", "image_url": {"url": "https://example.com/photo.jpg"}}
+      ]}]
+    }
+
+## Function Calling
+
+    {
+      "model": "gpt-4o-mini",
+      "messages": [{"role": "user", "content": "هوای تهران چطوره؟"}],
+      "tools": [{"type": "function", "function": {
+        "name": "get_weather",
+        "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
+      }}]
+    }
+
+========================================================================
+
+Responses API
+========================================================================
+
+    POST /responses
+رابط جدید OpenAI برای مدل‌های استدلالی و ابزارها. ورودی می‌تواند متن ساده یا آرایه‌ای از پیام‌ها باشد.
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/responses \
+      -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+      -d '{"model": "gpt-5-mini", "input": "تفاوت هوش مصنوعی و یادگیری ماشین چیست؟"}'
+
+    r = client.responses.create(model="gpt-5-mini", input="یک شعر کوتاه درباره پاییز")
+    print(r.output_text)
+
+## Completions (قدیمی)
+    POST /completions
+برای سازگاری با کدهای قدیمی؛ پارامتر prompt به‌جای messages.
+
+========================================================================
+
+تولید تصویر
+========================================================================
+
+    POST /images/generations
+  - model (الزامی) — مثل gpt-image-1، imagen-4.0-generate-001، flux-1.1-pro. فهرست کامل در /models.
+  - prompt (الزامی، حداکثر ۱۰۰۰ کاراکتر) — توصیف تصویر. برای کیفیت بهتر انگلیسی بنویسید.
+  - size — مثل 1024x1024، 1024x1792، 1792x1024.
+  - n — تعداد تصاویر (هزینه × n).
+  - اختیاری: quality، style، background، output_format، response_format (url یا b64_json).
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/images/generations \
+      -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+      -d '{"model": "gpt-image-1", "prompt": "a cozy reading nook with warm light, watercolor", "size": "1024x1024"}'
+
+    img = client.images.generate(model="gpt-image-1", prompt="a futuristic Tehran skyline at night", size="1792x1024")
+    print(img.data[0].url or "base64 length: %d" % len(img.data[0].b64_json))
+
+هزینه قبل از ارسال برآورد و بررسی می‌شود؛ اگر موجودی کافی نباشد خطای 402 برمی‌گردد.
+
+========================================================================
+
+صوت
+========================================================================
+
+## متن به گفتار (TTS)
+    POST /audio/speech
+پارامترها: model (مثل gpt-4o-mini-tts، tts-1، tts-1-hd)، input (متن)، voice (مثل alloy، nova، shimmer، echo). خروجی فایل صوتی است. هزینه هر درخواست: حدود ۵۰۰ تومان (پیش از سود).
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/audio/speech \
+      -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+      -d '{"model": "gpt-4o-mini-tts", "input": "سلام، به لمورا خوش آمدید", "voice": "nova"}' \
+      --output speech.mp3
+
+## گفتار به متن
+    POST /audio/transcriptions
+ارسال به‌صورت multipart/form-data با فیلدهای file و model (whisper-1، gpt-4o-transcribe، gpt-4o-mini-transcribe). اختیاری: language، prompt، response_format، temperature.
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/audio/transcriptions \
+      -H "Authorization: Bearer lsk-YOUR_KEY" \
+      -F file=@voice.mp3 -F model=whisper-1 -F language=fa
+
+## ترجمه گفتار به انگلیسی
+    POST /audio/translations
+مانند transcriptions، با مدل whisper-1؛ خروجی متن انگلیسی است.
+
+========================================================================
+
+تولید ویدیو
+========================================================================
+
+تولید ویدیو ناهمگام است: ابتدا کار را بسازید، سپس وضعیت را بررسی و در پایان فایل را دریافت کنید.
+    POST /videos
+پارامترها: model (sora-2، sora-2-pro، veo-3.1-generate-001، veo-3.1-fast-generate-001، ...)، prompt، seconds (یا duration) و size. هزینه = قیمت هر ثانیه × مدت.
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/videos \
+      -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+      -d '{"model": "sora-2", "prompt": "a paper boat drifting on a rainy street, cinematic", "seconds": 8}'
+
+    GET /videos/{video_id}
+وضعیت کار (queued، in_progress، completed، failed).
+    GET /videos/{video_id}/content
+دریافت فایل ویدیو پس از تکمیل.
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/videos/VIDEO_ID/content -H "Authorization: Bearer lsk-YOUR_KEY" --output video.mp4
+
+    POST /videos/{video_id}/remix
+    GET /videos
+    DELETE /videos/{video_id}
+
+========================================================================
+
+جستجو و تحقیق وب
+========================================================================
+
+## جستجوی وب با پاسخ هوشمند
+    POST /web-search
+ارسال query (یا messages) و مدل جستجو (پیش‌فرض gpt-4o-search-preview). پارامتر search_context_size: low، medium یا high (هزینه بیشتر، منابع بیشتر).
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/web-search \
+      -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+      -d '{"query": "آخرین اخبار هوش مصنوعی این هفته", "search_context_size": "medium"}'
+
+## استخراج محتوای صفحه
+    POST /web-scrape
+url یا آرایه urls؛ اختیاری max_chars_per_url (۵۰۰ تا ۵۰٬۰۰۰). خروجی متن تمیزشده هر صفحه است.
+
+    {"urls": ["https://example.com/article"], "max_chars_per_url": 8000}
+
+## تحقیق خودکار
+    POST /research
+query (یا topic)؛ اختیاری model و max_results. گزارشی جمع‌بندی‌شده با منابع برمی‌گرداند.
+
+========================================================================
+
+Embedding و Moderation
+========================================================================
+
+    POST /embeddings
+تبدیل متن به بردار برای جستجوی معنایی و RAG. مدل‌ها: text-embedding-3-small، text-embedding-3-large، text-embedding-ada-002. هزینه: حدود ۲۰ تومان به ازای هر ۱۰۰۰ توکن.
+
+    e = client.embeddings.create(model="text-embedding-3-small", input=["سلام دنیا", "hello world"])
+    print(len(e.data[0].embedding))
+
+    POST /moderations
+بررسی محتوای نامناسب. مدل پیش‌فرض omni-moderation-latest؛ فیلد input الزامی است.
+
+    {"model": "omni-moderation-latest", "input": "متنی برای بررسی"}
+
+========================================================================
+
+موجودی
+========================================================================
+
+    GET /balance
+
+    curl https://lemura.ir/wp-json/lemuraai/v1/balance -H "Authorization: Bearer lsk-YOUR_KEY"
+
+    {
+      "object": "balance",
+      "user_id": 123,
+      "balance": 152000,
+      "currency": "toman",
+      "token_info": {"id": 7, "name": "my-app", "total_requests": 420, "total_tokens_used": 381200, "total_cost": 21500},
+      "rate_limits": {"per_minute": 30, "per_day": 3000},
+      "stats": {"total_spent": 48000, "total_requests": 1300, "total_tokens_used": 920000,
+                "today": {"spent": 1200, "requests": 18}, "this_month": {"spent": 22000, "requests": 610}}
+    }
+
+برای افزایش موجودی به کیف پول بروید. موجودی بین چت سایت، تولید تصویر و API مشترک است.
+
+========================================================================
+
+مدل‌ها
+========================================================================
+
+    GET /models
+فهرست همه مدل‌های فعال همراه با نوع و قیمت تومانی:
+
+    {
+      "object": "list",
+      "data": [
+        {"id": "gpt-4o-mini", "object": "model", "type": "chat", "owned_by": "openai",
+         "input_toman_per_1m": 46800, "output_toman_per_1m": 187200, "cached_toman_per_1m": 23400},
+        {"id": "gpt-image-1", "object": "model", "type": "image", "price": 12000},
+        {"id": "sora-2", "object": "model", "type": "video", "price_per_second": 26000, "max_seconds": 12}
+      ]
+    }
+
+انواع: chat، image، web_search، audio_tts، audio_transcription، audio_translation، video، embedding، moderation.
+اعداد بالا نمونه هستند؛ قیمت‌های واقعی و به‌روز را همیشه از خود /models بخوانید.
+    GET /models/{model_id}
+جزئیات یک مدل؛ اگر وجود نداشته باشد کد 404 با نوع model_not_found.
+
+========================================================================
+
+کلیدها و قیمت‌گذاری
+========================================================================
+
+## مدیریت کلید
+  - کلیدها از صفحه توسعه‌دهندگان ساخته، غیرفعال یا حذف می‌شوند.
+  - برای هر برنامه یک کلید جدا بسازید تا مصرف را جدا ببینید و در صورت لو رفتن فقط همان را حذف کنید.
+  - حداکثر تعداد کلید برای هر کاربر: ۱۰.
+
+## نحوه محاسبه هزینه
+  - مدل‌های متنی: بر اساس توکن ورودی، خروجی و ورودی کش‌شده، با قیمت تومانی هر مدل (در /models).
+  - تصویر: قیمت ثابت به ازای هر تصویر.
+  - ویدیو: قیمت هر ثانیه × مدت ویدیو.
+  - صوت: قیمت ثابت به ازای هر درخواست.
+  - جستجوی وب: بر اساس search_context_size.
+قیمت‌ها بر اساس نرخ روز دلار محاسبه می‌شوند و ممکن است تغییر کنند. درخواست‌های ناموفق هزینه‌ای ندارند.
+
+========================================================================
+
+گزارش مصرف
+========================================================================
+
+    GET /usage?days=30
+مصرف روزانه (حداکثر ۹۰ روز) برای کاربرِ صاحب کلید:
+
+    {
+      "object": "usage", "user_id": 123, "days": 30,
+      "data": [{"day": "2026-10-20", "requests": 42, "tokens": 51200, "cost": 2900}]
+    }
+
+## وضعیت سرویس
+    GET /ping
+بدون نیاز به کلید؛ برای مانیتورینگ.
+
+========================================================================
+
+نمونه کدها
+========================================================================
+
+## Python (کتابخانه openai)
+
+    # pip install openai
+    from openai import OpenAI
+
+    client = OpenAI(api_key="lsk-YOUR_KEY", base_url="https://lemura.ir/wp-json/lemuraai/v1")
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": "یک تابع مرتب‌سازی سریع بنویس"}],
+    )
+    print(resp.choices[0].message.content)
+
+## Node.js
+
+    // npm i openai
+    import OpenAI from "openai";
+
+    const client = new OpenAI({ apiKey: process.env.LEMURA_KEY, baseURL: "https://lemura.ir/wp-json/lemuraai/v1" });
+    const stream = await client.chat.completions.create({
+      model: "gpt-4o-mini", stream: true,
+      messages: [{ role: "user", content: "سلام!" }],
+    });
+    for await (const part of stream) process.stdout.write(part.choices[0]?.delta?.content || "");
+
+## PHP
+
+    $ch = curl_init("https://lemura.ir/wp-json/lemuraai/v1/chat/completions");
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true,
+      CURLOPT_HTTPHEADER => ["Authorization: Bearer lsk-YOUR_KEY", "Content-Type: application/json"],
+      CURLOPT_POSTFIELDS => json_encode(["model" => "gpt-4o-mini",
+        "messages" => [["role" => "user", "content" => "سلام"]]]),
+    ]);
+    $res = json_decode(curl_exec($ch), true);
+    echo $res["choices"][0]["message"]["content"];
+
+## LangChain
+
+    from langchain_openai import ChatOpenAI
+    llm = ChatOpenAI(model="gpt-4o-mini", api_key="lsk-YOUR_KEY", base_url="https://lemura.ir/wp-json/lemuraai/v1")
+    print(llm.invoke("سلام").content)
+
+========================================================================
+
+خطاها و رفع اشکال
+========================================================================
+
+خطاها در قالب استاندارد OpenAI برمی‌گردند:
+
+    {"error": {"message": "Insufficient balance. Available: 120 toman", "type": "insufficient_balance", "code": 402}}
+
+  کد | نوع | علت و راه‌حل
+  400 | invalid_request_error | بدنه نامعتبر یا فیلد الزامی (مثل model، messages) ارسال نشده.
+  401 | authentication_error | کلید ارسال نشده، اشتباه است یا غیرفعال شده. هدر Authorization: Bearer lsk-... را بررسی کنید.
+  402 | insufficient_balance | موجودی کافی نیست؛ کیف پول را شارژ کنید.
+  404 | model_not_found | شناسه مدل اشتباه یا غیرفعال است؛ از /models استفاده کنید.
+  429 | rate_limit_error | عبور از محدودیت نرخ؛ به مقدار هدر Retry-After صبر کنید.
+  5xx | server_error / upstream | خطای موقت ارائه‌دهنده مدل؛ با تأخیر دوباره تلاش کنید. هزینه‌ای کسر نمی‌شود.
+
+## نکات
+  - اگر کتابخانه OpenAI خطای اتصال می‌دهد، مطمئن شوید base_url دقیقاً https://lemura.ir/wp-json/lemuraai/v1 است (بدون /chat/completions).
+  - برای درخواست‌های طولانی (تصویر و ویدیو) timeout کلاینت را حداقل ۱۸۰ ثانیه بگذارید.
+  - در صورت تکرار خطای 5xx، مدل جایگزین را امتحان کنید.
+
+========================================================================
+
+سوالات متداول
+========================================================================
+
+## آیا با کدهای فعلی OpenAI سازگار است؟
+بله. فقط api_key را با کلید لمورا و base_url را با آدرس لمورا جایگزین کنید.
+
+## هزینه درخواست‌های ناموفق کسر می‌شود؟
+خیر. فقط درخواست‌های موفق هزینه دارند.
+
+## موجودی API و چت سایت جداست؟
+خیر، یک کیف پول مشترک برای همه سرویس‌هاست.
+
+## چطور بفهمم هر درخواست چقدر هزینه داشته؟
+از /usage و /balance یا تاریخچه کیف پول استفاده کنید.
+
+## کلیدم لو رفته، چه کنم؟
+فوراً از صفحه توسعه‌دهندگان آن را حذف و کلید جدید بسازید.
+
+## پشتیبانی
+برای سوالات فنی از چت سایت یا راه‌های ارتباطی لمورا با ما در تماس باشید.

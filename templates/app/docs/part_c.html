@@ -1,0 +1,145 @@
+{% from "app/docs/m.html" import code, ep %}
+<section class="dsec" id="d-bal">
+  <h2>موجودی</h2>
+  {{ ep('GET','/balance') }}
+  {% call code('bash') %}curl {{ B }}/balance -H "Authorization: Bearer lsk-YOUR_KEY"{% endcall %}
+  {% call code('json') %}{
+  "object": "balance",
+  "user_id": 123,
+  "balance": 152000,
+  "currency": "toman",
+  "token_info": {"id": 7, "name": "my-app", "total_requests": 420, "total_tokens_used": 381200, "total_cost": 21500},
+  "rate_limits": {"per_minute": {{ pr.rate_limit_per_minute|int }}, "per_day": {{ pr.rate_limit_per_day|int }}},
+  "stats": {"total_spent": 48000, "total_requests": 1300, "total_tokens_used": 920000,
+            "today": {"spent": 1200, "requests": 18}, "this_month": {"spent": 22000, "requests": 610}}
+}{% endcall %}
+  <p>برای افزایش موجودی به <a href="/wallet">کیف پول</a> بروید. موجودی بین چت سایت، تولید تصویر و API مشترک است.</p>
+</section>
+
+<section class="dsec" id="d-models">
+  <h2>مدل‌ها</h2>
+  {{ ep('GET','/models') }}
+  <p>فهرست همه مدل‌های فعال همراه با نوع و قیمت تومانی:</p>
+  {% call code('json') %}{
+  "object": "list",
+  "data": [
+    {"id": "gpt-4o-mini", "object": "model", "type": "chat", "owned_by": "openai",
+     "input_toman_per_1m": 46800, "output_toman_per_1m": 187200, "cached_toman_per_1m": 23400},
+    {"id": "gpt-image-1", "object": "model", "type": "image", "price": 12000},
+    {"id": "sora-2", "object": "model", "type": "video", "price_per_second": 26000, "max_seconds": 12}
+  ]
+}{% endcall %}
+  <p>انواع: <code>chat</code>، <code>image</code>، <code>web_search</code>، <code>audio_tts</code>، <code>audio_transcription</code>، <code>audio_translation</code>، <code>video</code>، <code>embedding</code>، <code>moderation</code>.</p>
+  <div class="note">اعداد بالا نمونه هستند؛ قیمت‌های واقعی و به‌روز را همیشه از خود <code>/models</code> بخوانید.</div>
+  {{ ep('GET','/models/{model_id}') }}
+  <p>جزئیات یک مدل؛ اگر وجود نداشته باشد کد <code>404</code> با نوع <code>model_not_found</code>.</p>
+</section>
+
+<section class="dsec" id="d-tokens">
+  <h2>کلیدها و قیمت‌گذاری</h2>
+  <h3>مدیریت کلید</h3>
+  <ul>
+    <li>کلیدها از صفحه <a href="/developers">توسعه‌دهندگان</a> ساخته، غیرفعال یا حذف می‌شوند.</li>
+    <li>برای هر برنامه یک کلید جدا بسازید تا مصرف را جدا ببینید و در صورت لو رفتن فقط همان را حذف کنید.</li>
+    <li>حداکثر تعداد کلید برای هر کاربر: <b>{{ pr.max_tokens_per_user|int|fa }}</b>.</li>
+  </ul>
+  <h3>نحوه محاسبه هزینه</h3>
+  <ul>
+    <li><b>مدل‌های متنی:</b> بر اساس توکن ورودی، خروجی و ورودی کش‌شده، با قیمت تومانی هر مدل (در <code>/models</code>).</li>
+    <li><b>تصویر:</b> قیمت ثابت به ازای هر تصویر.</li>
+    <li><b>ویدیو:</b> قیمت هر ثانیه × مدت ویدیو.</li>
+    <li><b>صوت:</b> قیمت ثابت به ازای هر درخواست.</li>
+    <li><b>جستجوی وب:</b> بر اساس <code>search_context_size</code>.</li>
+  </ul>
+  <p>قیمت‌ها بر اساس نرخ روز دلار محاسبه می‌شوند و ممکن است تغییر کنند. درخواست‌های ناموفق هزینه‌ای ندارند.</p>
+</section>
+
+<section class="dsec" id="d-usage">
+  <h2>گزارش مصرف</h2>
+  {{ ep('GET','/usage?days=30') }}
+  <p>مصرف روزانه (حداکثر ۹۰ روز) برای کاربرِ صاحب کلید:</p>
+  {% call code('json') %}{
+  "object": "usage", "user_id": 123, "days": 30,
+  "data": [{"day": "2026-10-20", "requests": 42, "tokens": 51200, "cost": 2900}]
+}{% endcall %}
+  <h3>وضعیت سرویس</h3>
+  {{ ep('GET','/ping') }}
+  <p>بدون نیاز به کلید؛ برای مانیتورینگ.</p>
+</section>
+
+<section class="dsec" id="d-examples">
+  <h2>نمونه کدها</h2>
+  <h3>Python (کتابخانه openai)</h3>
+  {% call code('python') %}# pip install openai
+from openai import OpenAI
+
+client = OpenAI(api_key="lsk-YOUR_KEY", base_url="{{ B }}")
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "یک تابع مرتب‌سازی سریع بنویس"}],
+)
+print(resp.choices[0].message.content){% endcall %}
+  <h3>Node.js</h3>
+  {% call code('javascript') %}// npm i openai
+import OpenAI from "openai";
+
+const client = new OpenAI({ apiKey: process.env.LEMURA_KEY, baseURL: "{{ B }}" });
+const stream = await client.chat.completions.create({
+  model: "gpt-4o-mini", stream: true,
+  messages: [{ role: "user", content: "سلام!" }],
+});
+for await (const part of stream) process.stdout.write(part.choices[0]?.delta?.content || "");{% endcall %}
+  <h3>PHP</h3>
+  {% call code('php') %}$ch = curl_init("{{ B }}/chat/completions");
+curl_setopt_array($ch, [
+  CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true,
+  CURLOPT_HTTPHEADER => ["Authorization: Bearer lsk-YOUR_KEY", "Content-Type: application/json"],
+  CURLOPT_POSTFIELDS => json_encode(["model" => "gpt-4o-mini",
+    "messages" => [["role" => "user", "content" => "سلام"]]]),
+]);
+$res = json_decode(curl_exec($ch), true);
+echo $res["choices"][0]["message"]["content"];{% endcall %}
+  <h3>LangChain</h3>
+  {% call code('python') %}from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(model="gpt-4o-mini", api_key="lsk-YOUR_KEY", base_url="{{ B }}")
+print(llm.invoke("سلام").content){% endcall %}
+</section>
+
+<section class="dsec" id="d-troubleshooting">
+  <h2>خطاها و رفع اشکال</h2>
+  <p>خطاها در قالب استاندارد OpenAI برمی‌گردند:</p>
+  {% call code('json') %}{"error": {"message": "Insufficient balance. Available: 120 toman", "type": "insufficient_balance", "code": 402}}{% endcall %}
+  <div class="tw"><table class="tbl">
+    <thead><tr><th>کد</th><th>نوع</th><th>علت و راه‌حل</th></tr></thead>
+    <tbody>
+      <tr><td>400</td><td class="ltr">invalid_request_error</td><td>بدنه نامعتبر یا فیلد الزامی (مثل <code>model</code>، <code>messages</code>) ارسال نشده.</td></tr>
+      <tr><td>401</td><td class="ltr">authentication_error</td><td>کلید ارسال نشده، اشتباه است یا غیرفعال شده. هدر <code>Authorization: Bearer lsk-...</code> را بررسی کنید.</td></tr>
+      <tr><td>402</td><td class="ltr">insufficient_balance</td><td>موجودی کافی نیست؛ <a href="/wallet">کیف پول را شارژ کنید</a>.</td></tr>
+      <tr><td>404</td><td class="ltr">model_not_found</td><td>شناسه مدل اشتباه یا غیرفعال است؛ از <code>/models</code> استفاده کنید.</td></tr>
+      <tr><td>429</td><td class="ltr">rate_limit_error</td><td>عبور از محدودیت نرخ؛ به مقدار هدر <code>Retry-After</code> صبر کنید.</td></tr>
+      <tr><td>5xx</td><td class="ltr">server_error / upstream</td><td>خطای موقت ارائه‌دهنده مدل؛ با تأخیر دوباره تلاش کنید. هزینه‌ای کسر نمی‌شود.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>نکات</h3>
+  <ul>
+    <li>اگر کتابخانه OpenAI خطای اتصال می‌دهد، مطمئن شوید <code>base_url</code> دقیقاً <code class="ltr">{{ B }}</code> است (بدون <code>/chat/completions</code>).</li>
+    <li>برای درخواست‌های طولانی (تصویر و ویدیو) timeout کلاینت را حداقل ۱۸۰ ثانیه بگذارید.</li>
+    <li>در صورت تکرار خطای 5xx، مدل جایگزین را امتحان کنید.</li>
+  </ul>
+</section>
+
+<section class="dsec" id="d-faq">
+  <h2>سوالات متداول</h2>
+  <h3>آیا با کدهای فعلی OpenAI سازگار است؟</h3>
+  <p>بله. فقط <code>api_key</code> را با کلید لمورا و <code>base_url</code> را با آدرس لمورا جایگزین کنید.</p>
+  <h3>هزینه درخواست‌های ناموفق کسر می‌شود؟</h3>
+  <p>خیر. فقط درخواست‌های موفق هزینه دارند.</p>
+  <h3>موجودی API و چت سایت جداست؟</h3>
+  <p>خیر، یک کیف پول مشترک برای همه سرویس‌هاست.</p>
+  <h3>چطور بفهمم هر درخواست چقدر هزینه داشته؟</h3>
+  <p>از <a href="#usage">/usage</a> و <a href="#bal">/balance</a> یا تاریخچه <a href="/wallet">کیف پول</a> استفاده کنید.</p>
+  <h3>کلیدم لو رفته، چه کنم؟</h3>
+  <p>فوراً از صفحه <a href="/developers">توسعه‌دهندگان</a> آن را حذف و کلید جدید بسازید.</p>
+  <h3>پشتیبانی</h3>
+  <p>برای سوالات فنی از چت سایت یا راه‌های ارتباطی لمورا با ما در تماس باشید.</p>
+</section>

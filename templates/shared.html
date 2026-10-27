@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}گفتگوی اشتراک‌گذاشته شده — لمورا{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/chat.css"><meta name="robots" content="noindex">{% endblock %}
+{% block body %}
+<div style="max-width:880px;margin:24px auto;padding:0 16px">
+  <div class="card" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <div><h2 style="margin:0;font-size:1.1rem">گفتگوی اشتراک‌گذاشته شده</h2><div style="font-size:.78rem;color:var(--t3)">نسخه فقط‌خواندنی</div></div>
+    <a class="btn btn-sm" href="/panel">⚡ لمورا</a>
+  </div>
+  {% if messages is none %}
+    <div class="card" style="color:var(--red);text-align:center">این لینک اشتراک‌گذاری یافت نشد یا منقضی شده است.</div>
+  {% elif not messages %}
+    <div class="card" style="color:var(--warn);text-align:center">گفتگو خالی است.</div>
+  {% else %}
+  <div class="lac-msgs" style="overflow:visible">
+    {% for m in messages %}
+    <div class="lac-msg {{ m.role }}">
+      {% if m.role == 'assistant' %}<div class="lac-av">AI</div>{% endif %}
+      <div><div style="font-size:.7rem;color:var(--t3);margin-bottom:4px">{{ 'شما' if m.role == 'user' else (m.model or 'AI') }}</div>
+      <div class="lac-bubble" data-md="{{ 1 if m.role == 'assistant' else 0 }}">{{ m.content }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('.lac-bubble[data-md="1"]').forEach(function(el){
+  var s=el.textContent,blocks=[];
+  s=s.replace(/```[\w-]*\n?([\s\S]*?)```/g,function(m,c){blocks.push(c);return '\u0000'+(blocks.length-1)+'\u0000';});
+  var d=document.createElement('div');d.textContent=s;s=d.innerHTML;
+  s=s.replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\u0000(\d+)\u0000/g,function(m,i){var e=document.createElement('div');e.textContent=blocks[+i];return '<pre><code>'+e.innerHTML+'</code></pre>';});
+  el.innerHTML=s;
+});
+</script>
+{% endblock %}

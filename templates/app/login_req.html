@@ -1,0 +1,10 @@
+{% extends "app/base.html" %}
+{% block main %}
+<div class="page"><div class="page-in" style="text-align:center;padding-top:14vh">
+  <div class="auth-logo">🔒</div>
+  <h1>برای ادامه وارد شوید</h1>
+  <p class="sub">با شماره موبایل{% if google_login %} یا حساب گوگل{% endif %} در چند ثانیه وارد شوید یا حساب بسازید.</p>
+  <button class="btn" onclick="Auth.open()">ورود / ثبت‌نام</button>
+</div></div>
+{% endblock %}
+{% block scripts %}<script>Auth.open();</script>{% endblock %}

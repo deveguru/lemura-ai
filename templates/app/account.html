@@ -1,0 +1,41 @@
+{% extends "app/base.html" %}
+{% block pagetitle %}حساب کاربری{% endblock %}
+{% block main %}
+{% set M = {'updated':('ok','اطلاعات ذخیره شد'),'pass_changed':('ok','رمز عبور تغییر کرد'),'pass_mismatch':('err','رمز عبور و تکرار آن یکسان نیست'),
+  'pass_short':('err','رمز عبور حداقل ۶ کاراکتر'),'pass_empty':('err','رمز عبور را وارد کنید')} %}
+<div class="page"><div class="page-in" style="max-width:760px">
+  <h1>👤 حساب کاربری</h1>
+  <p class="sub">شناسه کاربری: <b class="ltr">#{{ user.id }}</b>{% if user.mobile %} · موبایل: <b class="ltr">{{ user.mobile }}</b>{% endif %}</p>
+  {% if msg in M %}<div class="amsg {{ M[msg][0] }}" style="display:block">{{ M[msg][1] }}</div>{% endif %}
+  <div class="panel" style="margin-bottom:16px">
+    <h3>اطلاعات پروفایل</h3>
+    <form method="post" action="/panel/profile" enctype="multipart/form-data">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        {% if user.avatar %}<img class="av" src="{{ user.avatar }}" style="width:64px;height:64px" alt="">{% else %}<span class="av" style="width:64px;height:64px;font-size:1.6rem">{{ (user.display_name or '?')[:1] }}</span>{% endif %}
+        <div class="fg" style="flex:1;margin:0"><label>تصویر پروفایل</label><input class="input" type="file" name="profile_avatar" accept="image/*"></div>
+      </div>
+      <div class="fg"><label>نام نمایشی</label><input class="input" name="display_name" value="{{ user.display_name }}"></div>
+      <div class="fg"><label>ایمیل</label><input class="input ltr" type="email" name="user_email" value="{{ user.email }}"></div>
+      <button class="btn">ذخیره تغییرات</button>
+    </form>
+  </div>
+  <div class="panel" style="margin-bottom:16px">
+    <h3>{{ 'تغییر رمز عبور' if user.has_password else 'تعیین رمز عبور' }}</h3>
+    <p style="font-size:.8rem;color:var(--t3);margin:-6px 0 12px">با رمز عبور می‌توانید بدون کد پیامکی وارد شوید.</p>
+    <form method="post" action="/panel/password">
+      <div class="fg"><label>رمز عبور جدید</label><input class="input ltr" type="password" name="new_password" minlength="6" required autocomplete="new-password"></div>
+      <div class="fg"><label>تکرار رمز عبور</label><input class="input ltr" type="password" name="confirm_password" minlength="6" required autocomplete="new-password"></div>
+      <button class="btn">ذخیره رمز عبور</button>
+    </form>
+  </div>
+  <div class="panel">
+    <h3>روش‌های ورود</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem">
+      <div>📱 پیامک: {% if user.mobile %}<span class="badge badge-green">فعال</span>{% else %}<span class="badge">ثبت نشده</span>{% endif %}</div>
+      <div>🔑 رمز عبور: {% if user.has_password %}<span class="badge badge-green">فعال</span>{% else %}<span class="badge">تعیین نشده</span>{% endif %}</div>
+      <div>🟢 گوگل: {% if user.google_sub %}<span class="badge badge-green">متصل</span>{% else %}<span class="badge">متصل نیست</span>{% endif %}</div>
+    </div>
+    <a class="btn btn-danger" href="/auth/logout" style="margin-top:16px">خروج از حساب</a>
+  </div>
+</div></div>
+{% endblock %}

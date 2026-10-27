@@ -1,0 +1,6 @@
+{% macro code(lang='bash') -%}
+<pre><button class="cp" type="button" data-copy>کپی</button><span class="lang">{{ lang }}</span><code class="language-{{ lang }}">{{ caller() }}</code></pre>
+{%- endmacro %}
+{% macro ep(method, path) -%}
+<div class="ep"><span>{{ path }}</span><span class="m {{ {'GET':'get','POST':'post','DELETE':'del'}[method] }}">{{ method }}</span></div>
+{%- endmacro %}

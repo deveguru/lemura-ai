@@ -10,9 +10,8 @@
   <div class="panel" style="margin-bottom:18px">
     <textarea class="input" id="pr" rows="3" placeholder="{{ _('مثلاً: یک شهر آینده‌نگر در شب با نورهای نئونی بنفش، سبک سینمایی، جزئیات بالا') }}" style="resize:vertical"></textarea>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
-      <select class="input" id="mdl" style="width:auto;min-width:200px">
-        {% for m in models %}<option value="{{ m.id }}" data-price="{{ m.price }}" {{ 'selected' if m.id==default_model }}>{{ m.name }} — {{ m.price|fa }} {{ _('تومان') }}</option>{% endfor %}
-      </select>
+      <div class="persona-chip">{% if persona.icon %}<img src="{{ persona.icon }}" alt="">{% else %}🎨{% endif %}
+        <b>{{ persona.name if lang=='fa' else persona.name_en }}</b>{% if persona.price %}<span>{{ persona.price|fa }} {{ _('تومان') }}</span>{% endif %}</div>
       <div class="seg" id="sz">
         {% for s in sizes %}<button type="button" data-s="{{ s }}" class="{{ 'on' if loop.first }}">{{ _({'1024x1024':'مربع ۱:۱','1024x1792':'عمودی ۹:۱۶','1792x1024':'افقی ۱۶:۹'}.get(s, s)) }}</button>{% endfor %}
       </div>
@@ -41,7 +40,7 @@
   if(go)go.onclick=function(){var p=$('pr').value.trim();if(!p){App.toast('توضیح تصویر را بنویسید',true);return;}
     go.disabled=true;go.textContent='در حال ساخت...';
     $('out').innerHTML='<div class="imgph" style="margin:0 auto">🎨 در حال ساخت تصویر...</div>';
-    App.post('/chat/image',{prompt:p,model:$('mdl').value,size:size},true).then(function(r){
+    App.post('/chat/image',{prompt:p,size:size},true).then(function(r){
       go.disabled=false;go.textContent='✨ ساخت تصویر';
       if(!r.ok){$('out').innerHTML='<div class="errbox">'+App.esc(r.error||'خطا')+(r.need_charge?'<br><a class="btn btn-sm" href="/wallet">شارژ کیف پول</a>':'')+'</div>';return;}
       $('out').innerHTML='<div style="text-align:center"><span class="genimg"><img src="'+App.esc(r.url)+'" onclick="App.lightbox(this.src)" style="max-height:70vh">'+

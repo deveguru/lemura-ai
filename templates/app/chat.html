@@ -38,7 +38,6 @@
         accept="image/*,.pdf,.docx,.xlsx,.pptx,.txt,.md,.csv,.json,.xml,.yaml,.yml,.html,.css,.js,.ts,.py,.php,.java,.go,.rs,.c,.cpp,.cs,.rb,.sh,.sql,.log">
       <button class="ibtn" type="button" title="{{ _('پیوست فایل یا تصویر') }}" onclick="document.getElementById('fileIn').click()">{{ ic('clip') }}</button>
       <button class="chip" id="webChip" style="display:none" onclick="Chat.toggleWeb()">{{ ic('globe') }} <span>{{ _('جستجوی وب') }}</span></button>
-      <button class="chip" id="imgChip" onclick="Chat.toggleImage()">{{ ic('image') }} <span>{{ _('ساخت تصویر') }}</span></button>
       <span class="quota" id="quota"></span>
       <button class="ibtn voicebtn" type="button" title="{{ _('گفتگوی صوتی زنده') }}" onclick="Voice.open()">{{ ic('mic') }}</button>
       <button class="send" id="send" disabled onclick="Chat.send()" aria-label="{{ _('ارسال') }}">{{ ic('send') }}</button>

@@ -29,7 +29,7 @@
       S.groups.forEach(function (g) { g.models.forEach(function (m) { S.models[m.id] = m; }); });
       S.state = d.state || {}; S.imageModels = d.image_models || []; S.imageModel = d.image_default || '';
       S.web = !!d.web_search; $('webChip').style.display = S.web ? '' : 'none';
-      $('imgChip').style.display = S.imageModels.length ? '' : 'none';
+      S.persona = d.image_persona || {};
       var saved = ''; try { saved = localStorage.getItem('lm_model') || ''; } catch (e) {}
       selectModel(S.models[saved] && !isLocked(saved) ? saved : (d.default_model && S.models[d.default_model] ? d.default_model : Object.keys(S.models)[0]), true);
       quota();
@@ -89,8 +89,16 @@
     d.innerHTML = '<div class="bubble">' + (atts.length ? '<div class="uatts">' + attHtml(atts) + '</div>' : '') + '<div class="utext"></div></div>';
     d.querySelector('.utext').textContent = stripTags(text); msgs.appendChild(d); scroll(true); return d;
   }
+  function avatarFor(modelId) {
+    if (modelId === '__image__') return (S.persona && S.persona.icon) || '';
+    return (S.models[modelId] || {}).icon || '';
+  }
+  function setAvatar(el, icon) {
+    var a = el.querySelector('.aiav'); if (!a) return;
+    a.innerHTML = icon ? '<img src="' + esc(icon) + '" alt="">' : '⚡';
+  }
   function addAI(modelId) {
-    var m = S.models[modelId] || {};
+    var m = { icon: avatarFor(modelId) };
     var d = document.createElement('div'); d.className = 'msg ai';
     d.innerHTML = '<div class="aiav">' + (m.icon ? '<img src="' + esc(m.icon) + '" alt="">' : '⚡') + '</div>' +
       '<div class="bubble"><div class="srcs" style="display:none"></div><div class="md"><span class="dots"><span></span><span></span><span></span></span></div><div class="macts" style="display:none"></div></div>';
@@ -160,7 +168,6 @@
     if (!text && !atts.length) return;
     if (!opts.regen) { inp.value = ''; grow(); S.att = []; renderAtt(); }
     hero(false); ensureConv(text || atts[0].name);
-    if ((S.imgMode || opts.image) && !atts.length) return image(text, opts);
     if (!opts.regen) addUser(text, atts);
     S.voiceTurn = !!opts.voice;
     var el = addAI(S.model), md = el.querySelector('.md');
@@ -175,7 +182,6 @@
     }).then(function (res) {
       var ct = res.headers.get('Content-Type') || '';
       if (ct.indexOf('application/json') >= 0) return res.json().then(function (j) {
-        if (j.intent === 'image') { el.remove(); S.history.pop(); setBusy(false); return image(text, { fromChat: true }); }
         S.history.pop(); errBox(el, j.error || T('خطا'), j.code); setBusy(false);
         if (window.Chat && Chat.onReply) Chat.onReply('', j.error || 'error');
       });
@@ -193,6 +199,27 @@
             else if (j.lemura) {
               var L = j.lemura;
               if (L.type === 'sources') setSources(el, L.sources);
+              else if (L.type === 'image_start') {
+                var pn = L.persona || {}; setAvatar(el, pn.icon); spin(el, true);
+                var ph = document.createElement('div'); ph.className = 'imgph'; ph.style.marginTop = full ? '10px' : '0';
+                ph.textContent = '🎨 ' + T('در حال ساخت تصویر...');
+                if (!full) md.innerHTML = '';
+                el.querySelector('.bubble').insertBefore(ph, el.querySelector('.macts')); scroll(true);
+              }
+              else if (L.type === 'image') {
+                var p1 = el.querySelector('.imgph'); if (p1) p1.remove();
+                full = (full ? full + '\n\n' : '') + L.markdown; md.innerHTML = MD.render(full);
+                if (L.balance != null) App.setBalance(L.balance); scroll(true);
+              }
+              else if (L.type === 'image_error') {
+                var p2 = el.querySelector('.imgph'); if (p2) p2.remove();
+                var box = document.createElement('div'); box.className = 'errbox'; box.style.marginTop = '8px';
+                box.textContent = L.message || T('ساخت تصویر ناموفق بود');
+                if (L.code === 'login_required') { box.insertAdjacentHTML('beforeend', '<br><button class="btn btn-sm" onclick="Auth.open()">' + T('ورود / ثبت‌نام') + '</button>'); }
+                if (L.code === 'need_charge') { box.insertAdjacentHTML('beforeend', '<br><a class="btn btn-sm" href="/wallet">' + T('شارژ کیف پول') + '</a>'); }
+                if (!full) md.innerHTML = '';
+                el.querySelector('.bubble').insertBefore(box, el.querySelector('.macts'));
+              }
               else if (L.type === 'error') { full = full || ''; errBox(el, L.message || T('خطا در دریافت پاسخ')); }
               else if (L.type === 'done') {
                 if (L.state) { S.state = L.state; quota(); }
@@ -303,10 +330,7 @@
     model: function () { return S.models[S.model] || {}; },
     pickModel: function (e) { renderModelList(''); $('mq').value = ''; App.menu(e, 'mlist'); setTimeout(function () { $('mq').focus(); }, 30); },
     toggleWeb: function () { S.webOn = !S.webOn; $('webChip').classList.toggle('on', S.webOn); },
-    toggleImage: function () {
-      S.imgMode = !S.imgMode; $('imgChip').classList.toggle('on', S.imgMode);
-      inp.placeholder = S.imgMode ? T('تصویری که می‌خواهید را توصیف کنید...') : T('پیام خود را بنویسید...'); inp.focus();
-    },
+
     share: function () {
       if (!S.conv || !LEMURA.user) return;
       App.post('/chat/share', { conversation_id: S.conv }, true).then(function (r) {

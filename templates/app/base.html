@@ -29,6 +29,7 @@
     <div class="side-sec">{{ _('گفتگوها') }}</div>
     <div class="convs" id="convs">{% if not user %}<div style="padding:8px 10px;font-size:.8rem;color:var(--t3)">{{ _('برای ذخیره گفتگوها وارد شوید.') }}</div>{% endif %}</div>
     <div class="side-foot">
+          <a class="side-link {{ 'active' if page=='terms' }}" href="/terms">📜 {{ _('قوانین و مقررات') }}</a>
       {% if user %}
       <button class="me" onclick="App.menu(event,'meMenu')">
         {% if user.avatar %}<img class="av" src="{{ user.avatar }}" alt="">{% else %}<span class="av">{{ (user.display_name or '?')[:1] }}</span>{% endif %}
@@ -37,7 +38,6 @@
         {{ ic('dots') }}
       </button>
       {% else %}
-      <div class="langsw">{% for code, l in LANGS.items() %}<a href="/lang/{{ code }}" class="{{ 'on' if lang==code }}">{{ l.name }}</a>{% endfor %}</div>
       <button class="btn" style="width:100%" onclick="Auth.open()">{{ _('ورود / ثبت‌نام') }}</button>
       {% endif %}
     </div>

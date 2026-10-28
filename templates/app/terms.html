@@ -1,0 +1,13 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('قوانین و مقررات') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('قوانین و مقررات') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" style="max-width:860px">
+  <h1>📜 {{ _('قوانین و مقررات') }}</h1>
+  {% if terms.updated_at %}<p class="sub">{{ _('آخرین به‌روزرسانی') }}: <span class="num">{{ terms.updated_at }}</span></p>{% endif %}
+  <article class="panel md terms">
+    {% set body = terms.html_en if (lang == 'en' and terms.html_en) else terms.html %}
+    {% if body %}{{ body|safe }}{% else %}<p style="color:var(--t3)">{{ _('متن قوانین و مقررات هنوز منتشر نشده است.') }}</p>{% endif %}
+  </article>
+</div></div>
+{% endblock %}

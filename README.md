@@ -42,10 +42,15 @@
 |:-:|---|---|
 | 🗨️ | **گفتگوی هوشمند** | رابط به سبک ChatGPT، پاسخ زنده (streaming)، انتخاب مدل بر اساس سازنده، Markdown و کد رنگی، جستجوی وب، اشتراک‌گذاری گفتگو |
 | 🎨 | **تصویر داخل گفتگو** | کافی است بنویسی «یک تصویر بساز از …»؛ تصویر در همان گفتگو ساخته می‌شود |
+| 📎 | **فایل و بینایی** | ارسال تصویر، PDF، Word، Excel، PowerPoint و فایل‌های کد در چت؛ OCR خودکار اسناد اسکن‌شده |
+| 🗣️ | **گفتگوی صوتی زنده** | صحبت کن، لمورا گوش می‌دهد و با صدا جواب می‌دهد؛ وسط پاسخ صحبت کنی، قطع می‌کند |
+| 🤖 | **ایجنت و پروژه‌ها** | اتصال سایت با وردپرس، سی‌پنل یا SSH و سپردن کار به ایجنت: مقاله، محتوا، افزونه، تست و دیباگ — با برنامه، تأیید هر تغییر، تلاش مجدد خودکار، زمان‌بندی و گزارش کار |
+| ☁️ | **گوگل درایو** | ذخیره تصاویر، فایل‌ها و گفتگوها در درایو شخصی |
+| 🌐 | **فارسی / English** | رابط کامل دوزبانه، راست‌چین و چپ‌چین |
 | 🖼️ | **استودیو تصویر** | ساخت تصویر با متن فارسی، انتخاب مدل و ابعاد، گالری شخصی |
 | 🧑‍💻 | **توسعه‌دهندگان** | کلیدهای `lsk-`، آمار مصرف، شروع سریع و [مستندات کامل](docs/index.html)؛ سازگار با OpenAI SDK |
 | 👛 | **کیف پول** | شارژ آنلاین به تومان، پرداخت به اندازه مصرف و تاریخچه تراکنش‌ها |
-| 🔐 | **ورود و ثبت‌نام یکپارچه** | یک فرم واحد: موبایل یا ایمیل ← رمز عبور یا کد پیامکی؛ ورود با گوگل |
+| 🔐 | **ورود و ثبت‌نام یکپارچه** | یک فرم واحد: موبایل یا ایمیل ← رمز عبور یا کد پیامکی؛ ورود با گوگل و گیت‌هاب |
 | 👤 | **حساب کاربری** | تصویر پروفایل، نام نمایشی و رمز عبور |
 
 </div>
@@ -79,6 +84,10 @@ for chunk in reply:
 | `POST /embeddings` · `/moderations` | Embeddings and moderation |
 | `POST /web-search` · `/web-scrape` · `/research` | Live web search, page reading and research |
 | `POST /videos` | Video generation (create, remix, download) |
+| `POST /files` · `GET /files` · `GET/DELETE /files/{id}` · `GET /files/{id}/content` | Files API (per-account) for chat, responses and OCR |
+| `POST /ocr` | Document & image OCR (Mistral OCR 4, Markdown + structured annotations) |
+| `POST /images/edits` | Image editing (multipart or JSON / Base64) |
+| `POST /extraction` | Typed field extraction with uncertainty (`cf.clairic`) |
 | `GET /models` · `/balance` · `/usage` · `/me` · `/ping` | Models & prices, balance, usage history, key info, health |
 
 <div dir="rtl">
@@ -96,7 +105,9 @@ docs/
 templates/
 ├── app/
 │   ├── base.html            # app shell: sidebar (new chat, pages, conversations), top bar, account menu
-│   ├── chat.html            # ChatGPT-style chat (home "/"), model picker, in-chat image generation
+│   ├── chat.html            # ChatGPT-style chat (home "/"), model picker, attachments, voice mode, in-chat images
+│   ├── projects.html        # Projects: connected websites (WordPress / cPanel / SSH) and agent tasks
+│   ├── task.html            # live agent task timeline: plan approval, per-change approval, report
 │   ├── images.html          # image studio + personal gallery
 │   ├── developers.html      # API keys, usage stats, quick start
 │   ├── docs.html + docs/    # API documentation page (rendered at /docs)
@@ -108,8 +119,10 @@ templates/
 ├── base.html · shared.html  # read-only shared-conversation page
 static/
 ├── css/    theme.css (tokens) · app.css (app layout) · chat.css (shared page)
-├── js/     app.js (shell, sidebar, conversations) · app-chat.js (streaming chat + images)
-│           md.js (safe Markdown rendering) · auth.js (sign-in dialog)
+├── js/     app.js (shell, sidebar, conversations, Drive) · app-chat.js (streaming chat, files, images)
+│           voice.js (live voice chat) · projects.js · task.js (agent UI)
+│           md.js (safe Markdown, code copy/download) · auth.js (sign-in dialog)
+├── i18n_en.json  English UI strings (Persian is the source language)
 ├── vendor/ marked · highlight.js
 ├── fonts/  Vazir (woff2)
 └── img/    avatar.svg

@@ -1,11 +1,12 @@
 {% from "app/icons.html" import ic %}<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="{{ lang }}" dir="{{ dir }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#090611">
-<title>{% block title %}لمورا — دستیار هوش مصنوعی{% endblock %}</title>
-<meta name="description" content="لمورا: گفتگو با بهترین مدل‌های هوش مصنوعی، تولید تصویر و وب‌سرویس API">
+{% if brand.favicon %}<link rel="icon" href="{{ brand.favicon }}">{% endif %}
+<title>{% block title %}{{ brand.name if lang=='fa' else brand.name_en }} — {{ _('دستیار هوش مصنوعی') }}{% endblock %}</title>
+<meta name="description" content="{{ _('لمورا: گفتگو با بهترین مدل‌های هوش مصنوعی، تولید تصویر و وب‌سرویس API') }}">
 <link rel="stylesheet" href="/static/css/theme.css">
 <link rel="stylesheet" href="/static/css/app.css?v=2">
 {% block head %}{% endblock %}
@@ -14,39 +15,41 @@
 <div class="app" id="app">
   <aside class="side" id="side">
     <div class="side-head">
-      <a class="brand" href="/"><span class="logo">⚡</span>لمورا</a>
-      <button class="ibtn" onclick="App.toggleSide()" title="بستن منو">{{ ic('side') }}</button>
+      <a class="brand" href="/"><span class="logo">{% if brand.logo %}<img src="{{ brand.logo }}" alt="">{% else %}⚡{% endif %}</span>{{ brand.name if lang=='fa' else brand.name_en }}</a>
+      <button class="ibtn" onclick="App.toggleSide()" title="{{ _('بستن منو') }}">{{ ic('side') }}</button>
     </div>
     <nav class="side-nav">
-      <a class="snav new" href="/" id="newChatBtn">{{ ic('plus') }} گفتگوی جدید</a>
-      <a class="snav {{ 'active' if page=='images' }}" href="/images">{{ ic('image') }} استودیو تصویر</a>
-      <a class="snav {{ 'active' if page=='developers' }}" href="/developers">{{ ic('code') }} توسعه‌دهندگان و API</a>
-      <a class="snav {{ 'active' if page=='docs' }}" href="/docs">{{ ic('book') }} مستندات API</a>
-      <a class="snav {{ 'active' if page=='wallet' }}" href="/wallet">{{ ic('wallet') }} کیف پول</a>
+      <a class="snav new" href="/" id="newChatBtn">{{ ic('plus') }} {{ _('گفتگوی جدید') }}</a>
+      <a class="snav {{ 'active' if page=='projects' }}" href="/projects">{{ ic('folder') }} {{ _('پروژه‌ها و سایت‌های من') }}</a>
+      <a class="snav {{ 'active' if page=='images' }}" href="/images">{{ ic('image') }} {{ _('استودیو تصویر') }}</a>
+      <a class="snav {{ 'active' if page=='developers' }}" href="/developers">{{ ic('code') }} {{ _('توسعه‌دهندگان و API') }}</a>
+      <a class="snav {{ 'active' if page=='docs' }}" href="/docs">{{ ic('book') }} {{ _('مستندات API') }}</a>
+      <a class="snav {{ 'active' if page=='wallet' }}" href="/wallet">{{ ic('wallet') }} {{ _('کیف پول') }}</a>
     </nav>
-    <div class="side-sec">گفتگوها</div>
-    <div class="convs" id="convs">{% if not user %}<div style="padding:8px 10px;font-size:.8rem;color:var(--t3)">برای ذخیره گفتگوها وارد شوید.</div>{% endif %}</div>
+    <div class="side-sec">{{ _('گفتگوها') }}</div>
+    <div class="convs" id="convs">{% if not user %}<div style="padding:8px 10px;font-size:.8rem;color:var(--t3)">{{ _('برای ذخیره گفتگوها وارد شوید.') }}</div>{% endif %}</div>
     <div class="side-foot">
       {% if user %}
       <button class="me" onclick="App.menu(event,'meMenu')">
         {% if user.avatar %}<img class="av" src="{{ user.avatar }}" alt="">{% else %}<span class="av">{{ (user.display_name or '?')[:1] }}</span>{% endif %}
         <span style="flex:1;min-width:0"><span class="n" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ user.display_name }}</span>
-          <span class="b" id="sideBal">{{ balance|fa }} تومان</span></span>
+          <span class="b" id="sideBal">{{ balance|fa if lang=='fa' else '{:,}'.format(balance) }} {{ _('تومان') }}</span></span>
         {{ ic('dots') }}
       </button>
       {% else %}
-      <button class="btn" style="width:100%" onclick="Auth.open()">ورود / ثبت‌نام</button>
+      <div class="langsw">{% for code, l in LANGS.items() %}<a href="/lang/{{ code }}" class="{{ 'on' if lang==code }}">{{ l.name }}</a>{% endfor %}</div>
+      <button class="btn" style="width:100%" onclick="Auth.open()">{{ _('ورود / ثبت‌نام') }}</button>
       {% endif %}
     </div>
   </aside>
   <div class="scrim" onclick="App.toggleSide()"></div>
   <main class="main">
     <header class="top {% block topcls %}{% endblock %}">
-      <button class="ibtn" id="sideOpen" onclick="App.toggleSide()" title="منو">{{ ic('menu') }}</button>
+      <button class="ibtn" id="sideOpen" onclick="App.toggleSide()" title="{{ _('منو') }}">{{ ic('menu') }}</button>
       {% block topbar %}<b style="font-size:.95rem">{% block pagetitle %}{% endblock %}</b>{% endblock %}
       <span class="grow"></span>
       {% block topright %}{% endblock %}
-      {% if not user %}<button class="btn btn-sm" onclick="Auth.open()">ورود</button>{% endif %}
+      {% if not user %}<button class="btn btn-sm" onclick="Auth.open()">{{ _('ورود') }}</button>{% endif %}
     </header>
     {% block main %}{% endblock %}
   </main>
@@ -55,17 +58,19 @@
 {% if user %}
 <div class="menu" id="meMenu">
   <div style="padding:8px 10px;font-size:.75rem;color:var(--t3)">{{ user.mobile or user.email }}</div>
-  <a href="/account">{{ ic('user') }} حساب کاربری</a>
-  <a href="/wallet">{{ ic('wallet') }} کیف پول و شارژ</a>
-  <a href="/developers">{{ ic('key') }} کلیدهای API</a>
-  {% if user.role == 'administrator' %}<a href="/admin/">{{ ic('shield') }} پنل مدیریت</a>{% endif %}
-  <hr><a class="danger" href="/auth/logout">{{ ic('logout') }} خروج</a>
+  <a href="/account">{{ ic('user') }} {{ _('حساب کاربری') }}</a>
+  <a href="/wallet">{{ ic('wallet') }} {{ _('کیف پول و شارژ') }}</a>
+  <a href="/developers">{{ ic('key') }} {{ _('کلیدهای API') }}</a>
+  {% if user.role == 'administrator' %}<a href="/admin/">{{ ic('shield') }} {{ _('پنل مدیریت') }}</a>{% endif %}
+  <div class="langsw">{% for code, l in LANGS.items() %}<a href="/lang/{{ code }}" class="{{ 'on' if lang==code }}">{{ l.name }}</a>{% endfor %}</div>
+  <hr><a class="danger" href="/auth/logout">{{ ic('logout') }} {{ _('خروج') }}</a>
 </div>
 {% endif %}
 <div class="lb" id="lb" onclick="this.classList.remove('open')"><img alt=""></div>
 <div class="toast" id="globalToast"></div>
 {% if not user %}{% include "app/auth.html" %}{% endif %}
 <script>
+window.I18N=(function(d){d.t=function(s){return (d.dict&&d.dict[s])||s;};return d;})({{ i18n_js }});
 window.LEMURA={user:{{ ({"name":user.display_name,"id":user.id} if user else None)|tojson }},balance:{{ balance or 0 }}};
 </script>
 <script src="/static/js/app.js?v=2"></script>

@@ -6,7 +6,8 @@
   <ul>
     <li>سازگار با کتابخانه‌های رسمی OpenAI (Python، Node.js و ...) — فقط <code>base_url</code> را عوض کنید.</li>
     <li>چت با پشتیبانی کامل از Streaming (SSE)، تصویر ورودی (Vision) و Function Calling.</li>
-    <li>تولید تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو، Embedding و Moderation.</li>
+    <li>تولید و ویرایش تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو، Embedding و Moderation.</li>
+    <li>ورودی تصویر و PDF در چت (بینایی)، Files API، OCR اسناد و استخراج فیلدهای ساختاریافته.</li>
     <li>جستجوی وب، استخراج محتوای صفحات و تحقیق خودکار.</li>
     <li>پرداخت ریالی از کیف پول، بدون نیاز به کارت ارزی.</li>
   </ul>
@@ -51,8 +52,11 @@
   {{ ep('GET','/models') }}{{ ep('GET','/models/{model_id}') }}
   <h3>متن</h3>
   {{ ep('POST','/chat/completions') }}{{ ep('POST','/completions') }}{{ ep('POST','/responses') }}
+  <h3>فایل، بینایی و سند</h3>
+  {{ ep('POST','/files') }}{{ ep('GET','/files') }}{{ ep('GET','/files/{file_id}') }}{{ ep('GET','/files/{file_id}/content') }}{{ ep('DELETE','/files/{file_id}') }}
+  {{ ep('POST','/ocr') }}{{ ep('POST','/extraction') }}
   <h3>تصویر، صوت و ویدیو</h3>
-  {{ ep('POST','/images/generations') }}{{ ep('POST','/audio/speech') }}{{ ep('POST','/audio/transcriptions') }}{{ ep('POST','/audio/translations') }}
+  {{ ep('POST','/images/generations') }}{{ ep('POST','/images/edits') }}{{ ep('POST','/audio/speech') }}{{ ep('POST','/audio/transcriptions') }}{{ ep('POST','/audio/translations') }}
   {{ ep('POST','/videos') }}{{ ep('GET','/videos') }}{{ ep('GET','/videos/{video_id}') }}{{ ep('DELETE','/videos/{video_id}') }}
   {{ ep('POST','/videos/{video_id}/remix') }}{{ ep('GET','/videos/{video_id}/content') }}
   <h3>وب</h3>

@@ -21,11 +21,12 @@
 {% set B = api_base %}
 <div class="page"><div class="page-in">
   <h1>📘 مستندات وب‌سرویس لمورا</h1>
-  <p class="sub">API کاملاً سازگار با OpenAI SDK. نسخه ۵ — Base URL: <b class="ltr mono">{{ B }}</b></p>
+  <p class="sub">API کاملاً سازگار با OpenAI SDK. نسخه ۵٫۱ — Base URL: <b class="ltr mono">{{ B }}</b></p>
   <div class="dwrap">
     <nav class="dnav" id="dnav">
       {% for k,l in [('docs','🏠 معرفی'),('auth','🔐 احراز هویت'),('endpoints','🗂 فهرست Endpointها'),('chat','💬 چت'),('responses','🧩 Responses API'),
-        ('img','🎨 تولید تصویر'),('audio','🎙 صوت'),('video','🎬 ویدیو'),('ws','🌐 جستجو و تحقیق وب'),('emb','🔢 Embedding و Moderation'),
+        ('vision','👁 بینایی و فایل در چت'),('files','📁 فایل‌ها (Files API)'),('ocr','🔤 تشخیص متن (OCR)'),
+        ('img','🎨 تولید تصویر'),('imgedit','🖌 ویرایش تصویر'),('audio','🎙 صوت'),('voice','🗣 گفتگوی صوتی زنده'),('extract','🧾 استخراج فیلد'),('video','🎬 ویدیو'),('ws','🌐 جستجو و تحقیق وب'),('emb','🔢 Embedding و Moderation'),
         ('bal','💰 موجودی'),('models','🧠 مدل‌ها'),('tokens','🔑 کلیدها و قیمت‌گذاری'),('usage','📊 گزارش مصرف'),('examples','🧪 نمونه کدها'),
         ('troubleshooting','🛠 خطاها و رفع اشکال'),('faq','❓ سوالات متداول')] %}
       <button data-t="{{ k }}">{{ l }}</button>{% endfor %}
@@ -34,6 +35,7 @@
       {% include "app/docs/part_a.html" %}
       {% include "app/docs/part_b.html" %}
       {% include "app/docs/part_c.html" %}
+      {% include "app/docs/part_d.html" %}
     </div>
   </div>
 </div></div>

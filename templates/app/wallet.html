@@ -1,36 +1,36 @@
 {% extends "app/base.html" %}
-{% block pagetitle %}کیف پول{% endblock %}
+{% block pagetitle %}{{ _('کیف پول') }}{% endblock %}
 {% block main %}
 {% set wm = request.args.get('wallet_msg', '') %}
 <div class="page"><div class="page-in" style="max-width:860px">
-  <h1>💰 کیف پول</h1>
-  <p class="sub">موجودی کیف پول برای چت، تولید تصویر و وب‌سرویس API به‌صورت مشترک استفاده می‌شود.</p>
-  {% if wm == 'success' %}<div class="amsg ok" style="display:block">✅ پرداخت موفق بود و کیف پول شما شارژ شد.{% if request.args.get('ref_id') %} کد پیگیری: <b class="ltr">{{ request.args.get('ref_id') }}</b>{% endif %}</div>
-  {% elif wm in ('failed','error') %}<div class="amsg err" style="display:block">پرداخت ناموفق بود. اگر مبلغی کسر شده، طی ۷۲ ساعت بازمی‌گردد.</div>
-  {% elif wm == 'cancelled' %}<div class="amsg err" style="display:block">پرداخت لغو شد.</div>
-  {% elif wm == 'expired' %}<div class="amsg err" style="display:block">نشست پرداخت منقضی شده است.</div>{% endif %}
+  <h1>💰 {{ _('کیف پول') }}</h1>
+  <p class="sub">{{ _('موجودی کیف پول برای چت، تولید تصویر و وب‌سرویس API به‌صورت مشترک استفاده می‌شود.') }}</p>
+  {% if wm == 'success' %}<div class="amsg ok" style="display:block">✅ {{ _('پرداخت موفق بود و کیف پول شما شارژ شد.') }}{% if request.args.get('ref_id') %} {{ _('کد پیگیری') }}: <b class="ltr">{{ request.args.get('ref_id') }}</b>{% endif %}</div>
+  {% elif wm in ('failed','error') %}<div class="amsg err" style="display:block">{{ _('پرداخت ناموفق بود. اگر مبلغی کسر شده، طی ۷۲ ساعت بازمی‌گردد.') }}</div>
+  {% elif wm == 'cancelled' %}<div class="amsg err" style="display:block">{{ _('پرداخت لغو شد.') }}</div>
+  {% elif wm == 'expired' %}<div class="amsg err" style="display:block">{{ _('نشست پرداخت منقضی شده است.') }}</div>{% endif %}
 
   <div class="panel" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(124,58,237,.35),rgba(18,12,32,.9) 60%,rgba(248,113,113,.18))">
-    <div style="font-size:.8rem;color:var(--t2)">موجودی فعلی</div>
-    <div style="font-size:2.1rem;font-weight:800">{{ balance|fa }} <span style="font-size:1rem;font-weight:500">تومان</span></div>
+    <div style="font-size:.8rem;color:var(--t2)">{{ _('موجودی فعلی') }}</div>
+    <div style="font-size:2.1rem;font-weight:800">{{ balance|fa }} <span style="font-size:1rem;font-weight:500">{{ _('تومان') }}</span></div>
   </div>
 
   <div class="panel" style="margin-bottom:16px">
-    <h3>شارژ کیف پول</h3>
+    <h3>{{ _('شارژ کیف پول') }}</h3>
     <form method="post" action="/wallet/charge" id="cf">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px" id="presets">
-        {% for v in [50000,100000,200000,500000,1000000,2000000] %}<button type="button" class="chip" style="justify-content:center;padding:10px" data-v="{{ v }}">{{ v|fa }} تومان</button>{% endfor %}
+        {% for v in [50000,100000,200000,500000,1000000,2000000] %}<button type="button" class="chip" style="justify-content:center;padding:10px" data-v="{{ v }}">{{ v|fa }} {{ _('تومان') }}</button>{% endfor %}
       </div>
-      <div class="fg"><label>مبلغ دلخواه (تومان) — حداقل {{ ws.min_charge|int|fa }}</label>
+      <div class="fg"><label>{{ _('مبلغ دلخواه (تومان) — حداقل') }} {{ ws.min_charge|int|fa }}</label>
         <input class="input" name="charge_amount" id="amt" inputmode="numeric" required></div>
-      <button class="btn" style="width:100%">پرداخت و شارژ</button>
+      <button class="btn" style="width:100%">{{ _('پرداخت و شارژ') }}</button>
     </form>
   </div>
 
   <div class="panel">
-    <h3>تاریخچه تراکنش‌ها</h3>
-    <div class="tw"><table class="tbl"><thead><tr><th>نوع</th><th>مبلغ</th><th>شرح</th><th>تاریخ</th></tr></thead>
-      <tbody id="txb"><tr><td colspan="4" style="color:var(--t3)">در حال بارگذاری...</td></tr></tbody></table></div>
+    <h3>{{ _('تاریخچه تراکنش‌ها') }}</h3>
+    <div class="tw"><table class="tbl"><thead><tr><th>{{ _('نوع') }}</th><th>{{ _('مبلغ') }}</th><th>{{ _('شرح') }}</th><th>{{ _('تاریخ') }}</th></tr></thead>
+      <tbody id="txb"><tr><td colspan="4" style="color:var(--t3)">{{ _('در حال بارگذاری...') }}</td></tr></tbody></table></div>
   </div>
 </div></div>
 {% endblock %}

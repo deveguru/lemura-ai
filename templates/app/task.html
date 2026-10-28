@@ -1,0 +1,42 @@
+{% extends "app/base.html" %}
+{% block title %}{{ task.title }} — {{ brand.name }}{% endblock %}
+{% block topbar %}<a href="/projects" class="ibtn" title="{{ _('بازگشت') }}">→</a><b style="font-size:.95rem">{{ _('وظیفه ایجنت') }} #{{ task.id }}</b>{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" style="max-width:900px">
+  <div class="panel thead">
+    <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <h1 style="margin:0 0 4px;font-size:1.2rem">{{ task.title }}</h1>
+        <div class="tmeta">
+          {% if site %}<span>🌐 {{ site.name }} <span class="ltr" style="display:inline-block">({{ site.url or site.host }})</span></span>{% else %}<span>🤖 {{ _('بدون سایت') }}</span>{% endif %}
+          <span>🧠 <span class="ltr" style="display:inline-block">{{ task.model }}</span></span>
+          <span id="tMode"></span><span id="tCost"></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="tStatus"></span>
+        <button class="btn btn-sm btn-danger" id="bCancel" style="display:none">{{ _('لغو') }}</button>
+      </div>
+    </div>
+    <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--t3);font-size:.82rem">{{ _('شرح وظیفه') }}</summary>
+      <div style="white-space:pre-wrap;font-size:.88rem;color:var(--t2);margin-top:6px">{{ task.goal }}</div></details>
+    <div class="tstatusmsg" id="tMsg"></div>
+  </div>
+
+  <div id="timeline" class="timeline"></div>
+  <div id="working" class="twork" style="display:none"><span class="aiav spin" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,#7c3aed,#32165f);display:inline-flex;align-items:center;justify-content:center">⚡</span> <span id="workTxt">{{ _('ایجنت در حال کار است...') }}</span></div>
+
+  <div class="panel" id="followBox" style="display:none;margin-top:14px">
+    <h3 style="margin:0 0 8px">{{ _('ادامه یا درخواست تغییر') }}</h3>
+    <textarea class="input" id="follow" rows="3" placeholder="{{ _('مثلاً: یک بخش سوالات متداول هم به مقاله اضافه کن') }}"></textarea>
+    <button class="btn" style="margin-top:8px" id="bFollow">{{ _('ارسال به ایجنت') }}</button>
+  </div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/marked.min.js"></script>
+<script src="/static/vendor/highlight.min.js"></script>
+<script src="/static/js/md.js?v=3"></script>
+<script>window.TASK={{ {"id": task.id}|tojson }};</script>
+<script src="/static/js/task.js?v=1"></script>
+{% endblock %}

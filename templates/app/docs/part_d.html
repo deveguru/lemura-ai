@@ -1,0 +1,158 @@
+{% from "app/docs/m.html" import code, ep %}
+<section class="dsec" id="d-vision">
+  <h2>بینایی و فایل در چت</h2>
+  <p>مدل‌های دارای قابلیت بینایی (مثل <code>gpt-5.4</code>، <code>gpt-4o</code>، <code>claude-sonnet-4-6</code>، <code>gemini-2.5-flash</code>) می‌توانند تصویر و PDF را مستقیماً در پیام بخوانند. هزینه تصویر و صفحات PDF به‌صورت توکن ورودی حساب می‌شود.</p>
+  <h3>تصویر با URL یا Base64 (Chat Completions)</h3>
+  {% call code('json') %}{
+  "model": "gpt-4o",
+  "messages": [{"role": "user", "content": [
+    {"type": "text", "text": "متن و اعداد این رسید را استخراج کن"},
+    {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,/9j/4AAQ...", "detail": "high"}}
+  ]}]
+}{% endcall %}
+  <p>پارامتر <code>detail</code>: <code>low</code> (سریع و ارزان)، <code>high</code> (متن ریز، نمودار و اسکرین‌شات)، <code>auto</code>. برای چند تصویر، چند بخش <code>image_url</code> بفرستید و در متن برچسب بزنید («تصویر A»، «تصویر B»). مدل‌های Gemini فقط ورودی Base64 را می‌پذیرند.</p>
+  <h3>PDF با Responses API</h3>
+  {% call code('json') %}{
+  "model": "gpt-5.4",
+  "input": [{"role": "user", "content": [
+    {"type": "input_text", "text": "تعهدات اصلی این قرارداد را با شماره صفحه خلاصه کن"},
+    {"type": "input_file", "file_url": "https://example.com/contract.pdf"}
+  ]}]
+}{% endcall %}
+  <p>به‌جای <code>file_url</code> می‌توانید <code>"filename"</code> + <code>"file_data": "data:application/pdf;base64,..."</code> یا <code>"file_id"</code> فایلی که با <a href="#files">Files API</a> آپلود کرده‌اید را بفرستید. حجم هر فایل کمتر از ۵۰ مگابایت باشد.</p>
+  <h3>فایل آپلودشده در Chat Completions</h3>
+  {% call code('json') %}{
+  "model": "gemini-2.5-flash",
+  "messages": [{"role": "user", "content": [
+    {"type": "text", "text": "این سند را خلاصه کن"},
+    {"type": "file", "file": {"file_id": "file-EyVi0MrxuKTgBrvkVas5ZTGz"}}
+  ]}]
+}{% endcall %}
+  <div class="note">🔒 فقط به <code>file_id</code>هایی که با کلید حساب خودتان آپلود کرده‌اید می‌توانید ارجاع دهید؛ شناسه فایل دیگران خطای <code>404</code> می‌دهد.</div>
+</section>
+
+<section class="dsec" id="d-files">
+  <h2>فایل‌ها (Files API)</h2>
+  <p>یک بار آپلود کنید و بارها با <code>file_id</code> در چت، Responses، OCR و ویرایش تصویر استفاده کنید. ذخیره‌سازی فایل هزینه‌ای ندارد؛ فقط پردازش آن در مدل حساب می‌شود.</p>
+  {{ ep('POST','/files') }}
+  <p><code>multipart/form-data</code> با فیلدهای <code>file</code> (حداکثر ۱۲۸ مگابایت) و <code>purpose</code>: <code>user_data</code> (پیشنهادی برای ورودی مدل)، <code>vision</code>، <code>assistants</code>، <code>batch</code>، <code>fine-tune</code>، <code>evals</code>، <code>others</code>. اختیاری: <code>expires_after[anchor]=created_at</code> و <code>expires_after[seconds]</code>.</p>
+  {% call code('bash') %}curl {{ B }}/files \
+  -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -F purpose="user_data" -F file="@contract.pdf"{% endcall %}
+  {% call code('json') %}{"id": "file-EyVi0MrxuKTgBrvkVas5ZTGz", "object": "file", "bytes": 13264, "created_at": 1767210968,
+ "filename": "contract.pdf", "purpose": "user_data"}{% endcall %}
+  {{ ep('GET','/files?purpose=user_data&limit=100&order=desc') }}
+  <p>فهرست فایل‌های حساب شما.</p>
+  {{ ep('GET','/files/{file_id}') }}{{ ep('GET','/files/{file_id}/content') }}{{ ep('DELETE','/files/{file_id}') }}
+  {% call code('python') %}f = client.files.create(file=open("contract.pdf", "rb"), purpose="user_data")
+r = client.responses.create(model="gpt-5.4", input=[{"role": "user", "content": [
+    {"type": "input_file", "file_id": f.id},
+    {"type": "input_text", "text": "مهم‌ترین بندها را فهرست کن"}]}])
+print(r.output_text)
+client.files.delete(f.id){% endcall %}
+</section>
+
+<section class="dsec" id="d-ocr">
+  <h2>تشخیص متن (OCR)</h2>
+  {{ ep('POST','/ocr') }}
+  <p>استخراج ساختاریافته متن، جدول و تصاویر از PDF و تصویر با <code>mistral-ocr-4-0</code> (۱۷۰ زبان، خروجی Markdown). هزینه بر اساس تعداد صفحه: حدود <b>{{ ocr_price|int|fa }}</b> تومان برای هر صفحه (با حاشیه‌نویسی ساختاریافته ۲٫۲۵ برابر).</p>
+  <ul>
+    <li><code>document</code> (الزامی): <code>{"type": "document_url", "document_url": "https://... یا data:application/pdf;base64,..."}</code> یا <code>{"type": "image_url", "image_url": "..."}</code></li>
+    <li>اختیاری: <code>pages</code> (آرایه شماره صفحه از ۰)، <code>include_image_base64</code>، <code>image_limit</code>، <code>image_min_size</code>، <code>table_format</code> (<code>markdown</code>/<code>html</code>)، <code>extract_header</code>، <code>extract_footer</code>، <code>document_annotation_format</code> و <code>bbox_annotation_format</code> (خروجی JSON Schema).</li>
+  </ul>
+  {% call code('bash') %}curl {{ B }}/ocr \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "mistral-ocr-4-0",
+       "document": {"type": "document_url", "document_url": "https://arxiv.org/pdf/2201.04234"},
+       "pages": [0, 1], "table_format": "html"}'{% endcall %}
+  {% call code('json') %}{
+  "pages": [{"index": 0, "markdown": "# عنوان سند\n\nمتن استخراج‌شده...", "dimensions": {"dpi": 200, "height": 2200, "width": 1700}, "images": []}],
+  "model": "mistral-ocr-4-0",
+  "usage_info": {"pages_processed": 2, "doc_size_bytes": 3002783},
+  "object": "ocr"
+}{% endcall %}
+  <h3>استخراج داده ساختاریافته از فاکتور</h3>
+  {% call code('json') %}{
+  "model": "mistral-ocr-4-0",
+  "document": {"type": "document_url", "document_url": "https://example.com/invoice.pdf"},
+  "document_annotation_format": {"type": "json_schema", "json_schema": {"name": "invoice", "schema": {
+    "type": "object", "required": ["invoice_number", "total_amount"],
+    "properties": {"invoice_number": {"type": "string"}, "date": {"type": "string"}, "total_amount": {"type": "number"}}}}}
+}{% endcall %}
+  <p>نتیجه ساختاریافته در فیلد <code>document_annotation</code> به‌صورت رشته JSON برمی‌گردد. پیش از ثبت مالی، مبلغ‌ها و تاریخ‌ها را با سند اصلی تطبیق دهید.</p>
+</section>
+
+<section class="dsec" id="d-imgedit">
+  <h2>ویرایش تصویر</h2>
+  {{ ep('POST','/images/edits') }}
+  <p>ویرایش تصویر موجود با توضیح متنی (حذف پس‌زمینه، افزودن شیء، تغییر سبک...). مدل‌ها و قیمت همانند <a href="#img">تولید تصویر</a> است (مدل‌های فعال در <code>/models</code> با نوع <code>image</code>).</p>
+  <h3>آپلود فایل (multipart)</h3>
+  {% call code('bash') %}curl {{ B }}/images/edits \
+  -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -F model="gpt-image-2" -F image="@product.png" \
+  -F prompt="فقط پس‌زمینه را سفید گرم کن؛ محصول، لوگو و زاویه دوربین تغییر نکند" \
+  -F size="1024x1024"{% endcall %}
+  <h3>درخواست JSON با Base64</h3>
+  {% call code('json') %}{
+  "model": "gpt-image-2",
+  "prompt": "یک رنگین‌کمان در آسمان بالای کوه‌ها اضافه کن",
+  "images": [{"image_url": "data:image/png;base64,iVBORw0KGgo..."}],
+  "size": "1024x1024"
+}{% endcall %}
+  <p>اختیاری: <code>mask</code> (فایل یا <code>{"image_url": ...}</code> با کانال آلفا؛ ناحیه شفاف قابل ویرایش است)، <code>n</code> (حداکثر ۴)، <code>quality</code>، <code>output_format</code>. خروجی در <code>data[0].b64_json</code> یا <code>data[0].url</code> است. در پرامپت کل تصویر نهایی را توصیف کنید و بگویید چه چیزهایی باید بدون تغییر بمانند.</p>
+</section>
+
+<section class="dsec" id="d-extract">
+  <h2>استخراج فیلد (Extraction)</h2>
+  {{ ep('POST','/extraction') }}
+  <p>متن یا تصویر را بخوانید و مقدارهای نام‌دار و نوع‌دار برگردانید (شناسه، تاریخ، مبلغ، فهرست، برآورد، پیش‌بینی) — همراه با نشانه‌های عدم قطعیت. مدل: <code>cf.clairic</code>. هزینه بر اساس توکن ورودی (بسیار کم). پاسخ جریانی پشتیبانی نمی‌شود.</p>
+  <ul>
+    <li><code>state</code>: متن شواهد (یا <code>images</code>: تا ۴ تصویر Base64 با <code>content_type</code>).</li>
+    <li><code>fields</code>: شیء نام‌دار؛ نوع‌ها: <code>text</code>، <code>number</code>، <code>date</code>، <code>time</code>، <code>datetime</code>، <code>duration</code>، <code>list</code> (با <code>items</code>)، <code>estimate</code> و <code>forecast</code> (با <code>min</code>/<code>max</code>). تنظیمات: <code>instructions</code>، <code>unit</code>، <code>decimals</code>، <code>null_threshold</code> و ...</li>
+    <li>اختیاری: <code>reference_date</code> (برای تاریخ‌های بدون سال)، <code>options.include_quantiles</code>، <code>options.return_state_text</code>.</li>
+  </ul>
+  {% call code('bash') %}curl {{ B }}/extraction \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"model": "cf.clairic",
+       "state": "Invoice INV-2291 issued 2026-09-02, net 30. 4 pallets at $250.00, shipping $80.00. Contact: Dana Ruiz, Priya Shah.",
+       "fields": {
+         "invoice_number": {"type": "text"},
+         "due_date": {"type": "date", "instructions": "Issue date plus net payment days"},
+         "total": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Amount due including shipping"},
+         "contacts": {"type": "list", "items": "text"},
+         "po_number": {"type": "text", "instructions": "Purchase order number"}}}'{% endcall %}
+  {% call code('json') %}{
+  "model": "cf.clairic",
+  "answers": {
+    "invoice_number": {"type": "text", "value": "INV-2291", "confidence": 1, "p_null": 3.8e-10, "span": [8, 16]},
+    "due_date": {"type": "date", "value": "2026-10-02"},
+    "total": {"type": "number", "value": 1080},
+    "contacts": {"type": "list", "value": ["Dana Ruiz", "Priya Shah"]},
+    "po_number": {"type": "text", "value": null, "p_null": 1, "guess": "INV-2291"}
+  },
+  "truncated": false,
+  "usage": {"input_tokens": 655, "output_tokens": 0, "passes": 3}
+}{% endcall %}
+  <div class="note">⚠️ <code>value: null</code> یعنی مقدار پیدا نشد؛ <code>guess</code> را جایگزین آن نکنید (در مثال، شماره سفارش خرید وجود ندارد). پیش از ذخیره یا اقدام، مقدارها را اعتبارسنجی کنید.</div>
+</section>
+
+<section class="dsec" id="d-voice">
+  <h2>گفتگوی صوتی زنده</h2>
+  <p>برای ساخت دستیار صوتی، سه مرحله را زنجیره کنید: گفتار به متن ← چت ← متن به گفتار. این همان روشی است که «گفتگوی صوتی» سایت لمورا استفاده می‌کند.</p>
+  {% call code('python') %}with open("question.webm", "rb") as audio:
+    text = client.audio.transcriptions.create(model="gpt-4o-transcribe", file=audio, language="fa").text
+
+answer = client.chat.completions.create(model="gpt-5.4-mini", messages=[
+    {"role": "system", "content": "کوتاه و محاوره‌ای پاسخ بده."},
+    {"role": "user", "content": text}]).choices[0].message.content
+
+with client.audio.speech.with_streaming_response.create(
+        model="gpt-audio-1.5", voice="coral", input=answer, response_format="mp3") as speech:
+    speech.stream_to_file("answer.mp3"){% endcall %}
+  <ul>
+    <li>متن هر درخواست TTS را زیر ۴٬۰۰۰ کاراکتر نگه دارید؛ متن طولانی را پاراگراف به پاراگراف بفرستید.</li>
+    <li>صداهای پیشنهادی: <code>coral</code>، <code>marin</code>، <code>cedar</code>، <code>alloy</code>، <code>nova</code>.</li>
+    <li>برای کاهش تأخیر، پاسخ چت را کوتاه بخواهید و پخش را هم‌زمان با دریافت فایل شروع کنید.</li>
+    <li>به کاربر اطلاع دهید که صدای پاسخ با هوش مصنوعی تولید شده است.</li>
+  </ul>
+</section>

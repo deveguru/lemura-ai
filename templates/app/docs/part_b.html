@@ -28,7 +28,7 @@ print(img.data[0].url or "base64 length: %d" % len(img.data[0].b64_json)){% endc
   --output speech.mp3{% endcall %}
   <h3>گفتار به متن</h3>
   {{ ep('POST','/audio/transcriptions') }}
-  <p>ارسال به‌صورت <code>multipart/form-data</code> با فیلدهای <code>file</code> و <code>model</code> (<code>whisper-1</code>، <code>gpt-4o-transcribe</code>، <code>gpt-4o-mini-transcribe</code>). اختیاری: <code>language</code>، <code>prompt</code>، <code>response_format</code>، <code>temperature</code>.</p>
+  <p>ارسال به‌صورت <code>multipart/form-data</code> با فیلدهای <code>file</code> و <code>model</code> (مثل <code>gpt-4o-transcribe</code>، <code>gpt-4o-mini-transcribe</code>، <code>whisper-1</code>؛ فهرست به‌روز در <code>/models</code>). اختیاری: <code>language</code>، <code>prompt</code>، <code>response_format</code>، <code>temperature</code>.</p>
   {% call code('bash') %}curl {{ B }}/audio/transcriptions \
   -H "Authorization: Bearer lsk-YOUR_KEY" \
   -F file=@voice.mp3 -F model=whisper-1 -F language=fa{% endcall %}

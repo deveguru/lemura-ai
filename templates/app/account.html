@@ -1,41 +1,66 @@
 {% extends "app/base.html" %}
-{% block pagetitle %}حساب کاربری{% endblock %}
+{% block pagetitle %}{{ _('حساب کاربری') }}{% endblock %}
 {% block main %}
-{% set M = {'updated':('ok','اطلاعات ذخیره شد'),'pass_changed':('ok','رمز عبور تغییر کرد'),'pass_mismatch':('err','رمز عبور و تکرار آن یکسان نیست'),
-  'pass_short':('err','رمز عبور حداقل ۶ کاراکتر'),'pass_empty':('err','رمز عبور را وارد کنید')} %}
+{% set M = {'updated':('ok',_('اطلاعات ذخیره شد')),'pass_changed':('ok',_('رمز عبور تغییر کرد')),'pass_mismatch':('err',_('رمز عبور و تکرار آن یکسان نیست')),
+  'pass_short':('err',_('رمز عبور حداقل ۶ کاراکتر')),'pass_empty':('err',_('رمز عبور را وارد کنید'))} %}
 <div class="page"><div class="page-in" style="max-width:760px">
-  <h1>👤 حساب کاربری</h1>
-  <p class="sub">شناسه کاربری: <b class="ltr">#{{ user.id }}</b>{% if user.mobile %} · موبایل: <b class="ltr">{{ user.mobile }}</b>{% endif %}</p>
+  <h1>👤 {{ _('حساب کاربری') }}</h1>
+  <p class="sub">{{ _('شناسه کاربری:') }} <b class="ltr">#{{ user.id }}</b>{% if user.mobile %} · {{ _('موبایل') }}: <b class="ltr">{{ user.mobile }}</b>{% endif %}</p>
   {% if msg in M %}<div class="amsg {{ M[msg][0] }}" style="display:block">{{ M[msg][1] }}</div>{% endif %}
   <div class="panel" style="margin-bottom:16px">
-    <h3>اطلاعات پروفایل</h3>
+    <h3>{{ _('اطلاعات پروفایل') }}</h3>
     <form method="post" action="/panel/profile" enctype="multipart/form-data">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
         {% if user.avatar %}<img class="av" src="{{ user.avatar }}" style="width:64px;height:64px" alt="">{% else %}<span class="av" style="width:64px;height:64px;font-size:1.6rem">{{ (user.display_name or '?')[:1] }}</span>{% endif %}
-        <div class="fg" style="flex:1;margin:0"><label>تصویر پروفایل</label><input class="input" type="file" name="profile_avatar" accept="image/*"></div>
+        <div class="fg" style="flex:1;margin:0"><label>{{ _('تصویر پروفایل') }}</label><input class="input" type="file" name="profile_avatar" accept="image/*"></div>
       </div>
-      <div class="fg"><label>نام نمایشی</label><input class="input" name="display_name" value="{{ user.display_name }}"></div>
-      <div class="fg"><label>ایمیل</label><input class="input ltr" type="email" name="user_email" value="{{ user.email }}"></div>
-      <button class="btn">ذخیره تغییرات</button>
+      <div class="fg"><label>{{ _('نام نمایشی') }}</label><input class="input" name="display_name" value="{{ user.display_name }}"></div>
+      <div class="fg"><label>{{ _('ایمیل') }}</label><input class="input ltr" type="email" name="user_email" value="{{ user.email }}"></div>
+      <button class="btn">{{ _('ذخیره تغییرات') }}</button>
     </form>
   </div>
   <div class="panel" style="margin-bottom:16px">
-    <h3>{{ 'تغییر رمز عبور' if user.has_password else 'تعیین رمز عبور' }}</h3>
-    <p style="font-size:.8rem;color:var(--t3);margin:-6px 0 12px">با رمز عبور می‌توانید بدون کد پیامکی وارد شوید.</p>
+    <h3>{{ _('تغییر رمز عبور') if user.has_password else _('تعیین رمز عبور') }}</h3>
+    <p style="font-size:.8rem;color:var(--t3);margin:-6px 0 12px">{{ _('با رمز عبور می‌توانید بدون کد پیامکی وارد شوید.') }}</p>
     <form method="post" action="/panel/password">
-      <div class="fg"><label>رمز عبور جدید</label><input class="input ltr" type="password" name="new_password" minlength="6" required autocomplete="new-password"></div>
-      <div class="fg"><label>تکرار رمز عبور</label><input class="input ltr" type="password" name="confirm_password" minlength="6" required autocomplete="new-password"></div>
-      <button class="btn">ذخیره رمز عبور</button>
+      <div class="fg"><label>{{ _('رمز عبور جدید') }}</label><input class="input ltr" type="password" name="new_password" minlength="6" required autocomplete="new-password"></div>
+      <div class="fg"><label>{{ _('تکرار رمز عبور') }}</label><input class="input ltr" type="password" name="confirm_password" minlength="6" required autocomplete="new-password"></div>
+      <button class="btn">{{ _('ذخیره رمز عبور') }}</button>
     </form>
   </div>
+  <div class="panel" style="margin-bottom:16px" id="drivePanel">
+    <h3>{{ ic('drive') }} {{ _('گوگل درایو') }}</h3>
+    <p style="font-size:.82rem;color:var(--t3);margin:-6px 0 12px">{{ _('تصاویر ساخته‌شده، فایل‌ها و گفتگوها را با یک کلیک در پوشه «Lemura» گوگل درایو خودتان ذخیره کنید. لمورا فقط به فایل‌هایی که خودش می‌سازد دسترسی دارد.') }}</p>
+    <div id="driveBox" style="font-size:.88rem;color:var(--t3)">…</div>
+  </div>
+  <div class="panel" style="margin-bottom:16px">
+    <h3>{{ ic('lang') }} {{ _('زبان') }}</h3>
+    <div class="seg">{% for code, l in LANGS.items() %}<a href="/lang/{{ code }}?next=/account" style="padding:7px 16px;border-radius:9px;{{ 'background:var(--p);color:#fff' if lang==code else 'color:var(--t2)' }}">{{ l.name }}</a>{% endfor %}</div>
+  </div>
   <div class="panel">
-    <h3>روش‌های ورود</h3>
+    <h3>{{ _('روش‌های ورود') }}</h3>
     <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem">
-      <div>📱 پیامک: {% if user.mobile %}<span class="badge badge-green">فعال</span>{% else %}<span class="badge">ثبت نشده</span>{% endif %}</div>
-      <div>🔑 رمز عبور: {% if user.has_password %}<span class="badge badge-green">فعال</span>{% else %}<span class="badge">تعیین نشده</span>{% endif %}</div>
-      <div>🟢 گوگل: {% if user.google_sub %}<span class="badge badge-green">متصل</span>{% else %}<span class="badge">متصل نیست</span>{% endif %}</div>
+      <div>📱 {{ _('پیامک') }}: {% if user.mobile %}<span class="badge badge-green">{{ _('فعال') }}</span>{% else %}<span class="badge">{{ _('ثبت نشده') }}</span>{% endif %}</div>
+      <div>🔑 {{ _('رمز عبور') }}: {% if user.has_password %}<span class="badge badge-green">{{ _('فعال') }}</span>{% else %}<span class="badge">{{ _('تعیین نشده') }}</span>{% endif %}</div>
+      <div>🟢 {{ _('گوگل') }}: {% if user.google_sub %}<span class="badge badge-green">{{ _('متصل') }}</span>{% else %}<span class="badge">{{ _('متصل نیست') }}</span>{% endif %}</div>
+      <div>🐙 {{ _('گیت‌هاب') }}: {% if user.github_id %}<span class="badge badge-green">{{ _('متصل') }}</span>{% else %}<span class="badge">{{ _('متصل نیست') }}</span>{% endif %}</div>
     </div>
-    <a class="btn btn-danger" href="/auth/logout" style="margin-top:16px">خروج از حساب</a>
+    <a class="btn btn-danger" href="/auth/logout" style="margin-top:16px">{{ _('خروج از حساب') }}</a>
   </div>
 </div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){var box=document.getElementById('driveBox');
+  function load(){fetch('/drive/status',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+    if(!d.enabled){box.textContent=I18N.t('اتصال گوگل درایو توسط مدیر فعال نشده است.');return;}
+    if(d.connected){box.innerHTML='<span class="badge badge-green">'+I18N.t('متصل')+'</span> <b class="ltr" style="display:inline-block">'+App.esc(d.email)+'</b> &nbsp;<button class="btn btn-sm btn-ghost" id="drvOff">'+I18N.t('قطع اتصال')+'</button>';
+      document.getElementById('drvOff').onclick=function(){if(confirm(I18N.t('اتصال گوگل درایو قطع شود؟')))App.post('/drive/disconnect').then(load);};}
+    else box.innerHTML='<a class="btn" href="/drive/connect">'+I18N.t('اتصال به گوگل درایو')+'</a>';});}
+  load();
+  var m=new URLSearchParams(location.search).get('msg');
+  var M={drive_ok:I18N.t('گوگل درایو متصل شد'),drive_fail:I18N.t('اتصال گوگل درایو ناموفق بود'),drive_cancel:I18N.t('اتصال لغو شد'),drive_off:I18N.t('اتصال گوگل درایو فعال نیست')};
+  if(M[m])App.toast(M[m],m!=='drive_ok');
+})();
+</script>
 {% endblock %}

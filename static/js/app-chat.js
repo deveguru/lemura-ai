@@ -2,7 +2,7 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var S = { models: {}, groups: [], model: '', state: {}, imageModels: [], imageModel: '', web: false, webOn: false,
-    imgMode: false, history: [], conv: '', busy: false, ctrl: null };
+    imgMode: false, history: [], conv: '', busy: false, ctrl: null, att: [], voiceTurn: false };
   var inp = $('inp'), sendBtn = $('send'), msgs = $('msgs'), thread = $('thread');
   var ICON = {
     send: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
@@ -11,6 +11,7 @@
     redo: '<svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>'
   };
   var esc = MD.esc;
+  var T = function (s) { return window.I18N ? I18N.t(s) : s; };
 
   function newId() { var a = new Uint8Array(10); crypto.getRandomValues(a); return 'c' + Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
   function atBottom() { return thread.scrollHeight - thread.scrollTop - thread.clientHeight < 120; }
@@ -38,7 +39,7 @@
   function selectModel(id, silent) {
     if (!id || !S.models[id]) return;
     if (isLocked(id) && !silent) {
-      if (!LEMURA.user) { Auth.open('برای استفاده از این مدل وارد شوید'); return; }
+      if (!LEMURA.user) { Auth.open(T('برای استفاده از این مدل وارد شوید')); return; }
       App.toast('این مدل برای کاربرانی است که کیف پول خود را شارژ کرده‌اند', true); return;
     }
     S.model = id; var m = S.models[id];
@@ -54,7 +55,7 @@
       ms.forEach(function (m) {
         h += '<div class="mitem' + (m.id === S.model ? ' sel' : '') + '" data-mid="' + esc(m.id) + '"><img src="' + esc(m.icon || '') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
           '<span class="nm">' + esc(m.name) + (m.vision ? ' <span title="پشتیبانی از تصویر">👁</span>' : '') + '</span>' +
-          (isLocked(m.id) ? '<span class="lock">🔒</span>' : '<span class="pr">' + App.faNum(m.price) + ' ت/۱K</span>') + '</div>';
+          (isLocked(m.id) ? '<span class="lock">🔒</span>' : '<span class="pr">' + App.faNum(m.price) + T(' ت/۱K</span>')) + '</div>';
       });
     });
     $('mitems').innerHTML = h || '<div style="padding:10px;color:var(--t3)">مدلی یافت نشد</div>';
@@ -65,30 +66,44 @@
   $('mq').addEventListener('input', function () { renderModelList(this.value); });
   function quota() {
     var st = S.state, q = $('quota');
-    if (st.tier === 'guest') q.textContent = App.faNum(st.remaining) + ' پیام رایگان باقی‌مانده';
-    else if (st.tier === 'free') q.textContent = App.faNum(st.remaining) + ' پیام رایگان امروز';
+    if (st.tier === 'guest') q.textContent = App.faNum(st.remaining) + T(' پیام رایگان باقی‌مانده');
+    else if (st.tier === 'free') q.textContent = App.faNum(st.remaining) + T(' پیام رایگان امروز');
     else q.textContent = '';
     if (st.balance != null && LEMURA.user) App.setBalance(st.balance);
   }
 
   // ---------- rendering ----------
-  function addUser(text) {
+  var ATT_RE = /<!--att:([\s\S]*?)-->/;
+  function attList(text) { var m = ATT_RE.exec(String(text || '')); if (!m) return []; try { return JSON.parse(m[1]) || []; } catch (e) { return []; } }
+  function stripTags(text) { return String(text || '').replace(/<!--(att|sources):[\s\S]*?-->/g, '').trim(); }
+  function attHtml(list) {
+    return list.map(function (a) {
+      var u = MD.safeUrl(a.url);
+      if (a.kind === 'image' && u) return '<a class="attimg" href="' + esc(u) + '" target="_blank" rel="noopener"><img src="' + esc(u) + '" alt="' + esc(a.name) + '"></a>';
+      return '<a class="attchip" href="' + esc(u) + '" target="_blank" rel="noopener">📎 ' + esc(a.name) + '</a>';
+    }).join('');
+  }
+  function addUser(text, atts) {
+    atts = atts || attList(text);
     var d = document.createElement('div'); d.className = 'msg user';
-    d.innerHTML = '<div class="bubble"></div>'; d.firstChild.textContent = text; msgs.appendChild(d); scroll(true); return d;
+    d.innerHTML = '<div class="bubble">' + (atts.length ? '<div class="uatts">' + attHtml(atts) + '</div>' : '') + '<div class="utext"></div></div>';
+    d.querySelector('.utext').textContent = stripTags(text); msgs.appendChild(d); scroll(true); return d;
   }
   function addAI(modelId) {
     var m = S.models[modelId] || {};
     var d = document.createElement('div'); d.className = 'msg ai';
     d.innerHTML = '<div class="aiav">' + (m.icon ? '<img src="' + esc(m.icon) + '" alt="">' : '⚡') + '</div>' +
       '<div class="bubble"><div class="srcs" style="display:none"></div><div class="md"><span class="dots"><span></span><span></span><span></span></span></div><div class="macts" style="display:none"></div></div>';
-    msgs.appendChild(d); scroll(true); return d;
+    msgs.appendChild(d); scroll(true); spin(d, true); return d;
   }
+  function spin(el, on) { var a = el && el.querySelector('.aiav'); if (a) a.classList.toggle('spin', !!on); }
   function setSources(el, src) {
     var box = el.querySelector('.srcs'); if (!src || !src.length) return;
     box.innerHTML = src.map(function (s) { var u = MD.safeUrl(s.url); return u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">🔗 ' + esc(s.title || u) + '</a>' : ''; }).join('');
     box.style.display = 'flex';
   }
   function actions(el, text, meta, canRedo) {
+    spin(el, false);
     var a = el.querySelector('.macts'); a.style.display = 'flex';
     a.innerHTML = '<button class="ibtn" data-act="copy" title="کپی">' + ICON.copy + '</button>' +
       (canRedo ? '<button class="ibtn" data-act="redo" title="تولید مجدد">' + ICON.redo + '</button>' : '') +
@@ -100,6 +115,7 @@
     var btn = '';
     if (code === 'login_required' || code === 'guest_limit' || code === 'guest_model_locked') btn = '<button class="btn btn-sm" onclick="Auth.open()">ورود / ثبت‌نام</button>';
     else if (code === 'need_charge' || code === 'insufficient_balance' || code === 'free_limit') btn = '<a class="btn btn-sm" href="/wallet">شارژ کیف پول</a>';
+    spin(el, false);
     el.querySelector('.md').innerHTML = '<div class="errbox">' + esc(text) + (btn ? '<br>' + btn : '') + '</div>';
   }
 
@@ -122,7 +138,7 @@
           var el = addAI(m.model); el.querySelector('.md').innerHTML = MD.render(m.content);
           setSources(el, MD.sources(m.content)); actions(el, m.content, '', i === r.data.length - 1);
         }
-        S.history.push({ role: m.role, content: String(m.content).replace(/<!--sources:[\s\S]*?-->/g, '') });
+        S.history.push({ role: m.role, content: stripTags(m.content) });
       });
       App.renderConvs(); scroll(true);
     });
@@ -138,11 +154,15 @@
   function send(text, opts) {
     opts = opts || {};
     if (S.busy) { if (S.ctrl) S.ctrl.abort(); return; }
-    text = (text != null ? text : inp.value).trim(); if (!text) return;
-    if (!opts.regen) { inp.value = ''; grow(); }
-    hero(false); ensureConv(text);
-    if (S.imgMode || opts.image) return image(text, opts);
-    if (!opts.regen) addUser(text);
+    text = (text != null ? text : inp.value).trim();
+    var atts = opts.regen ? [] : S.att.filter(function (a) { return a.id; });
+    if (S.att.some(function (a) { return !a.id; })) { App.toast(T('صبر کنید تا آپلود فایل تمام شود'), true); return; }
+    if (!text && !atts.length) return;
+    if (!opts.regen) { inp.value = ''; grow(); S.att = []; renderAtt(); }
+    hero(false); ensureConv(text || atts[0].name);
+    if ((S.imgMode || opts.image) && !atts.length) return image(text, opts);
+    if (!opts.regen) addUser(text, atts);
+    S.voiceTurn = !!opts.voice;
     var el = addAI(S.model), md = el.querySelector('.md');
     var hist = S.history.slice(-20); var first = !S.history.length;
     S.history.push({ role: 'user', content: text });
@@ -150,12 +170,14 @@
     var full = '', meta = '';
     fetch('/chat/stream', {
       method: 'POST', credentials: 'same-origin', signal: S.ctrl.signal, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, model: S.model, history: hist, conversation_id: LEMURA.user ? S.conv : '', web_search: S.webOn, force_text: !!opts.forceText })
+      body: JSON.stringify({ message: text, model: S.model, history: hist, conversation_id: LEMURA.user ? S.conv : '', web_search: S.webOn,
+        force_text: !!opts.forceText || !!opts.voice, attachments: atts.map(function (a) { return a.id; }) })
     }).then(function (res) {
       var ct = res.headers.get('Content-Type') || '';
       if (ct.indexOf('application/json') >= 0) return res.json().then(function (j) {
         if (j.intent === 'image') { el.remove(); S.history.pop(); setBusy(false); return image(text, { fromChat: true }); }
-        S.history.pop(); errBox(el, j.error || 'خطا', j.code); setBusy(false);
+        S.history.pop(); errBox(el, j.error || T('خطا'), j.code); setBusy(false);
+        if (window.Chat && Chat.onReply) Chat.onReply('', j.error || 'error');
       });
       var reader = res.body.getReader(), dec = new TextDecoder(), buf = '';
       md.innerHTML = ''; md.classList.add('cursor');
@@ -171,10 +193,10 @@
             else if (j.lemura) {
               var L = j.lemura;
               if (L.type === 'sources') setSources(el, L.sources);
-              else if (L.type === 'error') { full = full || ''; errBox(el, L.message || 'خطا در دریافت پاسخ'); }
+              else if (L.type === 'error') { full = full || ''; errBox(el, L.message || T('خطا در دریافت پاسخ')); }
               else if (L.type === 'done') {
                 if (L.state) { S.state = L.state; quota(); }
-                meta = L.cost ? App.faNum(L.cost) + ' تومان · ' + App.faNum(L.tokens) + ' توکن' : '';
+                if (L.balance != null) App.setBalance(L.balance);
               }
             }
           });
@@ -184,20 +206,21 @@
       return pump().then(function () { finish(); });
     }).catch(function (e) {
       if (e && e.name === 'AbortError') { finish(true); return; }
-      errBox(el, 'ارتباط با سرور برقرار نشد'); setBusy(false);
+      errBox(el, T('ارتباط با سرور برقرار نشد')); setBusy(false);
     });
     function finish(aborted) {
-      md.classList.remove('cursor');
-      if (full) { md.innerHTML = MD.render(full); S.history.push({ role: 'assistant', content: full }); actions(el, full, meta + (aborted ? ' (متوقف شد)' : ''), true); }
+      md.classList.remove('cursor'); spin(el, false);
+      if (full) { md.innerHTML = MD.render(full); S.history.push({ role: 'assistant', content: full }); actions(el, full, aborted ? T('متوقف شد') : '', true); }
       else if (!el.querySelector('.errbox')) { md.innerHTML = aborted ? '<span style="color:var(--t3)">متوقف شد.</span>' : ''; S.history.pop(); }
       setBusy(false); S.ctrl = null;
       if (first && LEMURA.user) App.loadConvs();
+      if (window.Chat && Chat.onReply) Chat.onReply(full, aborted ? 'aborted' : '');
     }
   }
 
   function image(prompt, opts) {
     opts = opts || {};
-    if (!LEMURA.user) { Auth.open('برای ساخت تصویر وارد شوید'); return; }
+    if (!LEMURA.user) { Auth.open(T('برای ساخت تصویر وارد شوید')); return; }
     if (!opts.regen) addUser(prompt);
     var el = addAI(''), md = el.querySelector('.md');
     var im = S.imageModels.filter(function (m) { return m.id === S.imageModel; })[0] || S.imageModels[0] || {};
@@ -207,19 +230,19 @@
     S.history.push({ role: 'user', content: prompt });
     App.post('/chat/image', { prompt: prompt, model: S.imageModel, conversation_id: S.conv, has_history: hadHistory }, true).then(function (r) {
       setBusy(false);
-      if (!r.ok) { S.history.pop(); errBox(el, r.error || 'ساخت تصویر ناموفق بود', r.need_charge ? 'need_charge' : r.code); return; }
+      if (!r.ok) { S.history.pop(); errBox(el, r.error || T('ساخت تصویر ناموفق بود'), r.need_charge ? 'need_charge' : r.code); return; }
       var mdText = '![' + prompt.slice(0, 80).replace(/]/g, '') + '](' + r.url + ')';
       md.innerHTML = MD.render(mdText);
-      S.history.push({ role: 'assistant', content: '[تصویر ساخته شد: ' + prompt.slice(0, 120) + ']' });
-      actions(el, r.url, (r.cost ? App.faNum(r.cost) + ' تومان · ' : '') + (r.model || ''), false);
+      S.history.push({ role: 'assistant', content: T('[تصویر ساخته شد: ') + prompt.slice(0, 120) + ']' });
+      actions(el, r.url, '', false);
       if (r.balance != null) App.setBalance(r.balance);
       if (opts.fromChat) {
         var a = el.querySelector('.macts'), b = document.createElement('button');
-        b.className = 'chip'; b.style.marginRight = '6px'; b.textContent = 'منظورم تصویر نبود، پاسخ متنی بده';
+        b.className = 'chip'; b.style.marginRight = '6px'; b.textContent = T('منظورم تصویر نبود، پاسخ متنی بده');
         b.onclick = function () { send(prompt, { regen: true, forceText: true }); }; a.appendChild(b);
       }
       scroll(true); if (!hadHistory) App.loadConvs();
-    }).catch(function () { setBusy(false); S.history.pop(); errBox(el, 'ارتباط با سرور برقرار نشد'); });
+    }).catch(function () { setBusy(false); S.history.pop(); errBox(el, T('ارتباط با سرور برقرار نشد')); });
   }
 
   function regenerate() {
@@ -232,8 +255,38 @@
     send(lastUser, { regen: true, forceText: true });
   }
 
+
+  // ---------- attachments ----------
+  function renderAtt() {
+    var box = $('atts'); if (!box) return;
+    box.innerHTML = S.att.map(function (a, i) {
+      var thumb = a.kind === 'image' && a.preview ? '<img src="' + a.preview + '" alt="">' : '<span class="fi">📄</span>';
+      return '<div class="att' + (a.id ? '' : ' up') + '">' + thumb + '<span class="an">' + esc(a.name) + '</span>' +
+        '<button type="button" class="ax" data-rm="' + i + '" aria-label="remove">×</button></div>';
+    }).join('');
+    box.style.display = S.att.length ? 'flex' : 'none';
+    sendBtn.disabled = !S.busy && !inp.value.trim() && !S.att.length;
+  }
+  function addFiles(files) {
+    if (!LEMURA.user) { Auth.open(T('برای ارسال فایل وارد شوید')); return; }
+    Array.prototype.slice.call(files || [], 0, 6 - S.att.length).forEach(function (f) {
+      var a = { name: f.name, kind: /^image\//.test(f.type) ? 'image' : 'file', id: 0 };
+      if (a.kind === 'image') a.preview = URL.createObjectURL(f);
+      S.att.push(a); renderAtt();
+      var fd = new FormData(); fd.append('file', f);
+      fetch('/chat/upload', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (r) {
+        if (!r.ok) { S.att.splice(S.att.indexOf(a), 1); renderAtt(); App.toast(r.error || T('آپلود ناموفق بود'), true); return; }
+        a.id = r.file.id; a.url = r.file.url; a.kind = r.file.kind; renderAtt();
+      }).catch(function () { S.att.splice(S.att.indexOf(a), 1); renderAtt(); App.toast(T('آپلود ناموفق بود'), true); });
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-rm]'); if (!b) return;
+    S.att.splice(+b.getAttribute('data-rm'), 1); renderAtt();
+  });
+
   // ---------- composer ----------
-  function grow() { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 220) + 'px'; sendBtn.disabled = !S.busy && !inp.value.trim(); }
+  function grow() { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 220) + 'px'; sendBtn.disabled = !S.busy && !inp.value.trim() && !S.att.length; }
   inp.addEventListener('input', grow);
   inp.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !window.matchMedia('(max-width:860px)').matches) { e.preventDefault(); send(); }
@@ -241,13 +294,18 @@
   document.querySelectorAll('.sug').forEach(function (b) { b.onclick = function () { send(b.getAttribute('data-q')); }; });
   $('newChatBtn').addEventListener('click', function (e) { e.preventDefault(); reset(); });
 
+  inp.addEventListener('paste', function (e) {
+    var fs = e.clipboardData && e.clipboardData.files; if (fs && fs.length) { e.preventDefault(); addFiles(fs); }
+  });
   window.Chat = {
-    send: function () { send(); }, open: open, reset: reset,
+    send: function () { send(); }, open: open, reset: reset, addFiles: addFiles,
+    sendText: function (t, opts) { send(t, opts || {}); }, isBusy: function () { return S.busy; },
+    model: function () { return S.models[S.model] || {}; },
     pickModel: function (e) { renderModelList(''); $('mq').value = ''; App.menu(e, 'mlist'); setTimeout(function () { $('mq').focus(); }, 30); },
     toggleWeb: function () { S.webOn = !S.webOn; $('webChip').classList.toggle('on', S.webOn); },
     toggleImage: function () {
       S.imgMode = !S.imgMode; $('imgChip').classList.toggle('on', S.imgMode);
-      inp.placeholder = S.imgMode ? 'تصویری که می‌خواهید را توصیف کنید...' : 'پیام خود را بنویسید...'; inp.focus();
+      inp.placeholder = S.imgMode ? T('تصویری که می‌خواهید را توصیف کنید...') : T('پیام خود را بنویسید...'); inp.focus();
     },
     share: function () {
       if (!S.conv || !LEMURA.user) return;

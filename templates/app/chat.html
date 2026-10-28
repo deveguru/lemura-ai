@@ -1,48 +1,71 @@
 {% extends "app/base.html" %}
 {% block topbar %}
 <button class="mpick" id="mpick" onclick="Chat.pickModel(event)">
-  <img id="mpIcon" src="" alt="" onerror="this.style.visibility='hidden'"><span id="mpName">لمورا</span>{{ ic('down') }}
+  <img id="mpIcon" src="" alt="" onerror="this.style.visibility='hidden'"><span id="mpName">{{ _('لمورا') }}</span>{{ ic('down') }}
 </button>
 {% endblock %}
 {% block topright %}
-<button class="ibtn" id="shareBtn" style="display:none" title="اشتراک‌گذاری" onclick="Chat.share()">{{ ic('share') }}</button>
-<a class="ibtn" href="/" title="گفتگوی جدید">{{ ic('edit') }}</a>
+<button class="ibtn" id="shareBtn" style="display:none" title="{{ _('اشتراک‌گذاری') }}" onclick="Chat.share()">{{ ic('share') }}</button>
+<a class="ibtn" href="/" title="{{ _('گفتگوی جدید') }}">{{ ic('edit') }}</a>
 {% endblock %}
 {% block main %}
 <div class="thread" id="thread">
   <div class="hero" id="hero">
-    <h1>{% if user %}سلام {{ user.display_name.split(' ')[0] }}، امروز چطور کمکتان کنم؟{% else %}امروز چطور کمکتان کنم؟{% endif %}</h1>
-    <p>گفتگو با بهترین مدل‌های هوش مصنوعی دنیا — بنویسید «یک تصویر بساز از ...» تا تصویر بسازم.</p>
+    {% if brand.logo %}<img class="hero-logo" src="{{ brand.logo }}" alt="{{ brand.name }}">{% else %}<div class="auth-logo" style="width:72px;height:72px;font-size:34px;margin-bottom:14px">⚡</div>{% endif %}
+    <h1>{% if user %}{{ _('سلام {name}، امروز چطور کمکتان کنم؟', name=user.display_name.split(' ')[0]) }}{% else %}{{ _('امروز چطور کمکتان کنم؟') }}{% endif %}</h1>
+    <p>{{ _('گفتگو با بهترین مدل‌های هوش مصنوعی دنیا — بنویسید «یک تصویر بساز از ...» تا تصویر بسازم.') }}</p>
     <div class="sugs">
-      <button class="sug" data-q="یک ایمیل رسمی برای درخواست مرخصی سه روزه بنویس"><b>✍️ نوشتن</b>یک ایمیل رسمی برای درخواست مرخصی</button>
-      <button class="sug" data-q="یک تصویر بساز از گربه فضانورد روی ماه با سبک سینمایی"><b>🎨 تولید تصویر</b>گربه فضانورد روی ماه، سبک سینمایی</button>
-      <button class="sug" data-q="یک تابع پایتون بنویس که اعداد اول تا n را برگرداند و توضیح بده"><b>💻 برنامه‌نویسی</b>تابع پایتون برای اعداد اول</button>
-      <button class="sug" data-q="مفهوم یادگیری ماشین را به زبان ساده با مثال توضیح بده"><b>🎓 یادگیری</b>یادگیری ماشین به زبان ساده</button>
+      <button class="sug" data-q="{{ _('یک ایمیل رسمی برای درخواست مرخصی سه روزه بنویس') }}"><b>✍️ {{ _('نوشتن') }}</b>{{ _('یک ایمیل رسمی برای درخواست مرخصی') }}</button>
+      <button class="sug" data-q="{{ _('یک تصویر بساز از گربه فضانورد روی ماه با سبک سینمایی') }}"><b>🎨 {{ _('تولید تصویر') }}</b>{{ _('گربه فضانورد روی ماه، سبک سینمایی') }}</button>
+      <button class="sug" data-q="{{ _('یک تابع پایتون بنویس که اعداد اول تا n را برگرداند و توضیح بده') }}"><b>💻 {{ _('برنامه‌نویسی') }}</b>{{ _('تابع پایتون برای اعداد اول') }}</button>
+      <button class="sug" data-q="{{ _('مفهوم یادگیری ماشین را به زبان ساده با مثال توضیح بده') }}"><b>🎓 {{ _('یادگیری') }}</b>{{ _('یادگیری ماشین به زبان ساده') }}</button>
     </div>
   </div>
   <div class="msgs" id="msgs"></div>
 </div>
 <div class="composer-wrap">
-  <div class="composer">
-    <textarea id="inp" rows="1" placeholder="پیام خود را بنویسید..." autofocus></textarea>
+  <div class="composer" id="composer">
+    <div class="atts" id="atts" style="display:none"></div>
+    <textarea id="inp" rows="1" placeholder="{{ _('پیام خود را بنویسید...') }}" autofocus></textarea>
     <div class="crow">
-      <button class="chip" id="webChip" style="display:none" onclick="Chat.toggleWeb()">{{ ic('globe') }} جستجوی وب</button>
-      <button class="chip" id="imgChip" onclick="Chat.toggleImage()">{{ ic('image') }} ساخت تصویر</button>
+      <input type="file" id="fileIn" multiple hidden
+        accept="image/*,.pdf,.docx,.xlsx,.pptx,.txt,.md,.csv,.json,.xml,.yaml,.yml,.html,.css,.js,.ts,.py,.php,.java,.go,.rs,.c,.cpp,.cs,.rb,.sh,.sql,.log">
+      <button class="ibtn" type="button" title="{{ _('پیوست فایل یا تصویر') }}" onclick="document.getElementById('fileIn').click()">{{ ic('clip') }}</button>
+      <button class="chip" id="webChip" style="display:none" onclick="Chat.toggleWeb()">{{ ic('globe') }} {{ _('جستجوی وب') }}</button>
+      <button class="chip" id="imgChip" onclick="Chat.toggleImage()">{{ ic('image') }} {{ _('ساخت تصویر') }}</button>
       <span class="quota" id="quota"></span>
-      <button class="send" id="send" disabled onclick="Chat.send()" aria-label="ارسال">{{ ic('send') }}</button>
+      <button class="ibtn voicebtn" type="button" title="{{ _('گفتگوی صوتی زنده') }}" onclick="Voice.open()">{{ ic('mic') }}</button>
+      <button class="send" id="send" disabled onclick="Chat.send()" aria-label="{{ _('ارسال') }}">{{ ic('send') }}</button>
     </div>
   </div>
-  <div class="foot-note">لمورا ممکن است اشتباه کند؛ اطلاعات مهم را بررسی کنید.</div>
+  <div class="foot-note">{{ _('لمورا ممکن است اشتباه کند؛ اطلاعات مهم را بررسی کنید.') }}</div>
+</div>
+<div class="voice-ov" id="voiceOv" data-state="idle">
+  <button class="ibtn vclose" onclick="Voice.close()" aria-label="{{ _('بستن') }}">✕</button>
+  <div class="vorb-wrap" onclick="Voice.tapToTalk()"><div class="vorb" id="voiceOrb">{% if brand.logo %}<img src="{{ brand.logo }}" alt="">{% else %}⚡{% endif %}</div></div>
+  <div class="vstatus" id="voiceStatus"></div>
+  <div class="vheard" id="voiceHeard"></div>
+  <div class="vhint">{{ _('صحبت کنید؛ پس از مکث، لمورا پاسخ می‌دهد و با صدا می‌خواند. وسط پاسخ صحبت کنید تا قطع شود.') }}</div>
+  <button class="btn btn-danger" onclick="Voice.close()">{{ _('پایان گفتگوی صوتی') }}</button>
 </div>
 <div class="menu mlist" id="mlist">
-  <input class="input" id="mq" placeholder="جستجوی مدل...">
+  <input class="input" id="mq" placeholder="{{ _('جستجوی مدل...') }}">
   <div id="mitems"></div>
 </div>
 {% endblock %}
 {% block scripts %}
 <script src="/static/vendor/marked.min.js"></script>
 <script src="/static/vendor/highlight.min.js"></script>
-<script src="/static/js/md.js?v=2"></script>
+<script src="/static/js/md.js?v=3"></script>
 <script>window.CHAT_INIT={{ {"conv": conv_id or ""}|tojson }};</script>
-<script src="/static/js/app-chat.js?v=2"></script>
+<script src="/static/js/app-chat.js?v=3"></script>
+<script src="/static/js/voice.js?v=1"></script>
+<script>
+(function(){var fi=document.getElementById('fileIn'),cp=document.getElementById('composer');
+  fi.onchange=function(){Chat.addFiles(fi.files);fi.value='';};
+  ['dragenter','dragover'].forEach(function(ev){cp.addEventListener(ev,function(e){e.preventDefault();cp.classList.add('drop');});});
+  ['dragleave','drop'].forEach(function(ev){cp.addEventListener(ev,function(e){e.preventDefault();cp.classList.remove('drop');});});
+  cp.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files.length)Chat.addFiles(e.dataTransfer.files);});
+})();
+</script>
 {% endblock %}

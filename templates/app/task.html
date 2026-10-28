@@ -34,9 +34,9 @@
 </div></div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/vendor/marked.min.js"></script>
-<script src="/static/vendor/highlight.min.js"></script>
-<script src="/static/js/md.js?v=3"></script>
+<script src="{{ asset('/static/vendor/marked.min.js') }}"></script>
+<script src="{{ asset('/static/vendor/highlight.min.js') }}"></script>
+<script src="{{ asset('/static/js/md.js') }}"></script>
 <script>window.TASK={{ {"id": task.id}|tojson }};</script>
-<script src="/static/js/task.js?v=1"></script>
+<script src="{{ asset('/static/js/task.js') }}"></script>
 {% endblock %}

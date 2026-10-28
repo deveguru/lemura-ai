@@ -27,7 +27,7 @@
 </div></div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/md.js?v=3"></script>
+<script src="{{ asset('/static/js/md.js') }}"></script>
 <script>
 (function(){
   var $=function(i){return document.getElementById(i);},size='{{ sizes[0] if sizes else "1024x1024" }}';

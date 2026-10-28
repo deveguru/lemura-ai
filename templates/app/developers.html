@@ -61,7 +61,7 @@ console.log(r.choices[0].message.content);</code></pre>
 </div></div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/md.js?v=2"></script>
+<script src="{{ asset('/static/js/md.js') }}"></script>
 <script>
 function cp(v){navigator.clipboard.writeText(v).then(function(){App.toast('کپی شد');});}
 function tk(a,id){App.post('/panel/api/token-'+a,{token_id:id}).then(function(r){if(r.success)location.reload();else App.toast('خطا',true);});}

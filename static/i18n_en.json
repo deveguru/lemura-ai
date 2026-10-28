@@ -342,5 +342,7 @@
  "اتصال لغو شد": "Connection cancelled",
  "اتصال گوگل درایو فعال نیست": "Google Drive is not enabled",
  "ورود با گیت‌هاب فعال نیست": "GitHub sign-in is not enabled",
- "ایمیل تأییدشده‌ای در حساب گیت‌هاب پیدا نشد": "No verified email was found on your GitHub account"
+ "ایمیل تأییدشده‌ای در حساب گیت‌هاب پیدا نشد": "No verified email was found on your GitHub account",
+ "پایان": "End",
+ "برای پایان صحبت یا قطع پاسخ ضربه بزنید": "Tap to finish speaking or interrupt the answer"
 }

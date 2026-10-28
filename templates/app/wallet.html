@@ -18,7 +18,7 @@
   <div class="panel" style="margin-bottom:16px">
     <h3>{{ _('شارژ کیف پول') }}</h3>
     <form method="post" action="/wallet/charge" id="cf">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px" id="presets">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr));gap:8px;margin-bottom:12px" id="presets">
         {% for v in [50000,100000,200000,500000,1000000,2000000] %}<button type="button" class="chip" style="justify-content:center;padding:10px" data-v="{{ v }}">{{ v|fa }} {{ _('تومان') }}</button>{% endfor %}
       </div>
       <div class="fg"><label>{{ _('مبلغ دلخواه (تومان) — حداقل') }} {{ ws.min_charge|int|fa }}</label>

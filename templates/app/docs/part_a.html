@@ -6,7 +6,7 @@
   <ul>
     <li>سازگار با کتابخانه‌های رسمی OpenAI (Python، Node.js و ...) — فقط <code>base_url</code> را عوض کنید.</li>
     <li>چت با پشتیبانی کامل از Streaming (SSE)، تصویر ورودی (Vision) و Function Calling.</li>
-    <li>تولید و ویرایش تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو، Embedding و Moderation.</li>
+    <li>تولید و ویرایش تصویر، تبدیل متن به گفتار، گفتار به متن، تولید ویدیو و انیمیشن (موتور Remotion لمورا)، Embedding و Moderation — و همهٔ ابزارهای پلتفرم در <a href="/tools">وب‌سرویس ابزارها</a>.</li>
     <li>ورودی تصویر و PDF در چت (بینایی)، Files API، OCR اسناد و استخراج فیلدهای ساختاریافته.</li>
     <li>جستجوی وب، استخراج محتوای صفحات و تحقیق خودکار.</li>
     <li>پرداخت ریالی از کیف پول، بدون نیاز به کارت ارزی.</li>
@@ -30,7 +30,7 @@
   <h2>احراز هویت</h2>
   <p>همه درخواست‌ها (به‌جز <code>/ping</code>) باید کلید API را در هدر <code>Authorization</code> ارسال کنند:</p>
   {% call code('http') %}Authorization: Bearer lsk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx{% endcall %}
-  <div class="note">⚠️ کلید API را هرگز در کد سمت کاربر (مرورگر یا اپ موبایل منتشرشده) قرار ندهید. درخواست‌ها را از سرور خود ارسال کنید.</div>
+  <div class="note">{{ ic('triangle-alert', 'ic ie') }} کلید API را هرگز در کد سمت کاربر (مرورگر یا اپ موبایل منتشرشده) قرار ندهید. درخواست‌ها را از سرور خود ارسال کنید.</div>
   <h3>بررسی کلید</h3>
   {{ ep('GET', '/me') }}
   {% call code('bash') %}curl {{ B }}/me -H "Authorization: Bearer lsk-YOUR_KEY"{% endcall %}

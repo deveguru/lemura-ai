@@ -17,29 +17,47 @@
 @media (max-width:860px){.dwrap{display:block}.dnav{position:static;width:100%;max-width:100%;flex-direction:row;overflow-x:auto;max-height:none;margin-bottom:14px;padding-bottom:4px}.dnav button{white-space:nowrap;flex:none}.dbody{width:100%}.ep{justify-content:flex-start}}
 </style>
 {% endblock %}
-{% block main %}
+{% block main %}<!--email_off-->
 {% set B = api_base %}
 <div class="page"><div class="page-in">
-  <h1>📘 مستندات وب‌سرویس لمورا</h1>
+  <h1>{{ ic('book-open', 'ic ie') }} مستندات وب‌سرویس لمورا</h1>
   <p class="sub">API کاملاً سازگار با OpenAI SDK. نسخه ۵٫۱ — Base URL: <b class="ltr mono">{{ B }}</b></p>
+  {% include "app/_docs_nav.html" %}
   <div class="dwrap">
     <nav class="dnav" id="dnav">
-      {% for k,l in [('docs','🏠 معرفی'),('auth','🔐 احراز هویت'),('endpoints','🗂 فهرست Endpointها'),('chat','💬 چت'),('responses','🧩 Responses API'),
-        ('vision','👁 بینایی و فایل در چت'),('files','📁 فایل‌ها (Files API)'),('ocr','🔤 تشخیص متن (OCR)'),
-        ('img','🎨 تولید تصویر'),('imgedit','🖌 ویرایش تصویر'),('audio','🎙 صوت'),('voice','🗣 گفتگوی صوتی زنده'),('extract','🧾 استخراج فیلد'),('video','🎬 ویدیو'),('ws','🌐 جستجو و تحقیق وب'),('emb','🔢 Embedding و Moderation'),
-        ('bal','💰 موجودی'),('models','🧠 مدل‌ها'),('tokens','🔑 کلیدها و قیمت‌گذاری'),('usage','📊 گزارش مصرف'),('examples','🧪 نمونه کدها'),
-        ('troubleshooting','🛠 خطاها و رفع اشکال'),('faq','❓ سوالات متداول')] %}
-      <button data-t="{{ k }}">{{ l }}</button>{% endfor %}
+      {% for k,l,i in [('docs','معرفی','info'),('common','قواعد مشترک، موجودی و خطاها','badge-check'),('auth','احراز هویت','key-round'),('endpoints','فهرست Endpointها','list'),('chat','چت','message-circle'),('responses','Responses API','workflow'),
+        ('vision','بینایی و فایل در چت','eye'),('files','فایل‌ها (Files API)','folder'),('ocr','تشخیص متن (OCR)','scan-text'),
+        ('img','تولید تصویر','image'),('imgedit','ویرایش تصویر','brush'),('audio','صوت','audio-lines'),('voice','گفتگوی صوتی زنده','mic'),('extract','استخراج فیلد','list-checks'),('video','ویدیو','clapperboard'),('ws','جستجو و تحقیق وب','search'),('emb','Embedding و Moderation','hash'),
+        ('bal','موجودی','wallet'),('models','مدل‌ها','brain'),('tokens','کلیدها و قیمت‌گذاری','coins'),('usage','گزارش مصرف','chart-column'),('examples','نمونه کدها','code-xml'),
+        ('tools','ابزارها (وب‌سرویس)','wrench'),('troubleshooting','خطاها و رفع اشکال','circle-alert'),('faq','سوالات متداول','circle-help')] %}
+      <button data-t="{{ k }}">{{ ic(i, 'ic ie') }} {{ l }}</button>{% endfor %}
     </nav>
     <div class="dbody md">
       {% include "app/docs/part_a.html" %}
+      <section class="dsec" id="d-common">
+        <h2>قواعد مشترک هر دو وب‌سرویس</h2>
+        {% include "app/_api_common.html" %}
+      </section>
       {% include "app/docs/part_b.html" %}
       {% include "app/docs/part_c.html" %}
       {% include "app/docs/part_d.html" %}
+      <section class="dsec" id="d-tools">
+        <h2>ابزارهای پلتفرم (وب‌سرویس ابزارها)</h2>
+        <p>همهٔ ابزارهای هوش مصنوعی لمورا با <b>همین کلید</b> و همین کیف پول به‌صورت API مستقیم در دسترس است:
+          <code class="ltr">POST {{ request.url_root.rstrip('/') }}/public/v1/tools/&lt;tool_id&gt;</code>.
+          مستندات کامل هر ابزار (پارامترها، نمونه و تعرفه) در <a href="/tools">وب‌سرویس ابزارها</a> است؛ این فهرست از همان منبع ساخته می‌شود.</p>
+        {% for g, items in tool_groups.items() %}
+        <h3>{{ g }}</h3>
+        <div class="tw"><table class="tbl"><tbody>{% for d in items %}
+          <tr><td style="width:38%"><a href="/tools#{{ d.tool_id }}"><b>{{ d.name }}</b></a><div class="ltr mono" style="font-size:.72rem;color:var(--t3)">{{ d.tool_id }}</div></td>
+            <td>{{ d.summary or d.description[:140] }}</td><td class="ltr" style="white-space:nowrap">~{{ '{:,}'.format(d.price.estimate) }} ت</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% endfor %}
+      </section>
     </div>
   </div>
 </div></div>
-{% endblock %}
+<!--/email_off-->{% endblock %}
 {% block scripts %}
 <script src="{{ asset('/static/js/md.js') }}"></script>
 <script>
@@ -56,4 +74,5 @@
 </script>
 <script src="{{ asset('/static/vendor/highlight.min.js') }}"></script>
 <script>document.querySelectorAll('.dsec pre code').forEach(function(c){try{hljs.highlightElement(c);}catch(e){}});</script>
+<script src="{{ asset('/static/js/docs.js') }}"></script>
 {% endblock %}

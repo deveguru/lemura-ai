@@ -3,9 +3,9 @@
 {% block main %}
 {% set wm = request.args.get('wallet_msg', '') %}
 <div class="page"><div class="page-in" style="max-width:860px">
-  <h1>💰 {{ _('کیف پول') }}</h1>
+  <h1>{{ ic('coins', 'ic ie') }} {{ _('کیف پول') }}</h1>
   <p class="sub">{{ _('موجودی کیف پول برای چت، تولید تصویر و وب‌سرویس API به‌صورت مشترک استفاده می‌شود.') }}</p>
-  {% if wm == 'success' %}<div class="amsg ok" style="display:block">✅ {{ _('پرداخت موفق بود و کیف پول شما شارژ شد.') }}{% if request.args.get('ref_id') %} {{ _('کد پیگیری') }}: <b class="ltr">{{ request.args.get('ref_id') }}</b>{% endif %}</div>
+  {% if wm == 'success' %}<div class="amsg ok" style="display:block">{{ ic('circle-check', 'ic ie') }} {{ _('پرداخت موفق بود و کیف پول شما شارژ شد.') }}{% if request.args.get('ref_id') %} {{ _('کد پیگیری') }}: <b class="ltr">{{ request.args.get('ref_id') }}</b>{% endif %}</div>
   {% elif wm in ('failed','error') %}<div class="amsg err" style="display:block">{{ _('پرداخت ناموفق بود. اگر مبلغی کسر شده، طی ۷۲ ساعت بازمی‌گردد.') }}</div>
   {% elif wm == 'cancelled' %}<div class="amsg err" style="display:block">{{ _('پرداخت لغو شد.') }}</div>
   {% elif wm == 'expired' %}<div class="amsg err" style="display:block">{{ _('نشست پرداخت منقضی شده است.') }}</div>{% endif %}

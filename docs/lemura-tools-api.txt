@@ -1,0 +1,933 @@
+﻿# وب‌سرویس ابزارهای لمورا
+
+همهٔ ابزارهایی که هوش مصنوعی لمورا در چت استفاده می‌کند — ساخت پاورپوینت، Word، Excel و PDF، OCR، تبدیل صوت، حذف پس‌زمینه، نمودار، داده‌های بازار و... — به‌صورت API مستقیم هم در دسترس است. پردازش کامل روی سرورهای لمورا انجام می‌شود و هزینهٔ هر فراخوانی از کیف پول صاحب کلید کسر می‌شود.
+
+Base URL: `https://lemura.ir/public/v1` · [OpenAPI JSON](openapi-tools.json)
+
+> نسخهٔ گرافیکی: [docs/index.html](index.html) · آنلاین: [https://lemura.ir/docs](https://lemura.ir/docs) · به‌روزرسانی 2026-10-29
+
+**گروه‌ها:**
+
+- [صوت](#صوت)
+- [کد](#کد)
+- [تولید اسناد](#تولید-اسناد)
+- [مالی](#مالی)
+- [تصویر](#تصویر)
+- [پردازش زبان](#پردازش-زبان)
+- [پردازش فایل](#پردازش-فایل)
+- [پایگاه دانش (RAG)](#پایگاه-دانش-rag)
+- [ویدیو و انیمیشن](#ویدیو-و-انیمیشن)
+- [مصورسازی و داده](#مصورسازی-و-داده)
+- [وب](#وب)
+
+## قواعد مشترک هر دو وب‌سرویس
+
+### احراز هویت
+
+هر دو وب‌سرویس با یک کلید کار می‌کنند. کلید را در صفحهٔ «کلیدها و آمار» بسازید و در هدر هر درخواست بفرستید:
+
+```bash
+Authorization: Bearer lsk-YOUR_KEY
+```
+
+### نحوهٔ درخواست
+
+- بدنهٔ درخواست‌ها JSON است با هدر `Content-Type: application/json`.
+- ارسال فایل با `multipart/form-data` (فیلد فایل؛ در ابزارها هم‌نام پارامتر و آرگومان‌های دیگر در فیلد args به‌صورت JSON).
+- پاسخ‌ها همیشه JSON با کدگذاری UTF-8 است؛ مبالغ به تومان است.
+- کارهای طولانی (ویدیو، OCR، تبدیل صوت و...) ناهمگام هستند: شناسهٔ کار برمی‌گردد و وضعیت را بعداً می‌پرسید.
+
+### متدها
+
+| متد | کاربرد |
+|---|---|
+| GET | خواندن: فهرست مدل‌ها/ابزارها، موجودی، وضعیت کار، دریافت فایل |
+| POST | اجرا: چت، تولید تصویر/ویدیو، فراخوانی ابزار، آپلود فایل، ساخت وظیفه |
+| DELETE | حذف: فایل، ویدیو، وظیفه |
+
+### موجودی کیف پول و اطلاعات حساب
+
+موجودی و اطلاعات حساب از هر دو وب‌سرویس با پاسخ یکسان در دسترس است:
+
+```bash
+GET https://lemura.ir/wp-json/lemuraai/v1/balance
+GET https://lemura.ir/public/v1/balance
+
+GET https://lemura.ir/wp-json/lemuraai/v1/me
+GET https://lemura.ir/public/v1/me
+```
+
+```bash
+curl https://lemura.ir/public/v1/balance -H "Authorization: Bearer lsk-YOUR_KEY"
+
+{"object": "balance", "user_id": 42, "balance": 125000, "currency": "toman", ...}
+```
+
+### کدهای خطا
+
+| HTTP | معنی |
+|---|---|
+| 400 | ورودی نامعتبر |
+| 401 | کلید ارسال نشده یا نامعتبر است |
+| 402 | موجودی کیف پول کافی نیست |
+| 403 | دسترسی به این مدل/ابزار مجاز نیست |
+| 404 | مدل، ابزار یا کار پیدا نشد |
+| 409 / 428 | کار هنوز آماده نیست / عملیات تغییردهنده نیاز به هدر X-Lemura-Confirm: true دارد |
+| 429 | عبور از سقف تعداد درخواست یا سهمیهٔ روزانه (هدرهای X-RateLimit-*) |
+| 5xx | خطای موقت سرور یا سرویس بالادستی — چند ثانیه بعد دوباره تلاش کنید |
+
+---
+
+### شروع سریع
+
+آدرس پایه: `https://lemura.ir/public/v1` — احراز هویت با هدر `Authorization: Bearer lsk-...` — قیمت‌ها برای پلن «رایگان»
+
+```
+# ساخت پاورپوینت
+curl -X POST https://lemura.ir/public/v1/tools/pptx_generate \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"title":"گزارش فصلی","slides":[{"title":"خلاصه","bullets":["رشد ۲۰٪","۳ محصول جدید"]}]}'
+
+# ارسال فایل (multipart): فیلد فایل هم‌نام پارامتر ابزار است
+curl -X POST "https://lemura.ir/public/v1/tools/ocr_image?wait=30" -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -F file=@scan.jpg -F 'args={"languages":["fa","en"]}'
+
+# کارهای طولانی job_id برمی‌گردانند (HTTP 202)
+curl https://lemura.ir/public/v1/jobs/job_xxx -H "Authorization: Bearer lsk-YOUR_KEY"
+```
+
+**خروجی یکسان**
+
+`{ ok, data, files[], error, meta }` — فایل‌ها با لینک دانلود موقت
+
+**هزینه**
+
+پایه + وزن پردازش × واحد پردازش واقعی؛ مبلغ دقیق در meta.cost
+
+**خطاها**
+
+400 ورودی · 401 کلید · 402 موجودی · 403 دسترسی · 428 تأیید · 429 سقف
+
+[صوت 3](#g1)[کد 1](#g2)[تولید اسناد 6](#g3)[مالی 2](#g4)[تصویر 2](#g5)[پردازش زبان 3](#g6)[پردازش فایل 4](#g7)[پایگاه دانش (RAG) 2](#g8)[ویدیو و انیمیشن 2](#g9)[مصورسازی و داده 2](#g10)[وب 2](#g11)
+
+## صوت
+
+### حذف نویز صدا — `audio_denoise`
+
+`async` · `v1.0.0` · ~260 تومان / فراخوانی
+
+Reduce background noise in an audio file (noisereduce spectral gating); outputs WAV/MP3.
+
+```http
+POST https://lemura.ir/public/v1/tools/audio_denoise
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| file | string | ✓ | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| strength | number |  | 0.1–1.0 |
+| stationary | boolean |  | Stationary noise (hum, fan) |
+| format | string (wav \| mp3) |  | Output |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/audio_denoise -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"file": "f_0123456789abcdef01234567"}'
+```
+
+حداکثر زمان اجرا: 300s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 200.0 + وزن پردازش 15.0 × واحد پردازش
+
+### تبدیل گفتار به متن — `speech_to_text`
+
+`async` · `v1.0.0` · ~800 تومان / فراخوانی
+
+Transcribe audio/video files to text with faster-whisper (Persian, English and 90+ languages), optional timestamps and SRT subtitles.
+
+```http
+POST https://lemura.ir/public/v1/tools/speech_to_text
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| file | string | ✓ | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| language | string (auto \| fa \| en \| ar \| tr \| de \| fr) |  | Language code or auto |
+| timestamps | boolean |  | Include segment timestamps |
+| srt | boolean |  | Also produce an .srt subtitle file |
+| translate | boolean |  | Translate to English instead of transcribing |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/speech_to_text -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"file": "f_0123456789abcdef01234567"}'
+```
+
+حداکثر زمان اجرا: 900s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 500.0 + وزن پردازش 15.0 × واحد پردازش
+
+### تبدیل متن به گفتار — `text_to_speech`
+
+`v1.0.0` · ~160 تومان / فراخوانی
+
+Convert text to natural speech (MP3) with neural voices (Persian: Dilara/Farid, English and many more).
+
+```http
+POST https://lemura.ir/public/v1/tools/text_to_speech
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| text | string | ✓ | Text to speak (max 5000 chars) |
+| voice | string (fa-IR-DilaraNeural \| fa-IR-FaridNeural \| en-US-JennyNeural \| en-US-GuyNeural \| en-GB-SoniaNeural \| ar-SA-ZariyahNeural \| tr-TR-EmelNeural \| de-DE-KatjaNeural) |  | Voice |
+| rate | string |  | Speed like +10% or -20% |
+| pitch | string |  | Pitch like +5Hz |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/text_to_speech -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"text": "..."}'
+```
+
+حداکثر زمان اجرا: 90s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 150.0 + وزن پردازش 10.0 × واحد پردازش
+
+## کد
+
+### مفسر کد پایتون — `code_interpreter`
+
+`v1.0.0` · ~115 تومان / فراخوانی
+
+Run Python 3.11 code in an isolated sandbox (no network) for calculations, data analysis and file conversion. pandas, numpy, matplotlib, plotly, openpyxl, python-docx, Pillow are available. Input files are in ./in, save outputs to ./out.
+
+```http
+POST https://lemura.ir/public/v1/tools/code_interpreter
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| code | string | ✓ | Python code |
+| files | array |  | `فایل` |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/code_interpreter -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"code": "..."}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 100.0 + وزن پردازش 15.0 × واحد پردازش
+
+## تولید اسناد
+
+### تولید سند Word — `docx_generate`
+
+`v1.0.0` · ~270 تومان / فراخوانی
+
+Create a Word (.docx) document from content blocks (headings, paragraphs, lists, tables, images), or fill a .docx template (docxtpl) with a context.
+
+```http
+POST https://lemura.ir/public/v1/tools/docx_generate
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| title | string |  | Document title |
+| rtl | boolean |  | Right-to-left (Persian) |
+| blocks | array |  |  |
+| template | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| context | object |  | Template variables for docxtpl |
+| filename | string |  | Output file name |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/docx_generate -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 250.0 + وزن پردازش 20.0 × واحد پردازش
+
+### تولید PDF — `pdf_generate`
+
+`v1.0.0` · ~270 تومان / فراخوانی
+
+Render HTML or Markdown into a high-quality PDF (WeasyPrint) with full Persian/RTL support and the Vazirmatn font.
+
+```http
+POST https://lemura.ir/public/v1/tools/pdf_generate
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| html | string |  | HTML body |
+| markdown | string |  | Markdown text (used if html is empty) |
+| title | string |  | Document title |
+| rtl | boolean |  | Right-to-left |
+| page_size | string (A4 \| A5 \| Letter \| A3) |  | Page size |
+| landscape | boolean |  | Landscape orientation |
+| css | string |  | Extra CSS |
+| filename | string |  | Output file name |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/pdf_generate -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+حداکثر زمان اجرا: 90s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 250.0 + وزن پردازش 20.0 × واحد پردازش
+
+### ابزارهای PDF — `pdf_tools`
+
+`v1.0.0` · ~165 تومان / فراخوانی
+
+Manipulate PDFs: merge, split, extract pages, rotate, add text watermark, convert pages to images, images to PDF, compress, read metadata.
+
+```http
+POST https://lemura.ir/public/v1/tools/pdf_tools
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| action | string (merge \| split \| extract_pages \| rotate \| watermark \| to_images \| images_to_pdf \| compress \| metadata) | ✓ | Operation |
+| files | array | ✓ | `فایل` |
+| pages | string |  | Page ranges like 1-3,5 |
+| angle | integer (90 \| 180 \| 270) |  | Rotation angle |
+| text | string |  | Watermark text |
+| dpi | integer |  | Image DPI |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/pdf_tools -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"action": "merge", "files": ["f_0123456789abcdef01234567"]}'
+```
+
+حداکثر زمان اجرا: 120s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 150.0 + وزن پردازش 15.0 × واحد پردازش
+
+### تولید پاورپوینت — `pptx_generate`
+
+`v1.0.0` · ~320 تومان / فراخوانی
+
+Create a PowerPoint (.pptx) presentation from structured slides. Supports Persian/RTL text, themes, notes and images.
+
+```http
+POST https://lemura.ir/public/v1/tools/pptx_generate
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| title | string | ✓ | Presentation title |
+| subtitle | string |  | Subtitle |
+| theme | string (purple \| dark \| light \| blue \| green) |  | Theme |
+| rtl | boolean |  | Right-to-left (Persian) layout |
+| slides | array | ✓ |  |
+| filename | string |  | Output file name |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/pptx_generate -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"slides": [{"title": "..."}], "title": "..."}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 300.0 + وزن پردازش 20.0 × واحد پردازش
+
+### ساخت QR کد — `qrcode_generate`
+
+`v1.0.0` · ~35 تومان / فراخوانی
+
+Generate a QR code image (PNG or SVG) for a URL, text, Wi-Fi config or contact card, with custom colors and optional center logo.
+
+```http
+POST https://lemura.ir/public/v1/tools/qrcode_generate
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| data | string | ✓ | Content to encode |
+| size | integer |  | Box size in px |
+| fill_color | string |  | Foreground color |
+| back_color | string |  | Background color |
+| format | string (png \| svg) |  | Output format |
+| logo | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/qrcode_generate -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"data": "..."}'
+```
+
+حداکثر زمان اجرا: 20s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 30.0 + وزن پردازش 5.0 × واحد پردازش
+
+### تولید اکسل — `xlsx_generate`
+
+`v1.0.0` · ~220 تومان / فراخوانی
+
+Create an Excel (.xlsx) workbook with one or more sheets, formulas, styled headers, auto-filter and optional native charts.
+
+```http
+POST https://lemura.ir/public/v1/tools/xlsx_generate
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| sheets | array | ✓ |  |
+| rtl | boolean |  | Right-to-left sheets |
+| filename | string |  | Output file name |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/xlsx_generate -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"sheets": [{"name": "...", "rows": ["..."]}]}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 200.0 + وزن پردازش 20.0 × واحد پردازش
+
+## مالی
+
+### بازار رمزارز — `crypto_market`
+
+`v1.0.0` · ~65 تومان / فراخوانی
+
+Live crypto market data from major exchanges (ccxt): ticker, OHLCV candles, order book, markets; optional technical indicators and candlestick chart.
+
+```http
+POST https://lemura.ir/public/v1/tools/crypto_market
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| action | string (ticker \| ohlcv \| orderbook \| markets) | ✓ | Data |
+| symbol | string |  | Pair like BTC/USDT |
+| exchange | string (binance \| kucoin \| okx \| bybit \| kraken \| coinbase \| bitfinex \| gateio \| mexc) |  | Exchange |
+| timeframe | string (1m \| 5m \| 15m \| 1h \| 4h \| 1d \| 1w) |  | Candle timeframe |
+| limit | integer |  | Candles |
+| indicators | array |  |  |
+| chart | boolean |  | Return a candlestick chart image |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/crypto_market -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"action": "ticker"}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 60.0 + وزن پردازش 5.0 × واحد پردازش
+
+### بازار سهام و تحلیل تکنیکال — `stock_market`
+
+`v1.0.0` · ~65 تومان / فراخوانی
+
+Stock/ETF/index/forex data from Yahoo Finance (yfinance): price history, company info and technical indicators (pandas-ta) with an optional chart.
+
+```http
+POST https://lemura.ir/public/v1/tools/stock_market
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| symbol | string | ✓ | Ticker like AAPL, ^GSPC, EURUSD=X, GC=F |
+| action | string (history \| info \| indicators) |  | Data |
+| period | string (5d \| 1mo \| 3mo \| 6mo \| 1y \| 2y \| 5y \| max) |  | Range |
+| interval | string (1h \| 1d \| 1wk \| 1mo) |  | Interval |
+| indicators | array |  |  |
+| chart | boolean |  | Return a chart image |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/stock_market -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"symbol": "..."}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 60.0 + وزن پردازش 5.0 × واحد پردازش
+
+## تصویر
+
+### ویرایش تصویر — `image_edit`
+
+`v1.0.0` · ~68 تومان / فراخوانی
+
+Edit images with a pipeline of operations: resize, crop, rotate, flip, grayscale, blur, sharpen, brightness, contrast, text watermark, format conversion, compression, thumbnail.
+
+```http
+POST https://lemura.ir/public/v1/tools/image_edit
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| file | string | ✓ | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| ops | array |  |  |
+| format | string (png \| jpeg \| webp) |  | Output format |
+| quality | integer |  | JPEG/WebP quality |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/image_edit -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"file": "f_0123456789abcdef01234567"}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 60.0 + وزن پردازش 8.0 × واحد پردازش
+
+### حذف پس‌زمینه تصویر — `remove_background`
+
+`async` · `v1.0.0` · ~330 تومان / فراخوانی
+
+Remove the background of a photo (rembg / U²-Net); optionally replace it with a solid color.
+
+```http
+POST https://lemura.ir/public/v1/tools/remove_background
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| file | string | ✓ | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| bg_color | string |  | Optional background color, e.g. #ffffff |
+| alpha_matting | boolean |  | Finer edges |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/remove_background -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"file": "f_0123456789abcdef01234567"}'
+```
+
+حداکثر زمان اجرا: 180s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 250.0 + وزن پردازش 20.0 × واحد پردازش
+
+## پردازش زبان
+
+### تحلیل متن (spaCy + fastText) — `nlp_analyze`
+
+`v1.0.0` · ~45 تومان / فراخوانی
+
+Detect language (fastText, 176 languages) and extract named entities, sentences and noun phrases (spaCy).
+
+```http
+POST https://lemura.ir/public/v1/tools/nlp_analyze
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| text | string | ✓ | Text |
+| ops | array |  |  |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/nlp_analyze -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"text": "..."}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 40.0 + وزن پردازش 5.0 × واحد پردازش
+
+### پردازش زبان فارسی (Hazm) — `persian_nlp`
+
+`v1.0.0` · ~45 تومان / فراخوانی
+
+Persian text processing with hazm: normalization (spacing, characters, half-space), sentence/word tokenization, stemming, lemmatization.
+
+```http
+POST https://lemura.ir/public/v1/tools/persian_nlp
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| text | string | ✓ | Persian text |
+| ops | array |  |  |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/persian_nlp -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"text": "..."}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 40.0 + وزن پردازش 5.0 × واحد پردازش
+
+### خلاصه‌سازی و تحلیل احساس — `text_summarize`
+
+`v1.0.0` · ~76 تومان / فراخوانی
+
+Extractive summarization (sumy: LSA/LexRank/TextRank/Luhn) and multilingual sentiment analysis (transformers).
+
+```http
+POST https://lemura.ir/public/v1/tools/text_summarize
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| text | string |  | Text |
+| file | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| task | string (summarize \| sentiment \| both) |  | Task |
+| sentences | integer |  | Summary sentences |
+| method | string (lsa \| lexrank \| textrank \| luhn) |  | Algorithm |
+| language | string (persian \| english \| auto) |  | Language |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/text_summarize -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+حداکثر زمان اجرا: 120s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 60.0 + وزن پردازش 8.0 × واحد پردازش
+
+## پردازش فایل
+
+### فشرده‌سازی و استخراج آرشیو — `archive_tools`
+
+`v1.0.0` · ~90 تومان / فراخوانی
+
+List, extract or create ZIP / 7z archives (optionally password-protected).
+
+```http
+POST https://lemura.ir/public/v1/tools/archive_tools
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| action | string (list \| extract \| create) | ✓ | Operation |
+| file | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| files | array |  | `فایل` |
+| format | string (zip \| 7z) |  | Archive format for create |
+| password | string |  | Archive password |
+| name | string |  | Output archive name |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/archive_tools -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"action": "list"}'
+```
+
+حداکثر زمان اجرا: 120s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 80.0 + وزن پردازش 10.0 × واحد پردازش
+
+### استخراج محتوای اصلی صفحه وب — `html_extract`
+
+`v1.0.0` · ~65 تومان / فراخوانی
+
+Fetch a public web page (or take raw HTML/file) and extract its main readable content as text/markdown with metadata (trafilatura).
+
+```http
+POST https://lemura.ir/public/v1/tools/html_extract
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| url | string |  | Public https URL |
+| html | string |  | Raw HTML instead of URL |
+| file | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| output | string (text \| markdown \| json) |  | Output format |
+| include_links | boolean |  | Keep links |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/html_extract -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+حداکثر زمان اجرا: 40s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 60.0 + وزن پردازش 5.0 × واحد پردازش
+
+### تشخیص متن از تصویر (OCR) — `ocr_image`
+
+`async` · `v1.0.0` · ~550 تومان / فراخوانی
+
+Extract text from images or scanned PDFs with EasyOCR (Persian + English by default).
+
+```http
+POST https://lemura.ir/public/v1/tools/ocr_image
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| file | string | ✓ | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| languages | array |  |  |
+| detail | boolean |  | Return boxes and confidence |
+| max_pages | integer |  | Max PDF pages |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/ocr_image -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"file": "f_0123456789abcdef01234567"}'
+```
+
+حداکثر زمان اجرا: 600s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 400.0 + وزن پردازش 25.0 × واحد پردازش
+
+### استخراج متن و جدول PDF — `pdf_extract`
+
+`async` · `v1.0.0` · ~180 تومان / فراخوانی
+
+Extract text and tables from a digital PDF (pdfplumber), page by page.
+
+```http
+POST https://lemura.ir/public/v1/tools/pdf_extract
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| file | string | ✓ | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| pages | string |  | Page ranges like 1-3,5 |
+| tables | boolean |  | Also extract tables |
+| max_chars | integer |  | Max characters returned |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/pdf_extract -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"file": "f_0123456789abcdef01234567"}'
+```
+
+حداکثر زمان اجرا: 300s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 150.0 + وزن پردازش 15.0 × واحد پردازش
+
+## پایگاه دانش (RAG)
+
+### ساخت پایگاه دانش (RAG) — `knowledge_index`
+
+`async` · `v1.0.0` · ~250 تومان / فراخوانی
+
+Index files, web pages or text into the user's private knowledge base (langchain splitter + chromadb) so it can be searched in chat.
+
+```http
+POST https://lemura.ir/public/v1/tools/knowledge_index
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| collection | string | ✓ | Knowledge base name |
+| files | array |  | `فایل` |
+| urls | array |  |  |
+| text | string |  | Raw text to index |
+| replace | boolean |  | Replace the collection first |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/knowledge_index -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"collection": "..."}'
+```
+
+حداکثر زمان اجرا: 900s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 200.0 + وزن پردازش 10.0 × واحد پردازش
+
+### جستجو در پایگاه دانش — `knowledge_search`
+
+`v1.0.0` · ~35 تومان / فراخوانی
+
+Semantic search over the user's knowledge base; returns the most relevant passages with sources (chat with your data).
+
+```http
+POST https://lemura.ir/public/v1/tools/knowledge_search
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| collection | string |  | Knowledge base name (empty = all) |
+| query | string | ✓ | Question or search phrase |
+| k | integer |  | Results |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/knowledge_search -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"query": "..."}'
+```
+
+حداکثر زمان اجرا: 30s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 30.0 + وزن پردازش 5.0 × واحد پردازش
+
+## ویدیو و انیمیشن
+
+### انیمیشن سفارشی با کد React — `animation_code`
+
+`async` · `v1.1.0` · ~3,000 تومان / فراخوانی
+
+Render a fully custom animation from a Remotion React component (TSX). The code must `export default` a React component; it may import from 'react', 'remotion' (AbsoluteFill, Sequence, Series, useCurrentFrame, useVideoConfig, interpolate, spring, Easing, Img, Audio, staticFile), '@remotion/transitions' (+ /fade /slide /wipe /flip), '@remotion/shapes', '@remotion/paths', '@remotion/noise'. Use the 'Vazirmatn' font for Persian. Input files are available via staticFile('in/<file name>') or by passing their ids in props. No network inside the renderer (no remote URLs). Max 60 s (30 s at 1080p). Queued like animation_render.
+
+```http
+POST https://lemura.ir/public/v1/tools/animation_code
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| code | string | ✓ | TSX source of the component (export default) |
+| duration_sec | number |  |  |
+| aspect | string (16:9 \| 9:16 \| 1:1 \| 4:5) |  | Aspect ratio |
+| quality | string (480p \| 720p \| 1080p) |  | Resolution (short side) |
+| fps | integer (24 \| 25 \| 30) |  | Frames per second |
+| format | string (mp4 \| webm \| gif) |  | Output format |
+| props | object |  | Props passed to the component (file ids f_xxx/att_N become staticFile paths) |
+| files | array |  | `فایل` |
+| title | string |  | File name |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/animation_code -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"code": "..."}'
+```
+
+حداکثر زمان اجرا: 900s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 1000.0 + وزن پردازش 4.0 × واحد پردازش
+
+### ساخت انیمیشن و موشن‌گرافیک — `animation_render`
+
+`async` · `v1.1.0` · ~2,400 تومان / فراخوانی
+
+Render an animated video (MP4/WebM/GIF) from scenes: title, text (word-by-word), bullets, image (Ken Burns), quote, stat (animated counter), chart (animated bars), steps, split (image+text), cta — with transitions (fade/slide/wipe/flip), theme, logo, background music and watermark. Persian RTL with the Vazirmatn font by default. Aspect 16:9, 9:16 (stories/reels), 1:1 or 4:5. Max 20 scenes; total length max 30 s at 1080p, 60 s at 720p (default), 120 s at 480p. Rendering is queued (one render at a time) and returns a job_id; the user is notified.
+
+```http
+POST https://lemura.ir/public/v1/tools/animation_render
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| title | string |  | Video title (also the file name) |
+| scenes | array | ✓ |  |
+| aspect | string (16:9 \| 9:16 \| 1:1 \| 4:5) |  | Aspect ratio |
+| quality | string (480p \| 720p \| 1080p) |  | Resolution (short side) |
+| fps | integer (24 \| 25 \| 30) |  | Frames per second |
+| format | string (mp4 \| webm \| gif) |  | Output format |
+| theme | object |  |  |
+| rtl | boolean |  | Right-to-left (Persian) layout |
+| logo | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| music | string |  | File id: f_xxx (uploaded/generated file) or att_N (chat attachment) `فایل` |
+| music_volume | number |  |  |
+| watermark | string |  | Small corner text |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/animation_render -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"aspect": "9:16", "scenes": [{"duration": 3, "subtitle": "\u062f\u0633\u062a\u06cc\u0627\u0631 \u0647\u0648\u0634 \u0645\u0635\u0646\u0648\u0639\u06cc \u0641\u0627\u0631\u0633\u06cc", "title": "\u0644\u0645\u0648\u0631\u0627", "type": "title"}, {"items": ["\u06af\u0641\u062a\u06af\u0648 \u0628\u0627 \u0628\u0647\u062a\u0631\u06cc\u0646 \u0645\u062f\u0644\u200c\u0647\u0627", "\u0633\u0627\u062e\u062a \u062a\u0635\u0648\u06cc\u0631 \u0648 \u0648\u06cc\u062f\u06cc\u0648", "\u0648\u0628\u200c\u0633\u0631\u0648\u06cc\u0633 API"], "title": "\u0627\u0645\u06a9\u0627\u0646\u0627\u062a", "transition": "slide", "type": "bullets"}, {"suffix": "%", "title": "\u0631\u0636\u0627\u06cc\u062a \u06a9\u0627\u0631\u0628\u0631\u0627\u0646", "type": "stat", "value": 98}, {"button": "lemura.ir", "title": "\u0647\u0645\u06cc\u0646 \u062d\u0627\u0644\u0627 \u0634\u0631\u0648\u0639 \u06a9\u0646\u06cc\u062f", "transition": "wipe", "type": "cta"}], "title": "\u0645\u0639\u0631\u0641\u06cc \u0644\u0645\u0648\u0631\u0627"}'
+```
+
+حداکثر زمان اجرا: 900s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 800.0 + وزن پردازش 4.0 × واحد پردازش
+
+## مصورسازی و داده
+
+### ساخت نمودار — `chart_generate`
+
+`v1.0.0` · ~68 تومان / فراخوانی
+
+Create a chart (bar, line, pie, scatter, area, histogram, heatmap, funnel) as PNG/SVG image or interactive HTML with Persian font support.
+
+```http
+POST https://lemura.ir/public/v1/tools/chart_generate
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| type | string (bar \| line \| pie \| scatter \| area \| histogram \| heatmap \| funnel) | ✓ | Chart type |
+| title | string |  | Title |
+| data | object | ✓ |  |
+| x_title | string |  | X axis title |
+| y_title | string |  | Y axis title |
+| format | string (png \| svg \| html) |  | Output |
+| width | integer |  | px |
+| height | integer |  | px |
+| theme | string (dark \| light) |  | Theme |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/chart_generate -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"data": {"series": [{"values": ["..."]}]}, "type": "bar"}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 60.0 + وزن پردازش 8.0 × واحد پردازش
+
+### تولید دادهٔ آزمایشی — `fake_data`
+
+`v1.0.0` · ~35 تومان / فراخوانی
+
+Generate realistic fake datasets (Persian or English locales) for testing: people, contacts, addresses, companies, dates, numbers, text.
+
+```http
+POST https://lemura.ir/public/v1/tools/fake_data
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| locale | string (fa_IR \| en_US \| de_DE \| ar_SA \| tr_TR) |  | Locale |
+| rows | integer |  | Row count |
+| fields | array | ✓ | faker providers: name, email, phone_number, address, company, job, date, city, text, iban, credit_card_number, uuid4, random_int, ... |
+| format | string (json \| csv \| xlsx) |  | Output |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/fake_data -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"fields": ["..."]}'
+```
+
+حداکثر زمان اجرا: 60s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 30.0 + وزن پردازش 5.0 × واحد پردازش
+
+## وب
+
+### مرورگر هدلس — `browser_render`
+
+`async` · `v1.0.0` · ~260 تومان / فراخوانی
+
+Open a public web page in a real headless Chromium (JavaScript-heavy sites) and return its rendered text, HTML, a screenshot or a PDF.
+
+```http
+POST https://lemura.ir/public/v1/tools/browser_render
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| url | string | ✓ | Public https URL |
+| action | string (text \| html \| screenshot \| pdf) |  | What to return |
+| full_page | boolean |  | Full-page screenshot |
+| wait_ms | integer |  | Extra wait after load |
+| selector | string |  | Optional CSS selector to wait for / extract |
+| width | integer |  | Viewport width |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/browser_render -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"url": "..."}'
+```
+
+حداکثر زمان اجرا: 90s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 200.0 + وزن پردازش 15.0 × واحد پردازش
+
+### استخراج داده از وب (Scraper) — `web_scrape`
+
+`v1.0.0` · ~55 تومان / فراخوانی
+
+Fetch a public web page over a safe proxy and extract text, links, tables, metadata or CSS-selector fields (httpx + BeautifulSoup).
+
+```http
+POST https://lemura.ir/public/v1/tools/web_scrape
+```
+
+**پارامترها، نمونه و محدودیت‌ها**
+
+| پارامتر | نوع | الزامی | توضیح |
+|---|---|---|---|
+| url | string | ✓ | Public https URL |
+| extract | string (text \| links \| tables \| meta \| all) |  | What to extract |
+| selectors | object |  | name -> CSS selector |
+| max_chars | integer |  | Max characters |
+
+```bash
+curl -X POST https://lemura.ir/public/v1/tools/web_scrape -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{"url": "..."}'
+```
+
+حداکثر زمان اجرا: 40s · حداکثر حجم فایل ورودی: 25MB · تعرفه: پایه 50.0 + وزن پردازش 5.0 × واحد پردازش
+
+### API مدیریت وظایف و اعلان
+
+```bash
+GET  https://lemura.ir/public/v1/tasks                     # list
+POST https://lemura.ir/public/v1/tasks                     # {"name","tool_id","payload","trigger":{"type":"cron","expr":"0 8 * * *"},"post_action":{"channels":["email"]}}
+POST https://lemura.ir/public/v1/tasks/<id>/approve         # confirm the exact payload + schedule
+POST https://lemura.ir/public/v1/tasks/<id>/run | pause | activate
+DELETE https://lemura.ir/public/v1/tasks/<id>
+POST https://lemura.ir/public/v1/notifications             # {"title","body","channels":["inapp","push","email","sms"]}
+```

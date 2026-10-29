@@ -31,9 +31,13 @@
         },
         image: function (t) {
           var src = safeUrl(t.href); if (!src) return esc(t.text || '');
+          if (/\.(mp4|webm|mov)$/i.test(t.text || '') || /\.(mp4|webm)(\?|$)/i.test(src)) {
+            return '<span class="genvid"><video controls playsinline preload="metadata" src="' + esc(src) + '"></video>' +
+              '<span class="acts"><a href="' + esc(src) + '" download>' + App.ic('download') + ' ' + T('دانلود') + '</a></span></span>';
+          }
           return '<span class="genimg"><img src="' + esc(src) + '" alt="' + esc(t.text || '') + '" loading="lazy" data-zoom>' +
-            '<span class="acts"><a href="' + esc(src) + '" download>⬇ ' + T('دانلود') + '</a><a href="' + esc(src) + '" target="_blank" rel="noopener">↗ ' + T('باز کردن') + '</a>' +
-            (src.indexOf('/uploads/') === 0 ? '<button type="button" data-drive="' + esc(src) + '">☁️ ' + T('درایو') + '</button>' : '') + '</span></span>';
+            '<span class="acts"><a href="' + esc(src) + '" download>' + App.ic('download') + ' ' + T('دانلود') + '</a><a href="' + esc(src) + '" target="_blank" rel="noopener">' + App.ic('arrow-up-right') + ' ' + T('باز کردن') + '</a>' +
+            (src.indexOf('/uploads/') === 0 ? '<button type="button" data-drive="' + esc(src) + '">' + App.ic('cloud') + ' ' + T('درایو') + '</button>' : '') + '</span></span>';
         },
         code: function (t) {
           var lang = (t.lang || '').split(/\s/)[0], body;
@@ -64,7 +68,7 @@
       var pre = b.closest('pre'), code = pre.querySelector('code').innerText;
       if (b.hasAttribute('data-dl')) { download(code, pre.getAttribute('data-lang')); return; }
       var orig = b.textContent;
-      navigator.clipboard.writeText(code).then(function () { b.textContent = '✓'; setTimeout(function () { b.textContent = orig; }, 1500); });
+      navigator.clipboard.writeText(code).then(function () { b.innerHTML = App.ic('check'); setTimeout(function () { b.textContent = orig; }, 1500); });
       return;
     }
     var dv = e.target.closest && e.target.closest('[data-drive]');

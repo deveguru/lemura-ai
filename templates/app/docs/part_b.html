@@ -38,19 +38,35 @@ print(img.data[0].url or "base64 length: %d" % len(img.data[0].b64_json)){% endc
 </section>
 
 <section class="dsec" id="d-video">
-  <h2>تولید ویدیو</h2>
-  <p>تولید ویدیو ناهمگام است: ابتدا کار را بسازید، سپس وضعیت را بررسی و در پایان فایل را دریافت کنید.</p>
+  <h2>تولید ویدیو و انیمیشن (موتور Remotion لمورا)</h2>
+  <p>همهٔ ویدیوهای لمورا با موتور انیمیشن <b>Remotion</b> روی سرورهای خود لمورا ساخته می‌شوند (همان ابزار
+    <a href="/tools#animation_render"><code>animation_render</code></a> در وب‌سرویس ابزارها و چت). پرامپت شما با هوش مصنوعی به صحنه‌ها
+    (عنوان، متن، فهرست، تصویر، آمار متحرک، نمودار، ترنزیشن، تم، متن فارسی راست‌به‌چپ) تبدیل و در صف رندر ساخته می‌شود.
+    تولید ناهمگام است: کار را بسازید، وضعیت را بپرسید و فایل را دریافت کنید.</p>
   {{ ep('POST','/videos') }}
-  <p>پارامترها: <code>model</code> (<code>sora-2</code>، <code>sora-2-pro</code>، <code>veo-3.1-generate-001</code>، <code>veo-3.1-fast-generate-001</code>، ...)، <code>prompt</code>، <code>seconds</code> (یا <code>duration</code>) و <code>size</code>. هزینه = قیمت هر ثانیه × مدت.</p>
-  {% call code('bash') %}curl {{ B }}/videos \
-  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
-  -d '{"model": "sora-2", "prompt": "a paper boat drifting on a rainy street, cinematic", "seconds": 8}'{% endcall %}
+  <div class="tw"><table class="tbl"><thead><tr><th>پارامتر</th><th>توضیح</th></tr></thead><tbody>
+    <tr><td class="ltr mono">prompt</td><td>توضیح ویدیو (فارسی یا انگلیسی) — الزامی</td></tr>
+    <tr><td class="ltr mono">seconds</td><td>مدت تقریبی؛ حداکثر ۳۰ ثانیه در 1080p، ۶۰ ثانیه در 720p و ۱۲۰ ثانیه در 480p</td></tr>
+    <tr><td class="ltr mono">size</td><td><span class="ltr">1280x720 · 1920x1080 · 854x480 · 720x1280 · 1080x1920 · 720x720 · 1080x1080 · 1080x1350</span> (یا <code>aspect</code>: <span class="ltr">16:9 · 9:16 · 1:1 · 4:5</span> و <code>quality</code>: <span class="ltr">480p · 720p · 1080p</span>)</td></tr>
+    <tr><td class="ltr mono">files</td><td>اختیاری: شناسهٔ تصاویر آپلودشده (<code>f_…</code> از <a href="/tools">POST /public/v1/files</a>) برای استفاده در صحنه‌ها</td></tr>
+    <tr><td class="ltr mono">model</td><td>اختیاری؛ همیشه <code>lemura-motion</code></td></tr>
+  </tbody></table></div>
+  {% if video_doc %}<p>هزینه: طراحی صحنه‌ها با هوش مصنوعی (مثل یک پیام چت) + رندر: پایه {{ '{:,}'.format(video_doc.price.base_cost|int) }} + وزن پردازش
+    {{ video_doc.price.compute_weight }} × واحد پردازش واقعی — حدود <b>{{ '{:,}'.format(video_doc.price.estimate) }} تومان</b> برای یک ویدیوی معمولی ۷۲۰p.
+    مبلغ دقیق هر ویدیو در فیلد <code>cost</code> و در <a href="/usage">گزارش مصرف</a> ثبت می‌شود.</p>{% endif %}
+  {% call code('bash') %}curl {{ B }}/videos   -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json"   -d '{"prompt": "ویدیوی معرفی فروشگاه قهوه: عنوان، سه مزیت، تخفیف ۲۰٪ و دعوت به خرید", "seconds": 15, "size": "720x1280"}'{% endcall %}
+  {% call code('json') %}{"id": "job_8b1f…", "object": "video", "model": "lemura-motion", "status": "queued",
+ "aspect": "9:16", "quality": "720p", "seconds": 15.0, "progress": 0}{% endcall %}
   {{ ep('GET','/videos/{video_id}') }}
-  <p>وضعیت کار (<code>queued</code>، <code>in_progress</code>، <code>completed</code>، <code>failed</code>).</p>
+  <p>وضعیت: <code>queued</code>، <code>in_progress</code>، <code>completed</code> (با <code>download_url</code> و <code>cost</code>) یا <code>failed</code> (با <code>error</code>).</p>
   {{ ep('GET','/videos/{video_id}/content') }}
-  <p>دریافت فایل ویدیو پس از تکمیل.</p>
+  <p>دریافت فایل MP4 پس از تکمیل (<code>?variant=thumbnail</code> = تصویر پوستر). از Range برای پخش پشتیبانی می‌کند.</p>
   {% call code('bash') %}curl {{ B }}/videos/VIDEO_ID/content -H "Authorization: Bearer lsk-YOUR_KEY" --output video.mp4{% endcall %}
-  {{ ep('POST','/videos/{video_id}/remix') }}{{ ep('GET','/videos') }}{{ ep('DELETE','/videos/{video_id}') }}
+  {{ ep('POST','/videos/{video_id}/remix') }}
+  <p>ساخت نسخهٔ تازه از روی همان طرح با یک دستور تغییر: <code>{"prompt": "رنگ‌ها را تیره‌تر کن و یک صحنهٔ آمار اضافه کن"}</code>.</p>
+  {{ ep('GET','/videos') }}{{ ep('DELETE','/videos/{video_id}') }}
+  <p>برای کنترل کامل صحنه‌ها (بدون طراحی خودکار) از ابزار <a href="/tools#animation_render"><code>POST /public/v1/tools/animation_render</code></a>
+    و برای کد React دلخواه از <a href="/tools#animation_code"><code>animation_code</code></a> استفاده کنید — همان موتور و همان تعرفه.</p>
 </section>
 
 <section class="dsec" id="d-ws">

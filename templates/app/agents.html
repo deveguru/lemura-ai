@@ -1,0 +1,41 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('ایجنت‌های سفارشی') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('ایجنت‌های سفارشی') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" data-pf="agents">
+  <div class="phead">
+    <div>
+      <h1>{{ ic('bot', 'ic ie') }} {{ _('ایجنت‌های سفارشی') }}</h1>
+      <p class="sub">{{ _('یک دستیار اختصاصی با دستورالعمل، مدل و مهارت‌های دلخواه بسازید: ابزارهای داخلی (پاورپوینت، PDF، OCR، نمودار...)، اتصال‌های API خودتان و کانکتورهای کتابخانهٔ عمومی. مثلاً ایجنتی که آمار پیج اینستاگرام را بگیرد و پاورپوینت گزارش بسازد.') }}</p>
+    </div>
+    <div class="pbtns"><button class="btn" onclick="PF.A.edit()">{{ ic('plus', 'ic ie') }} {{ _('ساخت ایجنت') }}</button></div>
+  </div>
+  <h3 class="sect">{{ _('ایجنت‌های من') }}</h3>
+  <div class="grid g3" id="agMine"><div class="panel muted">{{ _('در حال بارگذاری...') }}</div></div>
+  <h3 class="sect">{{ _('ایجنت‌های عمومی') }}</h3>
+  <div class="grid g3" id="agPublic"></div>
+</div></div>
+
+<div class="modal-ov" id="agModal"><div class="modal" style="max-width:720px">
+  <button class="ibtn modal-cls" onclick="PF.close('agModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0" id="agTitle">{{ _('ساخت ایجنت') }}</h3>
+  <form id="agForm" onsubmit="return PF.A.save(event)" autocomplete="off">
+    <input type="hidden" name="id">
+    <div class="grid" style="grid-template-columns:90px 1fr;gap:10px">
+      <div class="fg"><label>{{ _('آیکون') }}</label><input class="input" name="icon" value="" style="text-align:center;font-size:1.3rem"></div>
+      <div class="fg"><label>{{ _('نام') }}</label><input class="input" name="name" required></div>
+    </div>
+    <div class="fg"><label>{{ _('توضیح کوتاه') }}</label><input class="input" name="description"></div>
+    <div class="fg"><label>{{ _('مدل') }}</label><select class="input" name="model" id="agModel"><option value="">{{ _('پیش‌فرض سایت') }}</option></select></div>
+    <div class="fg"><label>{{ _('دستورالعمل (نقش، لحن، روند کار)') }}</label><textarea class="input" name="instructions" rows="6"
+      placeholder="{{ _('تو کارشناس گزارش‌گیری شبکه‌های اجتماعی هستی. هر بار آمار هفتهٔ اخیر را بگیر، تحلیل کن و یک پاورپوینت ۶ اسلایدی بساز...') }}"></textarea></div>
+    <div class="fg"><label>{{ _('مهارت‌ها (Skills)') }}</label>
+      <input class="input" id="skQ" placeholder="{{ _('جستجوی مهارت...') }}" style="margin-bottom:8px">
+      <div class="skills" id="agSkills"></div></div>
+    <div class="fg"><label>{{ _('پیشنهادهای شروع گفتگو (هر خط یکی)') }}</label><textarea class="input" name="starters" rows="3"></textarea></div>
+    <div class="fg"><label><input type="checkbox" name="visibility" value="public"> {{ _('عمومی (دیگران هم بتوانند از این ایجنت استفاده کنند؛ دستورالعمل نمایش داده نمی‌شود)') }}</label></div>
+    <button class="btn" type="submit" style="width:100%">{{ ic('save', 'ic ie') }} {{ _('ذخیره') }}</button>
+  </form>
+</div></div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/platform.js') }}"></script>{% endblock %}

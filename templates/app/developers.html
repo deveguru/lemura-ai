@@ -2,9 +2,10 @@
 {% block pagetitle %}{{ _('توسعه‌دهندگان') }}{% endblock %}
 {% block main %}
 <div class="page"><div class="page-in">
-  <h1>🧑‍💻 {{ _('توسعه‌دهندگان و وب‌سرویس API') }}</h1>
-  <p class="sub">{{ _('API سازگار با OpenAI — همه مدل‌های چت، تصویر، صوت، ویدیو و Embedding با یک کلید. هزینه از همین کیف پول کسر می‌شود.') }} <a href="/docs">{{ _('مستندات کامل ←') }}</a></p>
+  <h1>{{ ic('code-xml', 'ic ie') }} {{ _('توسعه‌دهندگان و وب‌سرویس API') }}</h1>
+  <p class="sub">{{ _('API سازگار با OpenAI — همه مدل‌های چت، تصویر، صوت، ویدیو و Embedding با یک کلید. هزینه از همین کیف پول کسر می‌شود.') }} <a href="/docs">{{ _('مستندات کامل ') }}</a></p>
 
+  {% include "app/_docs_nav.html" %}
   <div class="grid g3" style="margin-bottom:16px">
     <div class="panel stat"><div class="k">{{ _('موجودی') }}</div><div class="v">{{ balance|fa }}</div><div class="k">{{ _('تومان') }}</div></div>
     <div class="panel stat"><div class="k">{{ _('کلیدهای فعال') }}</div><div class="v">{{ tokens|selectattr('is_active')|list|length|fa }}</div></div>
@@ -14,7 +15,7 @@
 
   <div class="panel" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-      <h3 style="margin:0">🔑 {{ _('کلیدهای API') }}</h3>
+      <h3 style="margin:0">{{ ic('key-round', 'ic ie') }} {{ _('کلیدهای API') }}</h3>
       <div style="display:flex;gap:8px"><input class="input" id="kn" placeholder="{{ _('نام کلید (مثلاً: اپ موبایل)') }}" style="width:220px">
         <button class="btn" id="kc">{{ _('ساخت کلید') }}</button></div>
     </div>
@@ -35,7 +36,7 @@
   </div>
 
   <div class="panel">
-    <h3>⚡ {{ _('شروع سریع') }}</h3>
+    <h3>{{ ic('zap', 'ic ie') }} {{ _('شروع سریع') }}</h3>
     <div class="fg"><label>Base URL</label>
       <div style="display:flex;gap:6px"><input class="input ltr mono" readonly value="{{ api_base }}" id="bu"><button class="btn btn-ghost btn-sm" onclick="cp(document.getElementById('bu').value)">{{ _('کپی') }}</button></div></div>
     <div class="seg" id="lt" style="margin-bottom:8px"><button class="on" data-l="curl">cURL</button><button data-l="py">Python</button><button data-l="js">Node.js</button></div>
@@ -73,4 +74,5 @@ document.getElementById('kc').onclick=function(){var n=document.getElementById('
 document.querySelectorAll('#lt button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#lt button').forEach(function(x){x.classList.toggle('on',x===b);});
   document.querySelectorAll('pre[data-l]').forEach(function(p){p.style.display=p.getAttribute('data-l')===b.getAttribute('data-l')?'':'none';});};});
 </script>
+<script src="{{ asset('/static/js/docs.js') }}"></script>
 {% endblock %}

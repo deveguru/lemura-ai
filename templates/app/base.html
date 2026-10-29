@@ -15,21 +15,32 @@
 <div class="app" id="app">
   <aside class="side" id="side">
     <div class="side-head">
-      <a class="brand" href="/"><span class="logo">{% if brand.logo %}<img src="{{ brand.logo }}" alt="">{% else %}⚡{% endif %}</span>{{ brand.name if lang=='fa' else brand.name_en }}</a>
+      <a class="brand" href="/"><span class="logo">{% if brand.logo %}<img src="{{ brand.logo }}" alt="">{% else %}{{ ic('zap', 'ic ie') }}{% endif %}</span>{{ brand.name if lang=='fa' else brand.name_en }}</a>
       <button class="ibtn" onclick="App.toggleSide()" title="{{ _('بستن منو') }}">{{ ic('side') }}</button>
     </div>
     <nav class="side-nav">
       <a class="snav new" href="/" id="newChatBtn">{{ ic('plus') }} {{ _('گفتگوی جدید') }}</a>
-      <a class="snav {{ 'active' if page=='projects' }}" href="/projects">{{ ic('folder') }} {{ _('پروژه‌ها و سایت‌های من') }}</a>
-      <a class="snav {{ 'active' if page=='images' }}" href="/images">{{ ic('image') }} {{ _('استودیو تصویر') }}</a>
-      <a class="snav {{ 'active' if page=='developers' }}" href="/developers">{{ ic('code') }} {{ _('توسعه‌دهندگان و API') }}</a>
-      <a class="snav {{ 'active' if page=='docs' }}" href="/docs">{{ ic('book') }} {{ _('مستندات API') }}</a>
+      <a class="snav {{ 'active' if page=='projects' }}" href="/projects">{{ ic('folders') }} {{ _('پروژه‌ها و سایت‌های من') }}</a>
+      <a class="snav {{ 'active' if page=='images' }}" href="/images">{{ ic('palette') }} {{ _('استودیو تصویر و انیمیشن') }}</a>
+      <a class="snav {{ 'active' if page in ('developers', 'docs', 'tools') }}" href="/docs">{{ ic('code') }} {{ _('توسعه‌دهندگان و مستندات API') }}</a>
       <a class="snav {{ 'active' if page=='wallet' }}" href="/wallet">{{ ic('wallet') }} {{ _('کیف پول') }}</a>
     </nav>
-    <div class="side-sec">{{ _('گفتگوها') }}</div>
+    {% set auto_open = page in ('agents', 'integrations', 'library', 'tasks', 'jobs', 'usage') %}
+    <button type="button" class="side-sec side-tog" id="autoTog" aria-expanded="{{ 'true' if auto_open else 'false' }}" aria-controls="autoNav"
+            data-force="{{ '1' if auto_open else '' }}" onclick="App.toggleSec(this)">
+      <span>{{ _('ابزارها و اتوماسیون') }}</span>{{ ic('chevron-down', 'ic chev') }}</button>
+    <nav class="side-nav sub side-col" id="autoNav" {{ '' if auto_open else 'hidden' }}>
+      <a class="snav {{ 'active' if page=='agents' }}" href="/agents">{{ ic('bot') }} {{ _('ایجنت‌های سفارشی') }}</a>
+      <a class="snav {{ 'active' if page=='integrations' }}" href="/integrations">{{ ic('plug') }} {{ _('اتصال‌های API') }}</a>
+      <a class="snav {{ 'active' if page=='library' }}" href="/library">{{ ic('library') }} {{ _('کتابخانهٔ کانکتورها') }}</a>
+      <a class="snav {{ 'active' if page=='tasks' }}" href="/tasks">{{ ic('calendar-clock') }} {{ _('وظایف زمان‌بندی‌شده') }}</a>
+      <a class="snav {{ 'active' if page=='jobs' }}" href="/jobs">{{ ic('hourglass') }} {{ _('کارهای در صف') }}</a>
+      <a class="snav {{ 'active' if page=='usage' }}" href="/usage">{{ ic('trending-up') }} {{ _('مصرف و هزینهٔ ابزارها') }}</a>
+    </nav>
+    <div class="side-sec">{{ ic('history', 'ic ie') }} {{ _('گفتگوها') }}</div>
     <div class="convs" id="convs">{% if not user %}<div style="padding:8px 10px;font-size:.8rem;color:var(--t3)">{{ _('برای ذخیره گفتگوها وارد شوید.') }}</div>{% endif %}</div>
     <div class="side-foot">
-          <a class="side-link {{ 'active' if page=='terms' }}" href="/terms">📜 {{ _('قوانین و مقررات') }}</a>
+          <a class="side-link {{ 'active' if page=='terms' }}" href="/terms">{{ ic('scroll-text', 'ic ie') }} {{ _('قوانین و مقررات') }}</a>
       {% if user %}
       <button class="me" onclick="App.menu(event,'meMenu')">
         {% if user.avatar %}<img class="av" src="{{ user.avatar }}" alt="">{% else %}<span class="av">{{ (user.display_name or '?')[:1] }}</span>{% endif %}
@@ -49,6 +60,7 @@
       {% block topbar %}<b style="font-size:.95rem">{% block pagetitle %}{% endblock %}</b>{% endblock %}
       <span class="grow"></span>
       {% block topright %}{% endblock %}
+      {% if user %}<button class="ibtn bell" id="bellBtn" title="{{ _('اعلان‌ها') }}" onclick="Notif.toggle(event)">{{ ic('bell', 'ic ie') }}<span class="bdot" id="bellDot" hidden></span></button>{% endif %}
       {% if not user %}<button class="btn btn-sm" onclick="Auth.open()">{{ _('ورود') }}</button>{% endif %}
     </header>
     {% block main %}{% endblock %}
@@ -60,21 +72,27 @@
   <div class="ltr" style="padding:8px 10px;font-size:.75rem;color:var(--t3);text-align:start">{{ user.mobile or user.email }}</div>
   <a href="/account">{{ ic('user') }} {{ _('حساب کاربری') }}</a>
   <a href="/wallet">{{ ic('wallet') }} {{ _('کیف پول و شارژ') }}</a>
-  <a href="/developers">{{ ic('key') }} {{ _('کلیدهای API') }}</a>
+  <a href="/usage">{{ ic('trending-up', 'ic ie') }} {{ _('مصرف و هزینهٔ ابزارها') }}</a>
+  <a href="/jobs">{{ ic('hourglass', 'ic ie') }} {{ _('کارهای در صف') }}</a>
+
   {% if user.role == 'administrator' %}<a href="/admin/">{{ ic('shield') }} {{ _('پنل مدیریت') }}</a>{% endif %}
   <div class="langsw">{% for code, l in LANGS.items() %}<a href="/lang/{{ code }}" class="{{ 'on' if lang==code }}">{{ l.name }}</a>{% endfor %}</div>
   <hr><a class="danger" href="/auth/logout">{{ ic('logout') }} {{ _('خروج') }}</a>
 </div>
 {% endif %}
+{% if user %}<div class="menu notifm" id="notifMenu"><div class="nh"><b>{{ _('اعلان‌ها') }}</b><span class="grow"></span>
+  <button class="btn btn-sm btn-ghost" id="pushBtn" onclick="Notif.push()" hidden>{{ ic('bell', 'ic ie') }} {{ _('اعلان مرورگر') }}</button>
+  <button class="btn btn-sm btn-ghost" onclick="Notif.readAll()">{{ _('خواندن همه') }}</button></div><div id="notifList"></div></div>{% endif %}
 <div class="lb" id="lb" onclick="this.classList.remove('open')"><img alt=""></div>
 <div class="toast" id="globalToast"></div>
 {% if not user %}{% include "app/auth.html" %}{% endif %}
 <script>
 window.I18N=(function(d){d.t=function(s){return (d.dict&&d.dict[s])||s;};return d;})({{ i18n_js }});
+window.ICON_SPRITE={{ ICON_SPRITE|tojson }};
 window.LEMURA={user:{{ ({"name":user.display_name,"id":user.id} if user else None)|tojson }},balance:{{ balance or 0 }}};
 </script>
 <script src="{{ asset('/static/js/app.js') }}"></script>
-{% if not user %}<script src="{{ asset('/static/js/auth.js') }}"></script>{% endif %}
+{% if not user %}<script src="{{ asset('/static/js/auth.js') }}"></script>{% else %}<script src="{{ asset('/static/js/notif.js') }}"></script>{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

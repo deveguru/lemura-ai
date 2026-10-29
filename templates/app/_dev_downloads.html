@@ -1,0 +1,20 @@
+{# Admin-managed downloads (plugins, extensions, SDKs) for this docs section: /docs = "ai", /tools = "tools". #}
+{% set dl_items = dev_downloads('tools' if page == 'tools' else 'ai') if page in ('docs', 'tools') else [] %}
+{% if dl_items %}
+<section class="panel dldl" id="downloads" data-doc-title="{{ _('دانلودها') }}">
+  <h3>{{ ic('download', 'ic ie') }} {{ _('دانلودها و افزونه‌ها') }}</h3>
+  <div class="dlgrid">
+    {% for d in dl_items %}
+    <article class="dlit">
+      {% if d.image %}<img src="{{ d.image }}" alt="" loading="lazy">{% else %}<div class="dlph">{{ ic('package', 'ic') }}</div>{% endif %}
+      <div class="dlb">
+        <b>{{ d.title }}</b>{% if d.version %} <span class="badge badge-purple ltr">{{ d.version }}</span>{% endif %}
+        {% if d.description %}<p>{{ d.description }}</p>{% endif %}
+        <a class="btn btn-sm" href="{{ d.url }}" {% if not d.url.startswith('/') %}target="_blank" rel="noopener"{% else %}download{% endif %}>{{ ic('download', 'ic ie') }} {{ d.button or _('دانلود') }}</a>
+        <span class="dlurl ltr" hidden>{{ request.url_root.rstrip('/') + d.url if d.url.startswith('/') else d.url }}</span>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

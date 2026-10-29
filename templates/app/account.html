@@ -4,7 +4,7 @@
 {% set M = {'updated':('ok',_('اطلاعات ذخیره شد')),'pass_changed':('ok',_('رمز عبور تغییر کرد')),'pass_mismatch':('err',_('رمز عبور و تکرار آن یکسان نیست')),
   'pass_short':('err',_('رمز عبور حداقل ۶ کاراکتر')),'pass_empty':('err',_('رمز عبور را وارد کنید'))} %}
 <div class="page"><div class="page-in" style="max-width:760px">
-  <h1>👤 {{ _('حساب کاربری') }}</h1>
+  <h1>{{ ic('user', 'ic ie') }} {{ _('حساب کاربری') }}</h1>
   <p class="sub">{{ _('شناسه کاربری:') }} <b class="ltr">#{{ user.id }}</b>{% if user.mobile %} · {{ _('موبایل') }}: <b class="ltr">{{ user.mobile }}</b>{% endif %}</p>
   {% if msg in M %}<div class="amsg {{ M[msg][0] }}" style="display:block">{{ M[msg][1] }}</div>{% endif %}
   <div class="panel" style="margin-bottom:16px">
@@ -40,10 +40,10 @@
   <div class="panel">
     <h3>{{ _('روش‌های ورود') }}</h3>
     <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem">
-      <div>📱 {{ _('پیامک') }}: {% if user.mobile %}<span class="badge badge-green">{{ _('فعال') }}</span>{% else %}<span class="badge">{{ _('ثبت نشده') }}</span>{% endif %}</div>
-      <div>🔑 {{ _('رمز عبور') }}: {% if user.has_password %}<span class="badge badge-green">{{ _('فعال') }}</span>{% else %}<span class="badge">{{ _('تعیین نشده') }}</span>{% endif %}</div>
-      <div>🟢 {{ _('گوگل') }}: {% if user.google_sub %}<span class="badge badge-green">{{ _('متصل') }}</span>{% else %}<span class="badge">{{ _('متصل نیست') }}</span>{% endif %}</div>
-      <div>🐙 {{ _('گیت‌هاب') }}: {% if user.github_id %}<span class="badge badge-green">{{ _('متصل') }}</span>{% else %}<span class="badge">{{ _('متصل نیست') }}</span>{% endif %}</div>
+      <div>{{ ic('smartphone', 'ic ie') }} {{ _('پیامک') }}: {% if user.mobile %}<span class="badge badge-green">{{ _('فعال') }}</span>{% else %}<span class="badge">{{ _('ثبت نشده') }}</span>{% endif %}</div>
+      <div>{{ ic('key-round', 'ic ie') }} {{ _('رمز عبور') }}: {% if user.has_password %}<span class="badge badge-green">{{ _('فعال') }}</span>{% else %}<span class="badge">{{ _('تعیین نشده') }}</span>{% endif %}</div>
+      <div>{{ ic('circle', 'ic ie') }} {{ _('گوگل') }}: {% if user.google_sub %}<span class="badge badge-green">{{ _('متصل') }}</span>{% else %}<span class="badge">{{ _('متصل نیست') }}</span>{% endif %}</div>
+      <div>{{ ic('github', 'ic ie') }} {{ _('گیت‌هاب') }}: {% if user.github_id %}<span class="badge badge-green">{{ _('متصل') }}</span>{% else %}<span class="badge">{{ _('متصل نیست') }}</span>{% endif %}</div>
     </div>
     <a class="btn btn-danger" href="/auth/logout" style="margin-top:16px">{{ _('خروج از حساب') }}</a>
   </div>

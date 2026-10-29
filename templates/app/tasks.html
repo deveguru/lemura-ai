@@ -1,0 +1,69 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('وظایف زمان‌بندی‌شده') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('وظایف زمان‌بندی‌شده') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" data-pf="tasks">
+  <div class="phead">
+    <div>
+      <h1>{{ ic('alarm-clock', 'ic ie') }} {{ _('وظایف زمان‌بندی‌شده') }}</h1>
+      <p class="sub">{{ _('هر API زنده (اتصالی که تست موفق گرفته) یا ابزار داخلی را در زمان دلخواه اجرا کنید: هر روز، هر هفته، با بازهٔ زمانی یا یک‌بار. هر وظیفه پیش از فعال‌شدن باید با دیدن دقیق ورودی‌ها و زمان‌بندی تأیید شود و هر ویرایش، تأیید را باطل می‌کند. در چت هم می‌توانید بگویید «هر روز ساعت ۸ گزارش فروش را بگیر».') }}</p>
+    </div>
+    <div class="pbtns"><button class="btn" onclick="PF.T.edit()">{{ ic('plus', 'ic ie') }} {{ _('وظیفهٔ جدید') }}</button></div>
+  </div>
+  <div id="taskList"><div class="panel muted">{{ _('در حال بارگذاری...') }}</div></div>
+</div></div>
+
+<div class="modal-ov" id="taskModal"><div class="modal" style="max-width:660px">
+  <button class="ibtn modal-cls" onclick="PF.close('taskModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0" id="taskTitle">{{ _('وظیفهٔ جدید') }}</h3>
+  <form id="taskForm" onsubmit="return PF.T.save(event)" autocomplete="off">
+    <input type="hidden" name="id">
+    <div class="fg"><label>{{ _('نام وظیفه') }}</label><input class="input" name="name" placeholder="{{ _('مثلاً گزارش فروش روزانه') }}"></div>
+    <div class="fg"><label>{{ _('ابزار / API') }}</label><select class="input" name="tool_id" id="taskTool"></select>
+      <div class="hint" id="taskToolHint"></div></div>
+    <div class="fg"><label>{{ _('ورودی‌ها (JSON)') }} <span class="muted">{{ _('متغیرها:') }} <code>{{ '{{today}}' }}</code> <code>{{ '{{yesterday}}' }}</code> <code>{{ '{{last_run}}' }}</code> <code>{{ '{{now}}' }}</code></span></label>
+      <textarea class="input ltr mono" name="payload" rows="6">{}</textarea></div>
+    <div class="grid g2" style="gap:10px">
+      <div class="fg"><label>{{ _('زمان‌بندی') }}</label><select class="input" id="trgPreset">
+        <option value="daily">{{ _('هر روز در ساعت') }}</option><option value="weekly">{{ _('هر هفته') }}</option>
+        <option value="hourly">{{ _('هر ساعت') }}</option><option value="interval">{{ _('هر چند دقیقه') }}</option>
+        <option value="once">{{ _('یک‌بار در زمان مشخص') }}</option><option value="cron">{{ _('عبارت cron دلخواه') }}</option></select></div>
+      <div class="fg" data-trg="daily weekly"><label>{{ _('ساعت (تهران)') }}</label><input class="input ltr" id="trgTime" type="time" value="08:00"></div>
+      <div class="fg" data-trg="weekly" hidden><label>{{ _('روز هفته') }}</label><select class="input" id="trgDow">
+        <option value="6">{{ _('شنبه') }}</option><option value="0">{{ _('یکشنبه') }}</option><option value="1">{{ _('دوشنبه') }}</option><option value="2">{{ _('سه‌شنبه') }}</option>
+        <option value="3">{{ _('چهارشنبه') }}</option><option value="4">{{ _('پنجشنبه') }}</option><option value="5">{{ _('جمعه') }}</option></select></div>
+      <div class="fg" data-trg="interval" hidden><label>{{ _('هر چند دقیقه (حداقل ۵)') }}</label><input class="input ltr" id="trgEvery" type="number" min="5" value="60"></div>
+      <div class="fg" data-trg="once" hidden><label>{{ _('تاریخ و ساعت') }}</label><input class="input ltr" id="trgOnce" type="datetime-local"></div>
+      <div class="fg" data-trg="cron" hidden><label>{{ _('cron (دقیقه ساعت روز ماه روزهفته)') }}</label><input class="input ltr mono" id="trgCron" placeholder="0 8 * * *"></div>
+    </div>
+    <div class="fg"><label>{{ _('اعلان نتیجه') }}</label>
+      <div class="checks">
+        <label><input type="checkbox" name="ch" value="inapp" checked> {{ _('داخل سایت') }}</label>
+        <label><input type="checkbox" name="ch" value="push"> {{ _('اعلان مرورگر') }}</label>
+        <label><input type="checkbox" name="ch" value="email"> {{ _('ایمیل') }}</label>
+        <label><input type="checkbox" name="ch" value="sms"> {{ _('پیامک') }}</label>
+      </div>
+      <div class="checks" style="margin-top:6px">
+        <label><input type="checkbox" name="summarize"> {{ _('خلاصهٔ هوشمند نتیجه با AI') }}</label>
+        <select class="input" name="only_on" style="width:auto;min-height:32px;padding:4px 8px">
+          <option value="always">{{ _('همیشه') }}</option><option value="failure">{{ _('فقط در صورت خطا') }}</option><option value="success">{{ _('فقط در صورت موفقیت') }}</option></select>
+      </div></div>
+    <div class="fg"><label>{{ _('حداکثر تعداد اجرا (۰ = نامحدود)') }}</label><input class="input ltr" name="max_runs" type="number" min="0" value="0"></div>
+    <button class="btn" type="submit" style="width:100%">{{ ic('save', 'ic ie') }} {{ _('ذخیره (سپس بررسی و تأیید)') }}</button>
+  </form>
+</div></div>
+
+<div class="modal-ov" id="approveModal"><div class="modal" style="max-width:620px">
+  <button class="ibtn modal-cls" onclick="PF.close('approveModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0">{{ ic('shield-check', 'ic ie') }} {{ _('بررسی و تأیید وظیفه') }}</h3>
+  <div id="approveBody"></div>
+  <button class="btn" style="width:100%;margin-top:12px" id="approveBtn">{{ ic('circle-check', 'ic ie') }} {{ _('تأیید می‌کنم؛ فعال شود') }}</button>
+</div></div>
+
+<div class="modal-ov" id="runsModal"><div class="modal" style="max-width:720px">
+  <button class="ibtn modal-cls" onclick="PF.close('runsModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0">{{ ic('scroll-text', 'ic ie') }} {{ _('سابقهٔ اجرا') }}</h3>
+  <div id="runsBody"></div>
+</div></div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/platform.js') }}"></script>{% endblock %}

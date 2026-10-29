@@ -1,0 +1,16 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('کارهای در صف') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('کارهای در صف') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" data-pf="jobs">
+  <h1>{{ ic('hourglass', 'ic ie') }} {{ _('کارهای پس‌زمینه') }}</h1>
+  <p class="sub">{{ _('کارهای سنگین (OCR، تبدیل صوت به متن، حذف پس‌زمینه، ایندکس پایگاه دانش و...) در صف اجرا می‌شوند و پس از اتمام به شما اعلان داده می‌شود.') }}</p>
+  <div class="panel tw"><table class="tbl" id="jobTbl"><thead><tr><th>{{ _('ابزار') }}</th><th>{{ _('وضعیت') }}</th><th>{{ _('کانال') }}</th><th>{{ _('هزینه') }}</th><th>{{ _('زمان') }}</th><th></th></tr></thead>
+    <tbody><tr><td colspan="6" class="muted">{{ _('در حال بارگذاری...') }}</td></tr></tbody></table></div>
+</div></div>
+<div class="modal-ov" id="jobModal"><div class="modal" style="max-width:720px">
+  <button class="ibtn modal-cls" onclick="PF.close('jobModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0" id="jobTitle"></h3><div id="jobBody"></div>
+</div></div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/platform.js') }}"></script>{% endblock %}

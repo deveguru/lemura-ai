@@ -29,7 +29,7 @@
   }
   function taskRow(t) {
     return '<a class="trow" href="/projects/task/' + t.id + '"><span class="tt">' + esc(t.title) + '</span>' +
-      (t.schedule ? '<span class="badge">⏰ ' + esc(t.schedule) + '</span>' : '') + badge(t) +
+      (t.schedule ? '<span class="badge">' + App.ic('alarm-clock') + ' ' + esc(t.schedule) + '</span>' : '') + badge(t) +
       '<span class="tm">' + esc((t.updated_at || '').slice(0, 16)) + '</span></a>';
   }
   function render() {
@@ -67,23 +67,23 @@
           '<div class="pmeta"><span>' + T('اتصال') + ': <b>' + KIND[s.kind] + '</b></span><span class="ltr">' + esc(s.username + '@' + (s.host || '')) + '</span>' +
           (s.root ? '<span class="ltr">' + esc(s.root) + '</span>' : '') +
           '<span class="' + (s.status === 'error' ? 'bad' : 'okt') + '">' + esc(s.status_msg || T('هنوز تست نشده')) + '</span></div>' +
-          '<div class="pacts"><button class="btn btn-sm" data-newtask="' + s.id + '">🤖 ' + T('وظیفه جدید') + '</button>' +
-          '<button class="btn btn-sm btn-ghost" data-test="' + s.id + '">🔌 ' + T('تست اتصال') + '</button>' +
-          '<button class="btn btn-sm btn-ghost" data-edit="' + s.id + '">✏️ ' + T('ویرایش') + '</button>' +
-          '<button class="btn btn-sm btn-danger" data-del="' + s.id + '">🗑</button></div>' +
+          '<div class="pacts"><button class="btn btn-sm" data-newtask="' + s.id + '">' + App.ic('bot') + ' ' + T('وظیفه جدید') + '</button>' +
+          '<button class="btn btn-sm btn-ghost" data-test="' + s.id + '">' + App.ic('plug') + ' ' + T('تست اتصال') + '</button>' +
+          '<button class="btn btn-sm btn-ghost" data-edit="' + s.id + '">' + App.ic('pencil') + ' ' + T('ویرایش') + '</button>' +
+          '<button class="btn btn-sm btn-danger" data-del="' + s.id + '">' + App.ic('trash-2') + '</button></div>' +
           '<div class="psec">' + T('گزارش کارها') + '</div>' +
           (tasks.length ? tasks.map(taskRow).join('') : '<div class="hint">' + T('هنوز وظیفه‌ای برای این سایت ثبت نشده است.') + '</div>') +
         '</div></div>';
     });
     if (D.tab === 'all' || D.tab === 'none') {
       var general = D.tasks.filter(function (t) { return !t.site_id && (!q || t.title.toLowerCase().indexOf(q) >= 0); });
-      if (general.length || D.tab === 'none') html += '<div class="pcard open"><div class="phead"><span class="pkind">🤖</span><div class="pname"><b>' +
+      if (general.length || D.tab === 'none') html += '<div class="pcard open"><div class="phead"><span class="pkind">' + App.ic('bot') + '</span><div class="pname"><b>' +
         T('وظایف بدون سایت') + '</b><span>' + T('تحقیق، نوشتن و ساخت فایل تحویلی') + '</span></div></div><div class="pbody">' +
         (general.length ? general.map(taskRow).join('') : '<div class="hint">—</div>') + '</div></div>';
     }
-    if (!D.sites.length && !D.tasks.length) html = '<div class="panel empty"><div style="font-size:2.4rem">🌐</div><h3>' +
+    if (!D.sites.length && !D.tasks.length) html = '<div class="panel empty"><div style="font-size:2.4rem">' + App.ic('globe') + '</div><h3>' +
       T('هنوز وب‌سایتی اضافه نکرده‌اید') + '</h3><p class="sub">' + T('اولین سایت خود را با وردپرس، سی‌پنل یا SSH وصل کنید.') +
-      '</p><button class="btn" onclick="P.editSite()">➕ ' + T('افزودن وب‌سایت') + '</button></div>';
+      '</p><button class="btn" onclick="P.editSite()">' + App.ic('plus') + ' ' + T('افزودن وب‌سایت') + '</button></div>';
     $('plist').innerHTML = html;
   }
   document.addEventListener('click', function (e) {

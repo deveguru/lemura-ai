@@ -28,7 +28,7 @@
     {"type": "file", "file": {"file_id": "file-EyVi0MrxuKTgBrvkVas5ZTGz"}}
   ]}]
 }{% endcall %}
-  <div class="note">🔒 فقط به <code>file_id</code>هایی که با کلید حساب خودتان آپلود کرده‌اید می‌توانید ارجاع دهید؛ شناسه فایل دیگران خطای <code>404</code> می‌دهد.</div>
+  <div class="note">{{ ic('lock', 'ic ie') }} فقط به <code>file_id</code>هایی که با کلید حساب خودتان آپلود کرده‌اید می‌توانید ارجاع دهید؛ شناسه فایل دیگران خطای <code>404</code> می‌دهد.</div>
 </section>
 
 <section class="dsec" id="d-files">
@@ -133,12 +133,12 @@ client.files.delete(f.id){% endcall %}
   "truncated": false,
   "usage": {"input_tokens": 655, "output_tokens": 0, "passes": 3}
 }{% endcall %}
-  <div class="note">⚠️ <code>value: null</code> یعنی مقدار پیدا نشد؛ <code>guess</code> را جایگزین آن نکنید (در مثال، شماره سفارش خرید وجود ندارد). پیش از ذخیره یا اقدام، مقدارها را اعتبارسنجی کنید.</div>
+  <div class="note">{{ ic('triangle-alert', 'ic ie') }} <code>value: null</code> یعنی مقدار پیدا نشد؛ <code>guess</code> را جایگزین آن نکنید (در مثال، شماره سفارش خرید وجود ندارد). پیش از ذخیره یا اقدام، مقدارها را اعتبارسنجی کنید.</div>
 </section>
 
 <section class="dsec" id="d-voice">
   <h2>گفتگوی صوتی زنده</h2>
-  <p>برای ساخت دستیار صوتی، سه مرحله را زنجیره کنید: گفتار به متن ← چت ← متن به گفتار. این همان روشی است که «گفتگوی صوتی» سایت لمورا استفاده می‌کند.</p>
+  <p>برای ساخت دستیار صوتی، سه مرحله را زنجیره کنید: گفتار به متن {{ ic('arrow-left', 'ic ie') }} چت {{ ic('arrow-left', 'ic ie') }} متن به گفتار. این همان روشی است که «گفتگوی صوتی» سایت لمورا استفاده می‌کند.</p>
   {% call code('python') %}with open("question.webm", "rb") as audio:
     text = client.audio.transcriptions.create(model="gpt-4o-transcribe", file=audio, language="fa").text
 

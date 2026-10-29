@@ -90,3 +90,14 @@ table.tbl tr:hover td{background:rgba(124,58,237,.05)}
 
 .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (max-width:480px){.cols2{grid-template-columns:1fr}}
+
+/* ---------- icons: one Lucide sprite for the whole site (lemura/icons.py, static/vendor/lucide.svg) ---------- */
+.ic{width:20px;height:20px;flex:none;display:inline-block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.ic.ie{width:1.15em;height:1.15em;vertical-align:-.2em;stroke-width:2}
+.ic.fill{fill:currentColor}
+h1 .ic.ie,h2 .ic.ie,h3 .ic.ie{color:var(--accent);margin-inline-end:.15em}
+.btn .ic.ie,.btn .ic{width:1.1em;height:1.1em;vertical-align:-.18em}
+.sdot{display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-inline-end:.4em;vertical-align:.05em;background:var(--t4)}
+.sdot.ok{background:var(--green);box-shadow:0 0 0 3px rgba(74,222,155,.15)}
+.sdot.bad{background:var(--red);box-shadow:0 0 0 3px rgba(248,113,113,.15)}
+.sdot.warn{background:var(--warn);box-shadow:0 0 0 3px rgba(251,191,36,.15)}

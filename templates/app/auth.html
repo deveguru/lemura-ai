@@ -1,8 +1,8 @@
 <div class="modal-ov" id="authModal">
   <div class="modal">
-    <button class="ibtn modal-cls" onclick="Auth.close()" aria-label="{{ _('بستن') }}">✕</button>
+    <button class="ibtn modal-cls" onclick="Auth.close()" aria-label="{{ _('بستن') }}">{{ ic('x', 'ic ie') }}</button>
     <div style="text-align:center;margin-bottom:16px">
-      <div class="auth-logo">⚡</div>
+      <div class="auth-logo">{{ ic('zap', 'ic ie') }}</div>
       <h2 style="font-size:1.2rem;margin:0 0 4px" id="aTitle">{{ _('ورود یا ثبت‌نام') }}</h2>
       <p style="font-size:.8rem;color:var(--t3);margin:0" id="aSub">{{ _('با یک حساب، به همه مدل‌های هوش مصنوعی دسترسی داشته باشید') }}</p>
     </div>
@@ -46,7 +46,7 @@
         <span id="aTimer" style="font-size:.78rem;color:var(--t3)"></span>
         <button class="linkbtn" data-back>{{ _('تغییر شماره') }}</button>
       </div>
-      <div id="aGift" style="display:none;text-align:center;margin-top:12px;padding:9px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;font-size:.78rem;color:var(--warn)">🎁 {{ _('با ثبت‌نام، اعتبار هدیه به کیف پول شما اضافه می‌شود') }}</div>
+      <div id="aGift" style="display:none;text-align:center;margin-top:12px;padding:9px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;font-size:.78rem;color:var(--warn)">{{ ic('gift', 'ic ie') }} {{ _('با ثبت‌نام، اعتبار هدیه به کیف پول شما اضافه می‌شود') }}</div>
     </div>
     <p style="font-size:.7rem;color:var(--t3);text-align:center;margin:16px 0 0">{{ _('ورود شما به منزله پذیرش قوانین استفاده از لمورا است.') }}</p>
   </div>

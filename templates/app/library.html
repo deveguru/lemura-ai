@@ -1,0 +1,44 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('کتابخانهٔ کانکتورها') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('کتابخانهٔ کانکتورها') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" data-pf="library">
+  <div class="phead">
+    <div>
+      <h1>{{ ic('library', 'ic ie') }} {{ _('کتابخانهٔ وب‌سرویس‌ها و کانکتورهای عمومی') }}</h1>
+      <p class="sub">{{ _('اتصال‌هایی که کاربران لمورا ساخته، تست کرده و منتشر کرده‌اند. کانکتور را فعال کنید، فقط کلید API خودتان را وارد کنید و آن را در چت، ایجنت‌های سفارشی و وظایف زمان‌بندی‌شده به کار ببرید.') }}</p>
+    </div>
+    <div class="pbtns"><a class="btn btn-ghost" href="/integrations">{{ ic('plug', 'ic ie') }} {{ _('اتصال‌های من') }}</a></div>
+  </div>
+  <div class="ptabs-wrap">
+    <div class="seg" id="catSeg"><button type="button" data-c="" class="on">{{ _('همه') }}</button>
+      {% for k, v in categories.items() %}<button type="button" data-c="{{ k }}">{{ _(v) }}</button>{% endfor %}</div>
+    <input class="input psearch" id="libq" placeholder="{{ _('جستجوی کانکتور...') }}">
+  </div>
+  <div class="grid g3" id="libList"><div class="panel muted">{{ _('در حال بارگذاری...') }}</div></div>
+</div></div>
+
+<div class="modal-ov" id="actModal"><div class="modal" style="max-width:520px">
+  <button class="ibtn modal-cls" onclick="PF.close('actModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0" id="actTitle"></h3>
+  <p class="hint" id="actDesc"></p>
+  <form id="actForm" onsubmit="return PF.L.activate(event)" autocomplete="off">
+    <input type="hidden" name="id">
+    <div class="fg" id="actAuth"><label>{{ _('کلید / توکن API شما') }} <span class="muted">{{ ic('lock', 'ic ie') }} {{ _('فقط برای شما، رمزنگاری‌شده') }}</span></label>
+      <input class="input ltr" name="secret" type="password" autocomplete="new-password"></div>
+    <button class="btn" type="submit" style="width:100%">{{ ic('zap', 'ic ie') }} {{ _('فعال‌سازی و تست') }}</button>
+    <div id="actResult" style="margin-top:10px"></div>
+  </form>
+</div></div>
+
+<div class="modal-ov" id="repModal"><div class="modal" style="max-width:480px">
+  <button class="ibtn modal-cls" onclick="PF.close('repModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0">{{ ic('bug', 'ic ie') }} {{ _('گزارش مشکل به سازندهٔ کانکتور') }}</h3>
+  <form id="repForm" onsubmit="return PF.L.report(event)">
+    <input type="hidden" name="id">
+    <textarea class="input" name="message" rows="4" placeholder="{{ _('چه چیزی کار نمی‌کند؟') }}"></textarea>
+    <button class="btn" type="submit" style="width:100%;margin-top:10px">{{ _('ارسال گزارش') }}</button>
+  </form>
+</div></div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/platform.js') }}"></script>{% endblock %}

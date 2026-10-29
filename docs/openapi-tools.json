@@ -1,0 +1,4322 @@
+{
+  "components": {
+    "schemas": {
+      "ToolResult": {
+        "properties": {
+          "data": {
+            "description": "Tool output (structure depends on the tool)"
+          },
+          "error": {
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "files": {
+            "items": {
+              "properties": {
+                "expires_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "mime": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                },
+                "url": {
+                  "description": "Presigned download URL (expires)",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "meta": {
+            "properties": {
+              "async": {
+                "type": "boolean"
+              },
+              "cost": {
+                "type": "integer"
+              },
+              "job_id": {
+                "type": "string"
+              },
+              "latency_ms": {
+                "type": "integer"
+              },
+              "trace_id": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "description": "lsk-... API key",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "The tools of the Lemura AI platform as a web service. Every call is billed from the wallet of the API key owner (toman).",
+    "title": "Lemura Tools API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/files": {
+      "post": {
+        "operationId": "upload_file",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File"
+          }
+        },
+        "summary": "Upload an input file (returns f_xxx id)"
+      }
+    },
+    "/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job"
+          }
+        },
+        "summary": "Async job status and result"
+      }
+    },
+    "/notifications": {
+      "post": {
+        "operationId": "send_notification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "body": {
+                    "type": "string"
+                  },
+                  "channels": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title",
+                  "body"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent"
+          }
+        },
+        "summary": "Notify the key owner (in-app/push/email/sms)"
+      }
+    },
+    "/tasks": {
+      "get": {
+        "operationId": "list_tasks",
+        "responses": {
+          "200": {
+            "description": "Tasks"
+          }
+        },
+        "summary": "Scheduled tasks"
+      },
+      "post": {
+        "operationId": "create_task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "max_runs": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "payload": {
+                    "type": "object"
+                  },
+                  "post_action": {
+                    "type": "object"
+                  },
+                  "tool_id": {
+                    "type": "string"
+                  },
+                  "trigger": {
+                    "properties": {
+                      "expr": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "enum": [
+                          "cron",
+                          "interval",
+                          "once"
+                        ],
+                        "type": "string"
+                      },
+                      "tz": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "tool_id",
+                  "trigger"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task"
+          }
+        },
+        "summary": "Create a scheduled task (state needs_approval)"
+      }
+    },
+    "/tasks/{task_id}/activate": {
+      "post": {
+        "operationId": "task_activate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task"
+          }
+        },
+        "summary": "Task: activate"
+      }
+    },
+    "/tasks/{task_id}/approve": {
+      "post": {
+        "operationId": "task_approve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task"
+          }
+        },
+        "summary": "Task: approve"
+      }
+    },
+    "/tasks/{task_id}/delete": {
+      "post": {
+        "operationId": "task_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task"
+          }
+        },
+        "summary": "Task: delete"
+      }
+    },
+    "/tasks/{task_id}/pause": {
+      "post": {
+        "operationId": "task_pause",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task"
+          }
+        },
+        "summary": "Task: pause"
+      }
+    },
+    "/tasks/{task_id}/run": {
+      "post": {
+        "operationId": "task_run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task"
+          }
+        },
+        "summary": "Task: run"
+      }
+    },
+    "/tools": {
+      "get": {
+        "operationId": "list_tools",
+        "responses": {
+          "200": {
+            "description": "Tools"
+          }
+        },
+        "summary": "List public tools with schemas and prices"
+      }
+    },
+    "/tools/animation_code": {
+      "post": {
+        "description": "Render a fully custom animation from a Remotion React component (TSX). The code must `export default` a React component; it may import from 'react', 'remotion' (AbsoluteFill, Sequence, Series, useCurrentFrame, useVideoConfig, interpolate, spring, Easing, Img, Audio, staticFile), '@remotion/transitions' (+ /fade /slide /wipe /flip), '@remotion/shapes', '@remotion/paths', '@remotion/noise'. Use the 'Vazirmatn' font for Persian. Input files are available via staticFile('in/<file name>') or by passing their ids in props. No network inside the renderer (no remote URLs). Max 60 s (30 s at 1080p). Queued like animation_render.\n\nPrice (api, default plan): ~3,000 toman per call. Timeout 900s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "animation_code",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "code": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "aspect": {
+                    "description": "Aspect ratio",
+                    "enum": [
+                      "16:9",
+                      "9:16",
+                      "1:1",
+                      "4:5"
+                    ],
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "TSX source of the component (export default)",
+                    "type": "string"
+                  },
+                  "duration_sec": {
+                    "maximum": 60,
+                    "minimum": 1,
+                    "type": "number"
+                  },
+                  "files": {
+                    "items": {
+                      "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "format": {
+                    "description": "Output format",
+                    "enum": [
+                      "mp4",
+                      "webm",
+                      "gif"
+                    ],
+                    "type": "string"
+                  },
+                  "fps": {
+                    "description": "Frames per second",
+                    "enum": [
+                      24,
+                      25,
+                      30
+                    ],
+                    "type": "integer"
+                  },
+                  "props": {
+                    "description": "Props passed to the component (file ids f_xxx/att_N become staticFile paths)",
+                    "type": "object"
+                  },
+                  "quality": {
+                    "description": "Resolution (short side)",
+                    "enum": [
+                      "480p",
+                      "720p",
+                      "1080p"
+                    ],
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "File name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "files": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Custom animation from React code (Remotion)",
+        "tags": [
+          "ویدیو و انیمیشن"
+        ]
+      }
+    },
+    "/tools/animation_render": {
+      "post": {
+        "description": "Render an animated video (MP4/WebM/GIF) from scenes: title, text (word-by-word), bullets, image (Ken Burns), quote, stat (animated counter), chart (animated bars), steps, split (image+text), cta — with transitions (fade/slide/wipe/flip), theme, logo, background music and watermark. Persian RTL with the Vazirmatn font by default. Aspect 16:9, 9:16 (stories/reels), 1:1 or 4:5. Max 20 scenes; total length max 30 s at 1080p, 60 s at 720p (default), 120 s at 480p. Rendering is queued (one render at a time) and returns a job_id; the user is notified.\n\nPrice (api, default plan): ~2,400 toman per call. Timeout 900s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "animation_render",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "aspect": "9:16",
+                "scenes": [
+                  {
+                    "duration": 3,
+                    "subtitle": "دستیار هوش مصنوعی فارسی",
+                    "title": "لمورا",
+                    "type": "title"
+                  },
+                  {
+                    "items": [
+                      "گفتگو با بهترین مدل‌ها",
+                      "ساخت تصویر و ویدیو",
+                      "وب‌سرویس API"
+                    ],
+                    "title": "امکانات",
+                    "transition": "slide",
+                    "type": "bullets"
+                  },
+                  {
+                    "suffix": "%",
+                    "title": "رضایت کاربران",
+                    "type": "stat",
+                    "value": 98
+                  },
+                  {
+                    "button": "lemura.ir",
+                    "title": "همین حالا شروع کنید",
+                    "transition": "wipe",
+                    "type": "cta"
+                  }
+                ],
+                "title": "معرفی لمورا"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "aspect": {
+                    "description": "Aspect ratio",
+                    "enum": [
+                      "16:9",
+                      "9:16",
+                      "1:1",
+                      "4:5"
+                    ],
+                    "type": "string"
+                  },
+                  "format": {
+                    "description": "Output format",
+                    "enum": [
+                      "mp4",
+                      "webm",
+                      "gif"
+                    ],
+                    "type": "string"
+                  },
+                  "fps": {
+                    "description": "Frames per second",
+                    "enum": [
+                      24,
+                      25,
+                      30
+                    ],
+                    "type": "integer"
+                  },
+                  "logo": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "music": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "music_volume": {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "quality": {
+                    "description": "Resolution (short side)",
+                    "enum": [
+                      "480p",
+                      "720p",
+                      "1080p"
+                    ],
+                    "type": "string"
+                  },
+                  "rtl": {
+                    "default": true,
+                    "description": "Right-to-left (Persian) layout",
+                    "type": "boolean"
+                  },
+                  "scenes": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "author": {
+                          "description": "Quote author",
+                          "type": "string"
+                        },
+                        "background": {
+                          "description": "CSS background override (color or gradient)",
+                          "type": "string"
+                        },
+                        "button": {
+                          "description": "CTA button text",
+                          "type": "string"
+                        },
+                        "color": {
+                          "description": "Text color override",
+                          "type": "string"
+                        },
+                        "duration": {
+                          "description": "Seconds (default 4)",
+                          "maximum": 20,
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "image": {
+                          "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                          "type": "string"
+                        },
+                        "items": {
+                          "description": "Bullets / steps / split list",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 8,
+                          "type": "array"
+                        },
+                        "labels": {
+                          "description": "Chart labels",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12,
+                          "type": "array"
+                        },
+                        "prefix": {
+                          "description": "Text before the number, e.g. $",
+                          "type": "string"
+                        },
+                        "subtitle": {
+                          "description": "Sub heading (title scene)",
+                          "type": "string"
+                        },
+                        "suffix": {
+                          "description": "Text after the number, e.g. %",
+                          "type": "string"
+                        },
+                        "text": {
+                          "description": "Body text / quote / caption",
+                          "type": "string"
+                        },
+                        "title": {
+                          "description": "Heading",
+                          "type": "string"
+                        },
+                        "transition": {
+                          "description": "Transition into this scene",
+                          "enum": [
+                            "fade",
+                            "slide",
+                            "wipe",
+                            "flip",
+                            "none"
+                          ],
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "Scene layout",
+                          "enum": [
+                            "title",
+                            "text",
+                            "bullets",
+                            "image",
+                            "quote",
+                            "stat",
+                            "chart",
+                            "steps",
+                            "split",
+                            "cta"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "Number for stat scenes",
+                          "type": "number"
+                        },
+                        "values": {
+                          "description": "Chart values",
+                          "items": {
+                            "type": "number"
+                          },
+                          "maxItems": 12,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "theme": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "accent": {
+                        "description": "Color",
+                        "type": "string"
+                      },
+                      "accent2": {
+                        "description": "Color",
+                        "type": "string"
+                      },
+                      "background": {
+                        "description": "Color",
+                        "type": "string"
+                      },
+                      "background2": {
+                        "description": "Color",
+                        "type": "string"
+                      },
+                      "preset": {
+                        "description": "Theme",
+                        "enum": [
+                          "purple",
+                          "dark",
+                          "light",
+                          "ocean",
+                          "sunset",
+                          "mono"
+                        ],
+                        "type": "string"
+                      },
+                      "text": {
+                        "description": "Color",
+                        "type": "string"
+                      }
+                    },
+                    "required": [],
+                    "type": "object"
+                  },
+                  "title": {
+                    "description": "Video title (also the file name)",
+                    "type": "string"
+                  },
+                  "watermark": {
+                    "description": "Small corner text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "scenes"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "logo": {
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "music": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Animation & motion graphics (Remotion)",
+        "tags": [
+          "ویدیو و انیمیشن"
+        ]
+      }
+    },
+    "/tools/archive_tools": {
+      "post": {
+        "description": "List, extract or create ZIP / 7z archives (optionally password-protected).\n\nPrice (api, default plan): ~90 toman per call. Timeout 120s.",
+        "operationId": "archive_tools",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "action": "list"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "description": "Operation",
+                    "enum": [
+                      "list",
+                      "extract",
+                      "create"
+                    ],
+                    "type": "string"
+                  },
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "files": {
+                    "items": {
+                      "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                      "type": "string"
+                    },
+                    "maxItems": 30,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "format": {
+                    "description": "Archive format for create",
+                    "enum": [
+                      "zip",
+                      "7z"
+                    ],
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Output archive name",
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "Archive password",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "files": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Archive (zip/7z) tools",
+        "tags": [
+          "پردازش فایل"
+        ]
+      }
+    },
+    "/tools/audio_denoise": {
+      "post": {
+        "description": "Reduce background noise in an audio file (noisereduce spectral gating); outputs WAV/MP3.\n\nPrice (api, default plan): ~260 toman per call. Timeout 300s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "audio_denoise",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "file": "f_0123456789abcdef01234567"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "format": {
+                    "description": "Output",
+                    "enum": [
+                      "wav",
+                      "mp3"
+                    ],
+                    "type": "string"
+                  },
+                  "stationary": {
+                    "default": false,
+                    "description": "Stationary noise (hum, fan)",
+                    "type": "boolean"
+                  },
+                  "strength": {
+                    "description": "0.1–1.0",
+                    "maximum": 1.0,
+                    "minimum": 0.1,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Audio noise reduction",
+        "tags": [
+          "صوت"
+        ]
+      }
+    },
+    "/tools/browser_render": {
+      "post": {
+        "description": "Open a public web page in a real headless Chromium (JavaScript-heavy sites) and return its rendered text, HTML, a screenshot or a PDF.\n\nPrice (api, default plan): ~260 toman per call. Timeout 90s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "browser_render",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "url": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "description": "What to return",
+                    "enum": [
+                      "text",
+                      "html",
+                      "screenshot",
+                      "pdf"
+                    ],
+                    "type": "string"
+                  },
+                  "full_page": {
+                    "default": true,
+                    "description": "Full-page screenshot",
+                    "type": "boolean"
+                  },
+                  "selector": {
+                    "description": "Optional CSS selector to wait for / extract",
+                    "type": "string"
+                  },
+                  "url": {
+                    "description": "Public https URL",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Extra wait after load",
+                    "maximum": 15000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "Viewport width",
+                    "maximum": 1920,
+                    "minimum": 320,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Headless browser (Playwright)",
+        "tags": [
+          "وب"
+        ]
+      }
+    },
+    "/tools/chart_generate": {
+      "post": {
+        "description": "Create a chart (bar, line, pie, scatter, area, histogram, heatmap, funnel) as PNG/SVG image or interactive HTML with Persian font support.\n\nPrice (api, default plan): ~68 toman per call. Timeout 60s.",
+        "operationId": "chart_generate",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "data": {
+                  "series": [
+                    {
+                      "values": [
+                        "..."
+                      ]
+                    }
+                  ]
+                },
+                "type": "bar"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "data": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "labels": {
+                        "items": {},
+                        "type": "array"
+                      },
+                      "series": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "name": {
+                              "description": "Series name",
+                              "type": "string"
+                            },
+                            "values": {
+                              "items": {},
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "values"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "series"
+                    ],
+                    "type": "object"
+                  },
+                  "format": {
+                    "description": "Output",
+                    "enum": [
+                      "png",
+                      "svg",
+                      "html"
+                    ],
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "px",
+                    "maximum": 2000,
+                    "minimum": 200,
+                    "type": "integer"
+                  },
+                  "theme": {
+                    "description": "Theme",
+                    "enum": [
+                      "dark",
+                      "light"
+                    ],
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Title",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "Chart type",
+                    "enum": [
+                      "bar",
+                      "line",
+                      "pie",
+                      "scatter",
+                      "area",
+                      "histogram",
+                      "heatmap",
+                      "funnel"
+                    ],
+                    "type": "string"
+                  },
+                  "width": {
+                    "description": "px",
+                    "maximum": 2400,
+                    "minimum": 300,
+                    "type": "integer"
+                  },
+                  "x_title": {
+                    "description": "X axis title",
+                    "type": "string"
+                  },
+                  "y_title": {
+                    "description": "Y axis title",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "data"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Chart generator (plotly)",
+        "tags": [
+          "مصورسازی و داده"
+        ]
+      }
+    },
+    "/tools/code_interpreter": {
+      "post": {
+        "description": "Run Python 3.11 code in an isolated sandbox (no network) for calculations, data analysis and file conversion. pandas, numpy, matplotlib, plotly, openpyxl, python-docx, Pillow are available. Input files are in ./in, save outputs to ./out.\n\nPrice (api, default plan): ~115 toman per call. Timeout 60s.",
+        "operationId": "code_interpreter",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "code": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "description": "Python code",
+                    "type": "string"
+                  },
+                  "files": {
+                    "items": {
+                      "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "files": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Python code interpreter",
+        "tags": [
+          "کد"
+        ]
+      }
+    },
+    "/tools/crypto_market": {
+      "post": {
+        "description": "Live crypto market data from major exchanges (ccxt): ticker, OHLCV candles, order book, markets; optional technical indicators and candlestick chart.\n\nPrice (api, default plan): ~65 toman per call. Timeout 60s.",
+        "operationId": "crypto_market",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "action": "ticker"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "description": "Data",
+                    "enum": [
+                      "ticker",
+                      "ohlcv",
+                      "orderbook",
+                      "markets"
+                    ],
+                    "type": "string"
+                  },
+                  "chart": {
+                    "default": false,
+                    "description": "Return a candlestick chart image",
+                    "type": "boolean"
+                  },
+                  "exchange": {
+                    "description": "Exchange",
+                    "enum": [
+                      "binance",
+                      "kucoin",
+                      "okx",
+                      "bybit",
+                      "kraken",
+                      "coinbase",
+                      "bitfinex",
+                      "gateio",
+                      "mexc"
+                    ],
+                    "type": "string"
+                  },
+                  "indicators": {
+                    "items": {
+                      "enum": [
+                        "sma",
+                        "ema",
+                        "rsi",
+                        "macd",
+                        "bbands",
+                        "atr",
+                        "stoch"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "limit": {
+                    "description": "Candles",
+                    "maximum": 1000,
+                    "minimum": 5,
+                    "type": "integer"
+                  },
+                  "symbol": {
+                    "description": "Pair like BTC/USDT",
+                    "type": "string"
+                  },
+                  "timeframe": {
+                    "description": "Candle timeframe",
+                    "enum": [
+                      "1m",
+                      "5m",
+                      "15m",
+                      "1h",
+                      "4h",
+                      "1d",
+                      "1w"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Crypto market data (ccxt)",
+        "tags": [
+          "مالی"
+        ]
+      }
+    },
+    "/tools/docx_generate": {
+      "post": {
+        "description": "Create a Word (.docx) document from content blocks (headings, paragraphs, lists, tables, images), or fill a .docx template (docxtpl) with a context.\n\nPrice (api, default plan): ~270 toman per call. Timeout 60s.",
+        "operationId": "docx_generate",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "blocks": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "image": {
+                          "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                          "type": "string"
+                        },
+                        "items": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "level": {
+                          "description": "Heading level 1-4",
+                          "maximum": 4,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "rows": {
+                          "description": "Table rows; first row = header",
+                          "items": {
+                            "items": {},
+                            "type": "array"
+                          },
+                          "type": "array"
+                        },
+                        "text": {
+                          "description": "Text of heading/paragraph/quote",
+                          "type": "string"
+                        },
+                        "type": {
+                          "description": "Block type",
+                          "enum": [
+                            "heading",
+                            "paragraph",
+                            "bullets",
+                            "numbered",
+                            "table",
+                            "page_break",
+                            "image",
+                            "quote"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "context": {
+                    "description": "Template variables for docxtpl",
+                    "type": "object"
+                  },
+                  "filename": {
+                    "description": "Output file name",
+                    "type": "string"
+                  },
+                  "rtl": {
+                    "default": true,
+                    "description": "Right-to-left (Persian)",
+                    "type": "boolean"
+                  },
+                  "template": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Document title",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "template": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Word document generator",
+        "tags": [
+          "تولید اسناد"
+        ]
+      }
+    },
+    "/tools/fake_data": {
+      "post": {
+        "description": "Generate realistic fake datasets (Persian or English locales) for testing: people, contacts, addresses, companies, dates, numbers, text.\n\nPrice (api, default plan): ~35 toman per call. Timeout 60s.",
+        "operationId": "fake_data",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "fields": [
+                  "..."
+                ]
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "fields": {
+                    "description": "faker providers: name, email, phone_number, address, company, job, date, city, text, iban, credit_card_number, uuid4, random_int, ...",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "format": {
+                    "description": "Output",
+                    "enum": [
+                      "json",
+                      "csv",
+                      "xlsx"
+                    ],
+                    "type": "string"
+                  },
+                  "locale": {
+                    "description": "Locale",
+                    "enum": [
+                      "fa_IR",
+                      "en_US",
+                      "de_DE",
+                      "ar_SA",
+                      "tr_TR"
+                    ],
+                    "type": "string"
+                  },
+                  "rows": {
+                    "description": "Row count",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "fields"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Test data generator (faker)",
+        "tags": [
+          "مصورسازی و داده"
+        ]
+      }
+    },
+    "/tools/html_extract": {
+      "post": {
+        "description": "Fetch a public web page (or take raw HTML/file) and extract its main readable content as text/markdown with metadata (trafilatura).\n\nPrice (api, default plan): ~65 toman per call. Timeout 40s.",
+        "operationId": "html_extract",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "html": {
+                    "description": "Raw HTML instead of URL",
+                    "type": "string"
+                  },
+                  "include_links": {
+                    "default": false,
+                    "description": "Keep links",
+                    "type": "boolean"
+                  },
+                  "output": {
+                    "description": "Output format",
+                    "enum": [
+                      "text",
+                      "markdown",
+                      "json"
+                    ],
+                    "type": "string"
+                  },
+                  "url": {
+                    "description": "Public https URL",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Main-content extraction (trafilatura)",
+        "tags": [
+          "پردازش فایل"
+        ]
+      }
+    },
+    "/tools/image_edit": {
+      "post": {
+        "description": "Edit images with a pipeline of operations: resize, crop, rotate, flip, grayscale, blur, sharpen, brightness, contrast, text watermark, format conversion, compression, thumbnail.\n\nPrice (api, default plan): ~68 toman per call. Timeout 60s.",
+        "operationId": "image_edit",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "file": "f_0123456789abcdef01234567"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "format": {
+                    "description": "Output format",
+                    "enum": [
+                      "png",
+                      "jpeg",
+                      "webp"
+                    ],
+                    "type": "string"
+                  },
+                  "ops": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "angle": {
+                          "type": "number"
+                        },
+                        "direction": {
+                          "description": "flip",
+                          "enum": [
+                            "horizontal",
+                            "vertical"
+                          ],
+                          "type": "string"
+                        },
+                        "factor": {
+                          "type": "number"
+                        },
+                        "height": {
+                          "description": "px",
+                          "type": "integer"
+                        },
+                        "op": {
+                          "description": "Operation",
+                          "enum": [
+                            "resize",
+                            "crop",
+                            "rotate",
+                            "flip",
+                            "grayscale",
+                            "blur",
+                            "sharpen",
+                            "brightness",
+                            "contrast",
+                            "watermark_text",
+                            "thumbnail"
+                          ],
+                          "type": "string"
+                        },
+                        "text": {
+                          "description": "Watermark text",
+                          "type": "string"
+                        },
+                        "width": {
+                          "description": "px",
+                          "type": "integer"
+                        },
+                        "x": {
+                          "description": "px",
+                          "type": "integer"
+                        },
+                        "y": {
+                          "description": "px",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "quality": {
+                    "description": "JPEG/WebP quality",
+                    "maximum": 100,
+                    "minimum": 10,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Image editor (Pillow)",
+        "tags": [
+          "تصویر"
+        ]
+      }
+    },
+    "/tools/knowledge_index": {
+      "post": {
+        "description": "Index files, web pages or text into the user's private knowledge base (langchain splitter + chromadb) so it can be searched in chat.\n\nPrice (api, default plan): ~250 toman per call. Timeout 900s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "knowledge_index",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "collection": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "collection": {
+                    "description": "Knowledge base name",
+                    "type": "string"
+                  },
+                  "files": {
+                    "items": {
+                      "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "replace": {
+                    "default": false,
+                    "description": "Replace the collection first",
+                    "type": "boolean"
+                  },
+                  "text": {
+                    "description": "Raw text to index",
+                    "type": "string"
+                  },
+                  "urls": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "collection"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "files": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Knowledge base indexing (RAG)",
+        "tags": [
+          "پایگاه دانش (RAG)"
+        ]
+      }
+    },
+    "/tools/knowledge_search": {
+      "post": {
+        "description": "Semantic search over the user's knowledge base; returns the most relevant passages with sources (chat with your data).\n\nPrice (api, default plan): ~35 toman per call. Timeout 30s.",
+        "operationId": "knowledge_search",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "query": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "collection": {
+                    "description": "Knowledge base name (empty = all)",
+                    "type": "string"
+                  },
+                  "k": {
+                    "description": "Results",
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "query": {
+                    "description": "Question or search phrase",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Knowledge base search (RAG)",
+        "tags": [
+          "پایگاه دانش (RAG)"
+        ]
+      }
+    },
+    "/tools/nlp_analyze": {
+      "post": {
+        "description": "Detect language (fastText, 176 languages) and extract named entities, sentences and noun phrases (spaCy).\n\nPrice (api, default plan): ~45 toman per call. Timeout 60s.",
+        "operationId": "nlp_analyze",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "text": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "ops": {
+                    "items": {
+                      "enum": [
+                        "language",
+                        "entities",
+                        "sentences",
+                        "noun_chunks"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "text": {
+                    "description": "Text",
+                    "maxLength": 100000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Text analysis (spaCy + fastText)",
+        "tags": [
+          "پردازش زبان"
+        ]
+      }
+    },
+    "/tools/ocr_image": {
+      "post": {
+        "description": "Extract text from images or scanned PDFs with EasyOCR (Persian + English by default).\n\nPrice (api, default plan): ~550 toman per call. Timeout 600s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "ocr_image",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "file": "f_0123456789abcdef01234567"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "detail": {
+                    "default": false,
+                    "description": "Return boxes and confidence",
+                    "type": "boolean"
+                  },
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "languages": {
+                    "items": {
+                      "enum": [
+                        "fa",
+                        "en",
+                        "ar"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "max_pages": {
+                    "description": "Max PDF pages",
+                    "maximum": 30,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "OCR (image/PDF to text)",
+        "tags": [
+          "پردازش فایل"
+        ]
+      }
+    },
+    "/tools/pdf_extract": {
+      "post": {
+        "description": "Extract text and tables from a digital PDF (pdfplumber), page by page.\n\nPrice (api, default plan): ~180 toman per call. Timeout 300s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "pdf_extract",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "file": "f_0123456789abcdef01234567"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "max_chars": {
+                    "description": "Max characters returned",
+                    "maximum": 200000,
+                    "minimum": 1000,
+                    "type": "integer"
+                  },
+                  "pages": {
+                    "description": "Page ranges like 1-3,5",
+                    "type": "string"
+                  },
+                  "tables": {
+                    "default": true,
+                    "description": "Also extract tables",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "PDF text & table extraction",
+        "tags": [
+          "پردازش فایل"
+        ]
+      }
+    },
+    "/tools/pdf_generate": {
+      "post": {
+        "description": "Render HTML or Markdown into a high-quality PDF (WeasyPrint) with full Persian/RTL support and the Vazirmatn font.\n\nPrice (api, default plan): ~270 toman per call. Timeout 90s.",
+        "operationId": "pdf_generate",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "css": {
+                    "description": "Extra CSS",
+                    "type": "string"
+                  },
+                  "filename": {
+                    "description": "Output file name",
+                    "type": "string"
+                  },
+                  "html": {
+                    "description": "HTML body",
+                    "type": "string"
+                  },
+                  "landscape": {
+                    "default": false,
+                    "description": "Landscape orientation",
+                    "type": "boolean"
+                  },
+                  "markdown": {
+                    "description": "Markdown text (used if html is empty)",
+                    "type": "string"
+                  },
+                  "page_size": {
+                    "description": "Page size",
+                    "enum": [
+                      "A4",
+                      "A5",
+                      "Letter",
+                      "A3"
+                    ],
+                    "type": "string"
+                  },
+                  "rtl": {
+                    "default": true,
+                    "description": "Right-to-left",
+                    "type": "boolean"
+                  },
+                  "title": {
+                    "description": "Document title",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "PDF generator",
+        "tags": [
+          "تولید اسناد"
+        ]
+      }
+    },
+    "/tools/pdf_tools": {
+      "post": {
+        "description": "Manipulate PDFs: merge, split, extract pages, rotate, add text watermark, convert pages to images, images to PDF, compress, read metadata.\n\nPrice (api, default plan): ~165 toman per call. Timeout 120s.",
+        "operationId": "pdf_tools",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "action": "merge",
+                "files": [
+                  "f_0123456789abcdef01234567"
+                ]
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "description": "Operation",
+                    "enum": [
+                      "merge",
+                      "split",
+                      "extract_pages",
+                      "rotate",
+                      "watermark",
+                      "to_images",
+                      "images_to_pdf",
+                      "compress",
+                      "metadata"
+                    ],
+                    "type": "string"
+                  },
+                  "angle": {
+                    "description": "Rotation angle",
+                    "enum": [
+                      90,
+                      180,
+                      270
+                    ],
+                    "type": "integer"
+                  },
+                  "dpi": {
+                    "description": "Image DPI",
+                    "maximum": 300,
+                    "minimum": 50,
+                    "type": "integer"
+                  },
+                  "files": {
+                    "items": {
+                      "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                      "type": "string"
+                    },
+                    "maxItems": 30,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "pages": {
+                    "description": "Page ranges like 1-3,5",
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Watermark text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action",
+                  "files"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "files": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "PDF toolkit",
+        "tags": [
+          "تولید اسناد"
+        ]
+      }
+    },
+    "/tools/persian_nlp": {
+      "post": {
+        "description": "Persian text processing with hazm: normalization (spacing, characters, half-space), sentence/word tokenization, stemming, lemmatization.\n\nPrice (api, default plan): ~45 toman per call. Timeout 60s.",
+        "operationId": "persian_nlp",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "text": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "ops": {
+                    "items": {
+                      "enum": [
+                        "normalize",
+                        "sentences",
+                        "tokens",
+                        "stem",
+                        "lemmatize",
+                        "stats"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "text": {
+                    "description": "Persian text",
+                    "maxLength": 100000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Persian NLP (hazm)",
+        "tags": [
+          "پردازش زبان"
+        ]
+      }
+    },
+    "/tools/pptx_generate": {
+      "post": {
+        "description": "Create a PowerPoint (.pptx) presentation from structured slides. Supports Persian/RTL text, themes, notes and images.\n\nPrice (api, default plan): ~320 toman per call. Timeout 60s.",
+        "operationId": "pptx_generate",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "slides": [
+                  {
+                    "title": "..."
+                  }
+                ],
+                "title": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "filename": {
+                    "description": "Output file name",
+                    "type": "string"
+                  },
+                  "rtl": {
+                    "default": true,
+                    "description": "Right-to-left (Persian) layout",
+                    "type": "boolean"
+                  },
+                  "slides": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "body": {
+                          "description": "Paragraph text (instead of bullets)",
+                          "type": "string"
+                        },
+                        "bullets": {
+                          "description": "Bullet points",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "image": {
+                          "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                          "type": "string"
+                        },
+                        "layout": {
+                          "description": "Slide layout",
+                          "enum": [
+                            "title",
+                            "bullets",
+                            "two_column",
+                            "quote",
+                            "image",
+                            "section"
+                          ],
+                          "type": "string"
+                        },
+                        "left": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "notes": {
+                          "description": "Speaker notes",
+                          "type": "string"
+                        },
+                        "right": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "title": {
+                          "description": "Slide title",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "title"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 60,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "subtitle": {
+                    "description": "Subtitle",
+                    "type": "string"
+                  },
+                  "theme": {
+                    "description": "Theme",
+                    "enum": [
+                      "purple",
+                      "dark",
+                      "light",
+                      "blue",
+                      "green"
+                    ],
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Presentation title",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title",
+                  "slides"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "PowerPoint generator",
+        "tags": [
+          "تولید اسناد"
+        ]
+      }
+    },
+    "/tools/qrcode_generate": {
+      "post": {
+        "description": "Generate a QR code image (PNG or SVG) for a URL, text, Wi-Fi config or contact card, with custom colors and optional center logo.\n\nPrice (api, default plan): ~35 toman per call. Timeout 20s.",
+        "operationId": "qrcode_generate",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "data": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "back_color": {
+                    "description": "Background color",
+                    "type": "string"
+                  },
+                  "data": {
+                    "description": "Content to encode",
+                    "type": "string"
+                  },
+                  "fill_color": {
+                    "description": "Foreground color",
+                    "type": "string"
+                  },
+                  "format": {
+                    "description": "Output format",
+                    "enum": [
+                      "png",
+                      "svg"
+                    ],
+                    "type": "string"
+                  },
+                  "logo": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "Box size in px",
+                    "maximum": 40,
+                    "minimum": 2,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "data"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "logo": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "QR code generator",
+        "tags": [
+          "تولید اسناد"
+        ]
+      }
+    },
+    "/tools/remove_background": {
+      "post": {
+        "description": "Remove the background of a photo (rembg / U²-Net); optionally replace it with a solid color.\n\nPrice (api, default plan): ~330 toman per call. Timeout 180s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "remove_background",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "file": "f_0123456789abcdef01234567"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "alpha_matting": {
+                    "default": false,
+                    "description": "Finer edges",
+                    "type": "boolean"
+                  },
+                  "bg_color": {
+                    "description": "Optional background color, e.g. #ffffff",
+                    "type": "string"
+                  },
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Background removal",
+        "tags": [
+          "تصویر"
+        ]
+      }
+    },
+    "/tools/speech_to_text": {
+      "post": {
+        "description": "Transcribe audio/video files to text with faster-whisper (Persian, English and 90+ languages), optional timestamps and SRT subtitles.\n\nPrice (api, default plan): ~800 toman per call. Timeout 900s. Runs asynchronously: returns a job_id unless ?wait=N seconds is given.",
+        "operationId": "speech_to_text",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "file": "f_0123456789abcdef01234567"
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "language": {
+                    "description": "Language code or auto",
+                    "enum": [
+                      "auto",
+                      "fa",
+                      "en",
+                      "ar",
+                      "tr",
+                      "de",
+                      "fr"
+                    ],
+                    "type": "string"
+                  },
+                  "srt": {
+                    "default": false,
+                    "description": "Also produce an .srt subtitle file",
+                    "type": "boolean"
+                  },
+                  "timestamps": {
+                    "default": false,
+                    "description": "Include segment timestamps",
+                    "type": "boolean"
+                  },
+                  "translate": {
+                    "default": false,
+                    "description": "Translate to English instead of transcribing",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Speech to text (Whisper)",
+        "tags": [
+          "صوت"
+        ]
+      }
+    },
+    "/tools/stock_market": {
+      "post": {
+        "description": "Stock/ETF/index/forex data from Yahoo Finance (yfinance): price history, company info and technical indicators (pandas-ta) with an optional chart.\n\nPrice (api, default plan): ~65 toman per call. Timeout 60s.",
+        "operationId": "stock_market",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "symbol": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "description": "Data",
+                    "enum": [
+                      "history",
+                      "info",
+                      "indicators"
+                    ],
+                    "type": "string"
+                  },
+                  "chart": {
+                    "default": false,
+                    "description": "Return a chart image",
+                    "type": "boolean"
+                  },
+                  "indicators": {
+                    "items": {
+                      "enum": [
+                        "sma",
+                        "ema",
+                        "rsi",
+                        "macd",
+                        "bbands",
+                        "atr",
+                        "stoch"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "interval": {
+                    "description": "Interval",
+                    "enum": [
+                      "1h",
+                      "1d",
+                      "1wk",
+                      "1mo"
+                    ],
+                    "type": "string"
+                  },
+                  "period": {
+                    "description": "Range",
+                    "enum": [
+                      "5d",
+                      "1mo",
+                      "3mo",
+                      "6mo",
+                      "1y",
+                      "2y",
+                      "5y",
+                      "max"
+                    ],
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Ticker like AAPL, ^GSPC, EURUSD=X, GC=F",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "symbol"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Stock market & technical analysis",
+        "tags": [
+          "مالی"
+        ]
+      }
+    },
+    "/tools/text_summarize": {
+      "post": {
+        "description": "Extractive summarization (sumy: LSA/LexRank/TextRank/Luhn) and multilingual sentiment analysis (transformers).\n\nPrice (api, default plan): ~76 toman per call. Timeout 120s.",
+        "operationId": "text_summarize",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "description": "File id: f_xxx (uploaded/generated file) or att_N (chat attachment)",
+                    "type": "string"
+                  },
+                  "language": {
+                    "description": "Language",
+                    "enum": [
+                      "persian",
+                      "english",
+                      "auto"
+                    ],
+                    "type": "string"
+                  },
+                  "method": {
+                    "description": "Algorithm",
+                    "enum": [
+                      "lsa",
+                      "lexrank",
+                      "textrank",
+                      "luhn"
+                    ],
+                    "type": "string"
+                  },
+                  "sentences": {
+                    "description": "Summary sentences",
+                    "maximum": 30,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "task": {
+                    "description": "Task",
+                    "enum": [
+                      "summarize",
+                      "sentiment",
+                      "both"
+                    ],
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Text",
+                    "maxLength": 200000,
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Summarization & sentiment",
+        "tags": [
+          "پردازش زبان"
+        ]
+      }
+    },
+    "/tools/text_to_speech": {
+      "post": {
+        "description": "Convert text to natural speech (MP3) with neural voices (Persian: Dilara/Farid, English and many more).\n\nPrice (api, default plan): ~160 toman per call. Timeout 90s.",
+        "operationId": "text_to_speech",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "text": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "pitch": {
+                    "description": "Pitch like +5Hz",
+                    "type": "string"
+                  },
+                  "rate": {
+                    "description": "Speed like +10% or -20%",
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Text to speak (max 5000 chars)",
+                    "maxLength": 5000,
+                    "type": "string"
+                  },
+                  "voice": {
+                    "description": "Voice",
+                    "enum": [
+                      "fa-IR-DilaraNeural",
+                      "fa-IR-FaridNeural",
+                      "en-US-JennyNeural",
+                      "en-US-GuyNeural",
+                      "en-GB-SoniaNeural",
+                      "ar-SA-ZariyahNeural",
+                      "tr-TR-EmelNeural",
+                      "de-DE-KatjaNeural"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Text to speech (edge-tts)",
+        "tags": [
+          "صوت"
+        ]
+      }
+    },
+    "/tools/web_scrape": {
+      "post": {
+        "description": "Fetch a public web page over a safe proxy and extract text, links, tables, metadata or CSS-selector fields (httpx + BeautifulSoup).\n\nPrice (api, default plan): ~55 toman per call. Timeout 40s.",
+        "operationId": "web_scrape",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "url": "..."
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "extract": {
+                    "description": "What to extract",
+                    "enum": [
+                      "text",
+                      "links",
+                      "tables",
+                      "meta",
+                      "all"
+                    ],
+                    "type": "string"
+                  },
+                  "max_chars": {
+                    "description": "Max characters",
+                    "maximum": 100000,
+                    "minimum": 500,
+                    "type": "integer"
+                  },
+                  "selectors": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "name -> CSS selector",
+                    "type": "object"
+                  },
+                  "url": {
+                    "description": "Public https URL",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Web scraper",
+        "tags": [
+          "وب"
+        ]
+      }
+    },
+    "/tools/xlsx_generate": {
+      "post": {
+        "description": "Create an Excel (.xlsx) workbook with one or more sheets, formulas, styled headers, auto-filter and optional native charts.\n\nPrice (api, default plan): ~220 toman per call. Timeout 60s.",
+        "operationId": "xlsx_generate",
+        "parameters": [
+          {
+            "description": "Seconds to wait for async jobs before returning the job_id",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "maximum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "sheets": [
+                  {
+                    "name": "...",
+                    "rows": [
+                      "..."
+                    ]
+                  }
+                ]
+              },
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "filename": {
+                    "description": "Output file name",
+                    "type": "string"
+                  },
+                  "rtl": {
+                    "default": true,
+                    "description": "Right-to-left sheets",
+                    "type": "boolean"
+                  },
+                  "sheets": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "chart": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "data_cols": {
+                              "items": {
+                                "type": "integer"
+                              },
+                              "type": "array"
+                            },
+                            "label_col": {
+                              "description": "1-based label column",
+                              "type": "integer"
+                            },
+                            "title": {
+                              "description": "Chart title",
+                              "type": "string"
+                            },
+                            "type": {
+                              "description": "Chart type",
+                              "enum": [
+                                "bar",
+                                "line",
+                                "pie"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [],
+                          "type": "object"
+                        },
+                        "columns": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "formulas": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Cell -> formula, e.g. {\"D12\": \"=SUM(D2:D11)\"}",
+                          "type": "object"
+                        },
+                        "name": {
+                          "description": "Sheet name",
+                          "type": "string"
+                        },
+                        "rows": {
+                          "items": {
+                            "items": {},
+                            "type": "array"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "rows"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "sheets"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "description": "JSON arguments",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolResult"
+                }
+              }
+            },
+            "description": "ToolResult"
+          },
+          "202": {
+            "description": "Queued (async) — poll /jobs/{job_id}"
+          },
+          "400": {
+            "description": "Invalid arguments"
+          },
+          "401": {
+            "description": "Missing / invalid API key"
+          },
+          "402": {
+            "description": "Insufficient balance"
+          },
+          "403": {
+            "description": "Tool not allowed for this key"
+          },
+          "428": {
+            "description": "Write operation needs X-Lemura-Confirm: true"
+          },
+          "429": {
+            "description": "Rate limit / daily quota"
+          }
+        },
+        "summary": "Excel workbook generator",
+        "tags": [
+          "تولید اسناد"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://lemura.ir/public/v1"
+    }
+  ]
+}

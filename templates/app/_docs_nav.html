@@ -1,0 +1,42 @@
+{# Shared header of the developer area: /docs (AI model API), /tools (tools web service), /developers (keys & stats).
+   One key, one wallet, one billing ledger — shown identically on every page of the area. #}
+<nav class="dtabs">
+  <a href="/docs" class="{{ 'on' if page == 'docs' }}">{{ ic('brain', 'ic ie') }} {{ _('وب‌سرویس هوش مصنوعی') }}</a>
+  <a href="/tools" class="{{ 'on' if page == 'tools' }}">{{ ic('wrench', 'ic ie') }} {{ _('وب‌سرویس ابزارها') }}</a>
+  <a href="/developers" class="{{ 'on' if page == 'developers' }}">{{ ic('key-round', 'ic ie') }} {{ _('کلیدها و آمار') }}</a>
+  {% if user %}<a href="/usage" class="{{ 'on' if page == 'usage' }}">{{ ic('trending-up', 'ic ie') }} {{ _('مصرف و هزینه‌ها') }}</a>{% endif %}
+  <span class="grow"></span>
+  {% if page in ('docs', 'tools') %}
+  <button type="button" class="btn btn-sm btn-ghost" id="docsDl" title="{{ _('دانلود کامل مستندات این صفحه در یک فایل متنی') }}">{{ ic('download', 'ic ie') }} {{ _('دانلود کامل مستندات (TXT)') }}</button>
+  {% endif %}
+</nav>
+<div class="panel devbox" data-doc-skip>
+  <div class="dvb-item">
+    <span class="k">{{ _('احراز هویت (برای هر دو وب‌سرویس)') }}</span>
+    <code class="ltr">Authorization: Bearer lsk-…</code>
+  </div>
+  <div class="dvb-item">
+    <span class="k">{{ _('وب‌سرویس هوش مصنوعی (سازگار با OpenAI)') }}</span>
+    <code class="ltr">{{ request.url_root.rstrip('/') }}/wp-json/lemuraai/v1</code>
+  </div>
+  <div class="dvb-item">
+    <span class="k">{{ _('وب‌سرویس ابزارها') }}</span>
+    <code class="ltr">{{ request.url_root.rstrip('/') }}/public/v1</code>
+  </div>
+  <div class="dvb-item">
+    <span class="k">{{ _('موجودی کیف پول') }}</span>
+    {% if user %}<span><b class="bal" id="devBal">{{ balance|fa if lang=='fa' else '{:,}'.format(balance) }}</b> {{ _('تومان') }}</span>
+      <a class="btn btn-sm" href="/wallet">{{ ic('wallet', 'ic ie') }} {{ _('شارژ') }}</a>
+    {% else %}<button class="btn btn-sm" onclick="Auth.open()">{{ _('ورود برای دریافت کلید') }}</button>{% endif %}
+  </div>
+  {% if user and page != 'developers' %}
+  <details class="keyman" id="keyman">
+    <summary>{{ ic('key-round', 'ic ie') }} {{ _('کلیدهای API من') }} <span class="muted" id="kmCount"></span></summary>
+    <div class="kmnew"><input class="input" id="kmName" placeholder="{{ _('نام کلید (مثلاً: اپ موبایل)') }}">
+      <button class="btn btn-sm" type="button" id="kmCreate">{{ ic('plus', 'ic ie') }} {{ _('ساخت کلید') }}</button></div>
+    <div id="kmList" class="kmlist"><div class="muted">{{ _('در حال بارگذاری...') }}</div></div>
+  </details>
+  {% endif %}
+  <p class="hint dvb-note">{{ _('یک کلید و یک کیف پول برای همه: هزینهٔ هر فراخوانی (مدل‌ها، ابزارها، ویدیو) از کیف پول صاحب کلید کسر و در گزارش مصرف ثبت می‌شود. قواعد درخواست، متدها، موجودی و کدهای خطا در هر دو وب‌سرویس یکسان است.') }}</p>
+</div>
+{% include "app/_dev_downloads.html" %}

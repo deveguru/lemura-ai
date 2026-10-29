@@ -1,0 +1,30 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('مصرف و هزینهٔ ابزارها') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('مصرف و هزینه‌ها') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" data-pf="usage">
+  <div class="phead">
+    <div><h1>{{ ic('trending-up', 'ic ie') }} {{ _('مصرف و هزینهٔ ابزارها') }}</h1>
+      <p class="sub">{{ _('هزینهٔ هر فراخوانی ابزار — از چت، وب‌سرویس API یا وظایف زمان‌بندی‌شده — بر اساس پردازش و توکن مصرفی محاسبه و از کیف پول کسر می‌شود.') }}</p></div>
+    <div class="seg" id="daysSeg"><button type="button" data-d="7">{{ _('۷ روز') }}</button><button type="button" data-d="30" class="on">{{ _('۳۰ روز') }}</button><button type="button" data-d="90">{{ _('۹۰ روز') }}</button></div>
+  </div>
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="panel stat"><div class="k">{{ _('هزینهٔ دوره') }}</div><div class="v" id="uCost">—</div></div>
+    <div class="panel stat"><div class="k">{{ _('تعداد فراخوانی') }}</div><div class="v" id="uCalls">—</div></div>
+    <div class="panel stat"><div class="k">{{ _('پلن شما') }}</div><div class="v" id="uPlan">—</div></div>
+    <div class="panel stat"><div class="k">{{ _('موجودی') }}</div><div class="v" id="uBal">—</div></div>
+  </div>
+  <div class="panel" style="margin-bottom:14px"><h3>{{ ic('chart-column', 'ic ie') }} {{ _('روند روزانه') }}</h3><div class="bars" id="uDays"></div></div>
+  <div class="grid g2">
+    <div class="panel tw"><h3>{{ ic('wrench', 'ic ie') }} {{ _('به تفکیک ابزار') }}</h3><table class="tbl" id="uTools"><tbody></tbody></table></div>
+    <div class="panel tw"><h3>{{ ic('shuffle', 'ic ie') }} {{ _('به تفکیک کانال') }}</h3><table class="tbl" id="uChan"><tbody></tbody></table>
+      <h3 style="margin-top:18px">{{ ic('bell', 'ic ie') }} {{ _('هشدار بودجهٔ روزانه') }}</h3>
+      <form id="budgetForm" onsubmit="return PF.U.budget(event)" style="display:flex;gap:8px">
+        <input class="input ltr" name="daily_limit" type="number" min="0" placeholder="{{ _('تومان؛ ۰ = خاموش') }}">
+        <button class="btn" type="submit">{{ _('ذخیره') }}</button></form>
+      <div class="hint">{{ _('وقتی هزینهٔ ابزارهای یک روز از این مبلغ بگذرد، اعلان می‌گیرید.') }}</div></div>
+  </div>
+  <div class="panel tw" style="margin-top:14px"><h3>{{ ic('receipt', 'ic ie') }} {{ _('آخرین فراخوانی‌ها') }}</h3><table class="tbl" id="uRecent"><tbody></tbody></table></div>
+</div></div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/platform.js') }}"></script>{% endblock %}

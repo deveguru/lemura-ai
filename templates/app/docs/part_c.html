@@ -26,7 +26,7 @@
     {"id": "gpt-4o-mini", "object": "model", "type": "chat", "owned_by": "openai",
      "input_toman_per_1m": 46800, "output_toman_per_1m": 187200, "cached_toman_per_1m": 23400},
     {"id": "gpt-image-1", "object": "model", "type": "image", "price": 12000},
-    {"id": "sora-2", "object": "model", "type": "video", "price_per_second": 26000, "max_seconds": 12}
+    {"id": "lemura-motion", "object": "model", "type": "video", "engine": "remotion", "price_estimate": 3200, "max_seconds": 60}
   ]
 }{% endcall %}
   <p>انواع: <code>chat</code>، <code>image</code>، <code>web_search</code>، <code>audio_tts</code>، <code>audio_transcription</code>، <code>audio_translation</code>، <code>video</code>، <code>embedding</code>، <code>moderation</code>.</p>
@@ -47,7 +47,7 @@
   <ul>
     <li><b>مدل‌های متنی:</b> بر اساس توکن ورودی، خروجی و ورودی کش‌شده، با قیمت تومانی هر مدل (در <code>/models</code>).</li>
     <li><b>تصویر:</b> قیمت ثابت به ازای هر تصویر.</li>
-    <li><b>ویدیو:</b> قیمت هر ثانیه × مدت ویدیو.</li>
+    <li><b>ویدیو:</b> طراحی صحنه‌ها (مثل یک پیام چت) + رندر Remotion بر اساس پردازش واقعی (همان تعرفهٔ ابزار <a href="/tools#animation_render">animation_render</a>).</li>
     <li><b>صوت:</b> قیمت ثابت به ازای هر درخواست.</li>
     <li><b>جستجوی وب:</b> بر اساس <code>search_context_size</code>.</li>
   </ul>

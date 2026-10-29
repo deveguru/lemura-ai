@@ -1,53 +1,148 @@
 {% extends "app/base.html" %}
-{% block pagetitle %}{{ _('استودیو تصویر') }}{% endblock %}
+{% block title %}{{ _('استودیو تصویر و انیمیشن') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('استودیو تصویر و انیمیشن') }}{% endblock %}
 {% block main %}
-<div class="page"><div class="page-in">
-  <h1>🎨 {{ _('استودیو تصویر') }}</h1>
-  <p class="sub">{{ _('توضیح بدهید، لمورا می‌سازد. متن فارسی خودکار برای مدل بهینه می‌شود و هزینه فقط در صورت موفقیت کسر می‌شود.') }}</p>
-  {% if not models %}
-  <div class="panel">{{ _('در حال حاضر هیچ مدل تصویری فعال نیست.') }}</div>
-  {% else %}
-  <div class="panel" style="margin-bottom:18px">
-    <textarea class="input" id="pr" rows="3" placeholder="{{ _('مثلاً: یک شهر آینده‌نگر در شب با نورهای نئونی بنفش، سبک سینمایی، جزئیات بالا') }}" style="resize:vertical"></textarea>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
-      <div class="persona-chip">{% if persona.icon %}<img src="{{ persona.icon }}" alt="">{% else %}🎨{% endif %}
-        <b>{{ persona.name if lang=='fa' else persona.name_en }}</b>{% if persona.price %}<span>{{ persona.price|fa }} {{ _('تومان') }}</span>{% endif %}</div>
-      <div class="seg" id="sz">
-        {% for s in sizes %}<button type="button" data-s="{{ s }}" class="{{ 'on' if loop.first }}">{{ _({'1024x1024':'مربع ۱:۱','1024x1792':'عمودی ۹:۱۶','1792x1024':'افقی ۱۶:۹'}.get(s, s)) }}</button>{% endfor %}
-      </div>
-      <span style="flex:1"></span>
-      <button class="btn" id="go">✨ {{ _('ساخت تصویر') }}</button>
+<div class="page"><div class="page-in studio">
+  <div class="phead">
+    <div>
+      <h1>{{ ic('palette', 'ic ie') }} {{ _('استودیو تصویر و انیمیشن') }}</h1>
+      <p class="sub">{{ _('توضیح بدهید، لمورا می‌سازد: تصویر با بهترین مدل‌های تصویرسازی و انیمیشن و ویدیو با موتور Remotion روی سرورهای لمورا. هزینه فقط در صورت موفقیت کسر می‌شود.') }}</p>
+    </div>
+    <div class="seg" id="modeSeg">
+      <button type="button" data-m="image" class="{{ 'on' if tab != 'animation' }}">{{ ic('image', 'ic ie') }} {{ _('تصویر') }}</button>
+      <button type="button" data-m="animation" class="{{ 'on' if tab == 'animation' }}">{{ ic('clapperboard', 'ic ie') }} {{ _('انیمیشن و ویدیو') }}</button>
     </div>
   </div>
-  <div id="out" style="margin-bottom:22px"></div>
-  {% endif %}
-  <h3 style="margin:0 0 10px;font-size:1rem">{{ _('تصاویر من') }}</h3>
-  <div class="gal" id="gal"><div style="color:var(--t3);font-size:.85rem">{{ _('در حال بارگذاری...') }}</div></div>
+
+  {# ---------------- image ---------------- #}
+  <section data-mode="image" {{ 'hidden' if tab == 'animation' }}>
+    {% if not models %}
+    <div class="panel">{{ _('در حال حاضر هیچ مدل تصویری فعال نیست.') }}</div>
+    {% else %}
+    <div class="panel" style="margin-bottom:18px">
+      <textarea class="input" id="pr" rows="3" placeholder="{{ _('مثلاً: یک شهر آینده‌نگر در شب با نورهای نئونی بنفش، سبک سینمایی، جزئیات بالا') }}" style="resize:vertical"></textarea>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+        <div class="persona-chip">{% if persona.icon %}<img src="{{ persona.icon }}" alt="">{% else %}{{ ic('palette', 'ic ie') }}{% endif %}
+          <b>{{ persona.name if lang=='fa' else persona.name_en }}</b>{% if persona.price %}<span>{{ persona.price|fa }} {{ _('تومان') }}</span>{% endif %}</div>
+        <div class="seg" id="sz">
+          {% for s in sizes %}<button type="button" data-s="{{ s }}" class="{{ 'on' if loop.first }}">{{ _({'1024x1024':'مربع ۱:۱','1024x1792':'عمودی ۹:۱۶','1792x1024':'افقی ۱۶:۹'}.get(s, s)) }}</button>{% endfor %}
+        </div>
+        <span style="flex:1"></span>
+        <button class="btn" id="go">{{ ic('sparkles', 'ic ie') }} <span>{{ _('ساخت تصویر') }}</span></button>
+      </div>
+    </div>
+    <div id="out" style="margin-bottom:22px"></div>
+    {% endif %}
+    <h3 class="sect">{{ _('تصاویر من') }}</h3>
+    <div class="gal" id="gal"><div class="muted">{{ _('در حال بارگذاری...') }}</div></div>
+  </section>
+
+  {# ---------------- animation ---------------- #}
+  <section data-mode="animation" {{ 'hidden' if tab != 'animation' }}>
+    {% if not anim %}
+    <div class="panel">{{ _('موتور انیمیشن در حال حاضر فعال نیست.') }}</div>
+    {% else %}
+    <div class="panel" style="margin-bottom:18px">
+      <textarea class="input" id="apr" rows="3" placeholder="{{ _('مثلاً: یک ویدیوی ۱۵ ثانیه‌ای معرفی فروشگاه قهوهٔ ما برای استوری اینستاگرام: عنوان، سه مزیت، تخفیف ۲۰٪ و دعوت به خرید') }}" style="resize:vertical"></textarea>
+      <div class="agrid">
+        <div><label class="lbl">{{ _('قاب') }}</label>
+          <div class="seg" id="asp">
+            <button type="button" data-a="16:9" class="on">{{ _('افقی ۱۶:۹') }}</button><button type="button" data-a="9:16">{{ _('استوری ۹:۱۶') }}</button>
+            <button type="button" data-a="1:1">{{ _('مربع ۱:۱') }}</button><button type="button" data-a="4:5">{{ _('پست ۴:۵') }}</button></div></div>
+        <div><label class="lbl">{{ _('کیفیت') }}</label>
+          <div class="seg" id="aq"><button type="button" data-q="480p">480p</button><button type="button" data-q="720p" class="on">720p</button><button type="button" data-q="1080p">1080p</button></div></div>
+        <div><label class="lbl">{{ _('مدت') }} <b id="asecV">15</b> {{ _('ثانیه') }}</label>
+          <input type="range" id="asec" min="5" max="60" step="1" value="15"></div>
+      </div>
+      <div class="afiles" id="afiles"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">{{ ic('image', 'ic ie') }} {{ _('افزودن تصویر') }}
+          <input type="file" id="aimg" accept="image/*" multiple hidden></label>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">{{ ic('audio-lines', 'ic ie') }} {{ _('موسیقی (اختیاری)') }}
+          <input type="file" id="amus" accept="audio/*" hidden></label>
+        <span class="muted" style="font-size:.78rem">{{ _('هزینهٔ تقریبی') }}: ~{{ anim.estimate|fa }} {{ _('تومان') }}</span>
+        <span style="flex:1"></span>
+        <button class="btn" id="ago">{{ ic('clapperboard', 'ic ie') }} <span>{{ _('ساخت انیمیشن') }}</span></button>
+      </div>
+      <div class="hint">{{ _('رندر در پس‌زمینه روی سرور انجام می‌شود؛ می‌توانید صفحه را ببندید — وقتی آماده شد اعلان می‌گیرید و ویدیو همین‌جا و در «کارهای در صف» می‌ماند.') }}</div>
+    </div>
+    <h3 class="sect">{{ _('انیمیشن‌های من') }}</h3>
+    <div class="vgal" id="vgal"><div class="muted">{{ _('در حال بارگذاری...') }}</div></div>
+    {% endif %}
+  </section>
 </div></div>
 {% endblock %}
 {% block scripts %}
 <script src="{{ asset('/static/js/md.js') }}"></script>
 <script>
 (function(){
-  var $=function(i){return document.getElementById(i);},size='{{ sizes[0] if sizes else "1024x1024" }}';
-  document.querySelectorAll('#sz button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#sz button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');size=b.getAttribute('data-s');};});
-  function item(r){
-    if(!r.image_url&&!r.url)return '';var u=App.esc(r.image_url||r.url);
-    return '<div class="it"><img src="'+u+'" loading="lazy" onclick="App.lightbox(this.src)"><div class="cap">'+App.esc(r.prompt||'')+'</div></div>';}
+  var $=function(i){return document.getElementById(i);},T=function(s){return window.I18N?I18N.t(s):s;},esc=App.esc;
+  var size='{{ sizes[0] if sizes else "1024x1024" }}',aspect='16:9',quality='720p',files=[],music=null,timer=null;
+  function seg(id,attr,cb){var s=$(id);if(!s)return;s.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    s.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});cb(b.getAttribute(attr));});}
+  seg('modeSeg','data-m',function(m){document.querySelectorAll('section[data-mode]').forEach(function(x){x.hidden=x.getAttribute('data-mode')!==m;});
+    history.replaceState(null,'',m==='animation'?'?tab=animation':location.pathname);if(m==='animation')anims();});
+  seg('sz','data-s',function(v){size=v;});seg('asp','data-a',function(v){aspect=v;});
+  seg('aq','data-q',function(v){quality=v;var cap={'480p':120,'720p':60,'1080p':30}[v];$('asec').max=cap;if(+$('asec').value>cap){$('asec').value=cap;$('asecV').textContent=cap;}});
+  if($('asec'))$('asec').oninput=function(){$('asecV').textContent=this.value;};
+
+  // ---------- images ----------
+  function item(r){if(!r.image_url&&!r.url)return '';var u=esc(r.image_url||r.url);
+    return '<div class="it"><img src="'+u+'" loading="lazy" onclick="App.lightbox(this.src)"><div class="cap">'+esc(r.prompt||'')+'</div></div>';}
   function gallery(){App.post('/vision/history').then(function(r){var rows=(r.data||[]).filter(function(x){return x.status==='completed'||x.image_url;});
-    $('gal').innerHTML=rows.length?rows.map(item).join(''):'<div style="color:var(--t3);font-size:.85rem">هنوز تصویری نساخته‌اید.</div>';});}
+    $('gal').innerHTML=rows.length?rows.map(item).join(''):'<div class="muted">'+T('هنوز تصویری نساخته‌اید.')+'</div>';});}
+  function busy(btn,on,label){btn.disabled=on;btn.querySelector('span').textContent=on?T('در حال ارسال...'):label;}
   var go=$('go');
-  if(go)go.onclick=function(){var p=$('pr').value.trim();if(!p){App.toast('توضیح تصویر را بنویسید',true);return;}
-    go.disabled=true;go.textContent='در حال ساخت...';
-    $('out').innerHTML='<div class="imgph" style="margin:0 auto">🎨 در حال ساخت تصویر...</div>';
-    App.post('/chat/image',{prompt:p,size:size},true).then(function(r){
-      go.disabled=false;go.textContent='✨ ساخت تصویر';
-      if(!r.ok){$('out').innerHTML='<div class="errbox">'+App.esc(r.error||'خطا')+(r.need_charge?'<br><a class="btn btn-sm" href="/wallet">شارژ کیف پول</a>':'')+'</div>';return;}
-      $('out').innerHTML='<div style="text-align:center"><span class="genimg"><img src="'+App.esc(r.url)+'" onclick="App.lightbox(this.src)" style="max-height:70vh">'+
-        '<span class="acts"><a href="'+App.esc(r.url)+'" download>⬇ '+I18N.t('دانلود')+'</a><button type="button" data-drive="'+App.esc(r.url)+'">☁️ '+I18N.t('درایو')+'</button></span></span><div style="font-size:.75rem;color:var(--t3);margin-top:6px">'+App.faNum(r.cost)+' تومان کسر شد</div></div>';
+  if(go)go.onclick=function(){var p=$('pr').value.trim();if(!p){App.toast(T('توضیح تصویر را بنویسید'),true);return;}
+    busy(go,true);$('out').innerHTML='<div class="imgph" style="margin:0 auto">'+App.ic('palette')+' '+T('در حال ساخت تصویر...')+'</div>';
+    App.post('/chat/image',{prompt:p,size:size},true).then(function(r){busy(go,false,T('ساخت تصویر'));
+      if(!r.ok){$('out').innerHTML='<div class="errbox">'+esc(r.error||T('خطا'))+(r.need_charge?'<br><a class="btn btn-sm" href="/wallet">'+T('شارژ کیف پول')+'</a>':'')+'</div>';return;}
+      $('out').innerHTML='<div style="text-align:center"><span class="genimg"><img src="'+esc(r.url)+'" onclick="App.lightbox(this.src)" style="max-height:70vh">'+
+        '<span class="acts"><a href="'+esc(r.url)+'" download>'+App.ic('download')+' '+T('دانلود')+'</a><button type="button" data-drive="'+esc(r.url)+'">'+App.ic('cloud')+' '+T('درایو')+'</button></span></span>'+
+        '<div class="muted" style="font-size:.75rem;margin-top:6px">'+App.faNum(r.cost)+' '+T('تومان')+' '+T('کسر شد')+'</div></div>';
       if(r.balance!=null)App.setBalance(r.balance);gallery();
-    }).catch(function(){go.disabled=false;go.textContent='✨ ساخت تصویر';App.toast('ارتباط با سرور برقرار نشد',true);});};
-  gallery();
+    }).catch(function(){busy(go,false,T('ساخت تصویر'));App.toast(T('ارتباط با سرور برقرار نشد'),true);});};
+
+  // ---------- animation ----------
+  function upload(f){var fd=new FormData();fd.append('file',f);
+    return fetch('/pf/files',{method:'POST',body:fd,credentials:'same-origin'}).then(function(r){return r.json();});}
+  function renderFiles(){$('afiles').innerHTML=files.map(function(f,i){return '<span class="achip">'+App.ic('image')+' '+esc(f.name)+
+      '<button type="button" data-x="'+i+'">×</button></span>';}).join('')+(music?'<span class="achip">'+App.ic('audio-lines')+' '+esc(music.name)+'<button type="button" data-xm="1">×</button></span>':'');}
+  if($('afiles'))$('afiles').onclick=function(e){var b=e.target.closest('[data-x]');if(b){files.splice(+b.getAttribute('data-x'),1);renderFiles();}
+    if(e.target.closest('[data-xm]')){music=null;renderFiles();}};
+  if($('aimg'))$('aimg').onchange=function(){Array.prototype.slice.call(this.files,0,8-files.length).forEach(function(f){
+    upload(f).then(function(r){if(!r.ok){App.toast(r.error||T('آپلود ناموفق بود'),true);return;}files.push({id:r.file.id,name:r.file.name});renderFiles();});});this.value='';};
+  if($('amus'))$('amus').onchange=function(){var f=this.files[0];if(!f)return;upload(f).then(function(r){if(!r.ok){App.toast(r.error||T('آپلود ناموفق بود'),true);return;}
+    music={id:r.file.id,name:r.file.name};renderFiles();});this.value='';};
+  var ago=$('ago');
+  if(ago)ago.onclick=function(){var p=$('apr').value.trim();if(!p){App.toast(T('توضیح انیمیشن را بنویسید'),true);return;}
+    busy(ago,true);
+    App.post('/pf/animate',{prompt:p,aspect:aspect,quality:quality,seconds:+$('asec').value,files:files.map(function(f){return f.id;}),music:music?music.id:''},true).then(function(r){
+      busy(ago,false,T('ساخت انیمیشن'));
+      if(!r.ok){App.toast(r.error||T('خطا'),true);if(r.code==='insufficient_balance')setTimeout(function(){location.href='/wallet';},1500);return;}
+      App.toast(T('انیمیشن در صف رندر قرار گرفت؛ وقتی آماده شد اعلان می‌گیرید.'));if(r.balance!=null)App.setBalance(r.balance);anims();
+    }).catch(function(){busy(ago,false,T('ساخت انیمیشن'));App.toast(T('ارتباط با سرور برقرار نشد'),true);});};
+  var ST={queued:T('در صف'),running:T('در حال رندر'),succeeded:T('آماده'),failed:T('ناموفق'),cancelled:T('لغو شده')};
+  function anims(){if(!$('vgal'))return;clearTimeout(timer);
+    fetch('/pf/jobs?tool=animation_render,animation_code&files=1&limit=60',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(r){
+      var rows=r.jobs||[],live=false;
+      $('vgal').innerHTML=rows.length?rows.map(function(j){
+        var v=(j.files||[]).filter(function(f){return /^video\//.test(f.mime)||/^image\/gif/.test(f.mime);})[0],
+            poster=(j.files||[]).filter(function(f){return /poster/.test(f.name);})[0];
+        if(j.status==='queued'||j.status==='running')live=true;
+        return '<div class="vit '+j.status+'">'+(v?(/gif/.test(v.mime)?'<img src="'+esc(v.url)+'" alt="">':'<video controls playsinline preload="none" src="'+esc(v.url)+'"'+(poster?' poster="'+esc(poster.url)+'"':'')+'></video>')
+          :'<div class="vph">'+(j.status==='failed'?App.ic('triangle-alert','ic big'):'<span class="tsp"></span>')+'<span>'+esc(ST[j.status]||j.status)+'</span></div>')+
+          '<div class="vmeta"><b>'+esc(j.title||j.name)+'</b><span class="muted">'+esc(String(j.created_at).replace('T',' ').slice(0,16))+'</span>'+
+          (v?'<a class="btn btn-sm btn-ghost" href="'+esc(v.url)+'" download title="'+T('دانلود')+'">'+App.ic('download')+'</a>':'')+
+          (j.retryable?'<button class="btn btn-sm" data-retry="'+esc(j.id)+'">'+App.ic('rotate-cw')+' '+T('تلاش مجدد')+'</button>':'')+'</div>'+
+          (j.status==='failed'&&j.error?'<div class="errbox" style="font-size:.75rem;margin-top:6px">'+esc(j.error)+'</div>':'')+'</div>';
+      }).join(''):'<div class="muted">'+T('هنوز انیمیشنی نساخته‌اید.')+'</div>';
+      if(live)timer=setTimeout(anims,6000);
+    }).catch(function(){timer=setTimeout(anims,15000);});}
+  if($('vgal'))$('vgal').onclick=function(e){var b=e.target.closest('[data-retry]');if(!b)return;b.disabled=true;
+    App.post('/pf/jobs/'+b.getAttribute('data-retry')+'/retry',{},true).then(function(r){App.toast(r.ok?T('دوباره در صف قرار گرفت'):(r.error||T('خطا')),!r.ok);anims();});};
+  if($('gal'))gallery();
+  var as=document.querySelector('section[data-mode=animation]');if(as&&!as.hidden)anims();
 })();
 </script>
 {% endblock %}

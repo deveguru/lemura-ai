@@ -8,6 +8,10 @@
   var ICON_DOTS = SVG('<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>');
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  // one icon system (Lucide sprite, self-hosted): App.ic('wallet') -> inline SVG that follows the text color
+  function ic(name, cls) {
+    return '<svg class="' + (cls || 'ic ie') + '" aria-hidden="true"><use href="' + (window.ICON_SPRITE || '/static/vendor/lucide.svg') + '#' + name + '"></use></svg>';
+  }
   function num(n) { return Number(n || 0).toLocaleString('en-US'); }
   function faNum(n) { return Number(n || 0).toLocaleString(window.I18N && I18N.lang === 'en' ? 'en-US' : 'fa-IR'); }
   function toast(t, err) {
@@ -31,6 +35,20 @@
 
   // popup menus
   var openMenu = null;
+  // collapsible sidebar sections (state remembered per browser; a section holding the current page starts open)
+  function toggleSec(btn, open) {
+    var nav = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!nav) return;
+    open = open == null ? btn.getAttribute('aria-expanded') !== 'true' : open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    nav.hidden = !open;
+    try { localStorage.setItem('lemura_sec_' + btn.id, open ? '1' : '0'); } catch (e) { /* private mode */ }
+  }
+  document.querySelectorAll('.side-tog').forEach(function (b) {
+    if (b.getAttribute('data-force')) return;
+    var v = null; try { v = localStorage.getItem('lemura_sec_' + b.id); } catch (e) { /* ignore */ }
+    if (v === '1') toggleSec(b, true);
+  });
   function closeMenus() { if (openMenu) { openMenu.classList.remove('open'); openMenu = null; } }
   function menu(ev, id, anchor) {
     ev.stopPropagation();
@@ -78,8 +96,8 @@
     var c = e.target.closest && e.target.closest('.conv'); if (!c) return;
     var id = c.getAttribute('data-id');
     if (e.target.closest('[data-more]')) {
-      convMenu.innerHTML = '<button data-a="rename">✏️ ' + T('تغییر نام') + '</button><button data-a="share">🔗 ' + T('اشتراک‌گذاری') + '</button>' +
-        '<button data-a="drive">☁️ ' + T('ذخیره در گوگل درایو') + '</button><hr><button class="danger" data-a="delete">🗑 ' + T('حذف') + '</button>';
+      convMenu.innerHTML = '<button data-a="rename">' + App.ic('pencil') + ' ' + T('تغییر نام') + '</button><button data-a="share">' + App.ic('link') + ' ' + T('اشتراک‌گذاری') + '</button>' +
+        '<button data-a="drive">' + App.ic('cloud') + ' ' + T('ذخیره در گوگل درایو') + '</button><hr><button class="danger" data-a="delete">' + App.ic('trash-2') + ' ' + T('حذف') + '</button>';
       convMenu.onclick = function (ev) { var a = ev.target.closest('[data-a]'); if (!a) return; closeMenus(); convAction(a.getAttribute('data-a'), id); };
       menu(e, convMenu, e.target.closest('[data-more]')); return;
     }
@@ -125,7 +143,7 @@
     LEMURA.balance = b; var el = $('sideBal'); if (el) el.textContent = faNum(b) + T(' تومان');
   }
 
-  window.App = { toggleSide: toggleSide, menu: menu, closeMenus: closeMenus, toast: toast, post: post, esc: esc, num: num, faNum: faNum,
+  window.App = { ic: ic, toggleSec: toggleSec, toggleSide: toggleSide, menu: menu, closeMenus: closeMenus, toast: toast, post: post, esc: esc, num: num, faNum: faNum,
     lightbox: lightbox, loadConvs: loadConvs, toDrive: toDrive, renderConvs: renderConvs, upsertConv: upsertConv, setBalance: setBalance, currentConv: '' };
   window.lemuraToast = toast; window.commaNum = num;
   loadConvs();

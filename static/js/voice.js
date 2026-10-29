@@ -1,18 +1,19 @@
-/* Live voice conversation: listen (voice-activity detection) -> /chat/stt -> chat reply -> /chat/tts -> play -> listen.
-   Speaking while the assistant talks interrupts it (barge-in). */
+/* Voice input (dictation): tap the mic, speak, and the speech is transcribed (/chat/stt) and sent to the assistant
+   right away; the assistant answers in text (no spoken reply). Recording stops by itself after a short silence or
+   when the mic is tapped again. */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var T = function (s) { return window.I18N ? I18N.t(s) : s; };
-  var V = { on: false, stream: null, ctx: null, an: null, rec: null, chunks: [], speaking: false, lastVoice: 0,
-    started: 0, state: 'idle', audio: null, raf: 0 };
-  var START_RMS = 0.045, SILENCE_MS = 1300, MIN_MS = 450, MAX_MS = 60000;
+  var V = { rec: null, stream: null, ctx: null, an: null, chunks: [], started: 0, heard: false, lastVoice: 0, raf: 0, busy: false, send: false };
+  var START_RMS = 0.04, SILENCE_MS = 1600, MAX_MS = 90000, MIN_MS = 500;
 
-  function setState(st, text) {
-    V.state = st;
-    var ov = $('voiceOv'); if (!ov) return;
-    ov.setAttribute('data-state', st);
-    $('voiceStatus').textContent = text || { listening: T('در حال گوش دادن...'), hearing: T('می‌شنوم...'),
-      thinking: T('در حال فکر کردن...'), speaking: T('در حال صحبت...'), idle: '' }[st] || '';
+  function btn(state) {
+    var b = $('micBtn'); if (!b) return;
+    b.classList.toggle('rec', state === 'rec');
+    b.classList.toggle('wait', state === 'wait');
+    b.title = state === 'rec' ? T('در حال ضبط — برای ارسال دوباره بزنید') : state === 'wait' ? T('در حال تبدیل صدا به متن...') :
+      T('ورودی صوتی: صحبت کنید تا به متن تبدیل و ارسال شود');
+    if (state !== 'rec') $('micTime').textContent = '';
   }
   function rms() {
     var buf = new Float32Array(V.an.fftSize); V.an.getFloatTimeDomainData(buf);
@@ -20,86 +21,60 @@
     return Math.sqrt(s / buf.length);
   }
   function loop() {
-    if (!V.on) return;
-    var level = rms(), now = Date.now();
-    var orb = $('voiceOrb'); if (orb) orb.style.transform = 'scale(' + (1 + Math.min(level * 6, 0.6)) + ')';
-    var threshold = V.state === 'speaking' ? START_RMS * 2.2 : START_RMS;
-    if (level > threshold) {
-      V.lastVoice = now;
-      if (V.state === 'speaking') { stopAudio(); }           // barge-in
-      if (V.state === 'listening' || V.state === 'speaking') startRec();
-    }
-    if (V.state === 'hearing') {
-      if ((now - V.lastVoice > SILENCE_MS && now - V.started > MIN_MS) || now - V.started > MAX_MS) stopRec();
-    }
+    if (!V.rec) return;
+    var now = Date.now(), level = rms();
+    if (level > START_RMS) { V.heard = true; V.lastVoice = now; }
+    var secs = Math.floor((now - V.started) / 1000);
+    $('micTime').textContent = Math.floor(secs / 60) + ':' + ('0' + secs % 60).slice(-2);
+    $('micBtn').style.setProperty('--lvl', Math.min(level * 8, 1).toFixed(2));
+    if ((V.heard && now - V.lastVoice > SILENCE_MS && now - V.started > MIN_MS) || now - V.started > MAX_MS) { stop(true); return; }
     V.raf = requestAnimationFrame(loop);
   }
-  function startRec() {
-    V.chunks = []; V.started = Date.now();
-    var mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
-    V.rec = new MediaRecorder(V.stream, mime ? { mimeType: mime } : undefined);
-    V.rec.ondataavailable = function (e) { if (e.data.size) V.chunks.push(e.data); };
-    V.rec.onstop = onRecorded;
-    V.rec.start(); setState('hearing');
+  function cleanup() {
+    cancelAnimationFrame(V.raf);
+    if (V.stream) V.stream.getTracks().forEach(function (t) { t.stop(); });
+    if (V.ctx) V.ctx.close().catch(function () {});
+    V.stream = V.ctx = V.an = null;
   }
-  function stopRec() { if (V.rec && V.rec.state === 'recording') { setState('thinking'); V.rec.stop(); } }
-  function onRecorded() {
-    if (!V.on) return;
-    var blob = new Blob(V.chunks, { type: (V.rec && V.rec.mimeType) || 'audio/webm' });
-    if (blob.size < 2500) { setState('listening'); return; }
-    var fd = new FormData(); fd.append('audio', blob, 'voice.webm'); fd.append('lang', (window.I18N && I18N.lang) || 'fa');
-    fetch('/chat/stt', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (r) {
-      if (!V.on) return;
-      if (!r.ok) { App.toast(r.error || T('خطا'), true); setState('listening'); return; }
-      if (r.balance != null) App.setBalance(r.balance);
-      var text = (r.text || '').trim();
-      if (!text) { setState('listening'); return; }
-      $('voiceHeard').textContent = text;
-      setState('thinking'); Chat.sendText(text, { voice: true });
-    }).catch(function () { setState('listening'); });
-  }
-  function stopAudio() { if (V.audio) { V.audio.pause(); V.audio = null; } }
-  function speak(text) {
-    if (!text) { setState('listening'); return; }
-    setState('speaking');
-    fetch('/chat/tts', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text }) }).then(function (r) {
-      if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || 'tts'); });
-      return r.blob();
-    }).then(function (b) {
-      if (!V.on || V.state !== 'speaking') return;
-      var url = URL.createObjectURL(b); V.audio = new Audio(url);
-      V.audio.onended = function () { URL.revokeObjectURL(url); V.audio = null; if (V.on && V.state === 'speaking') setState('listening'); };
-      V.audio.play().catch(function () { setState('listening'); });
-    }).catch(function (e) { App.toast(e.message || T('خطا'), true); if (V.on) setState('listening'); });
-  }
-  function open() {
-    if (!LEMURA.user) { Auth.open(T('برای گفتگوی صوتی وارد شوید')); return; }
+  function start() {
+    if (!window.LEMURA || !LEMURA.user) { if (window.Auth) Auth.open(T('برای ورودی صوتی وارد شوید')); return; }
     if (!navigator.mediaDevices || !window.MediaRecorder) { App.toast(T('مرورگر شما از ضبط صدا پشتیبانی نمی‌کند'), true); return; }
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
-      V.stream = stream; V.on = true;
-      V.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      V.an = V.ctx.createAnalyser(); V.an.fftSize = 1024;
-      V.ctx.createMediaStreamSource(stream).connect(V.an);
-      $('voiceOv').classList.add('open'); $('voiceHeard').textContent = '';
-      setState('listening'); loop();
-    }).catch(function () { App.toast(T('دسترسی به میکروفون داده نشد'), true); });
+      V.stream = stream; V.chunks = []; V.heard = false; V.started = V.lastVoice = Date.now();
+      var AC = window.AudioContext || window.webkitAudioContext;
+      V.ctx = new AC(); V.an = V.ctx.createAnalyser(); V.an.fftSize = 1024; V.ctx.createMediaStreamSource(stream).connect(V.an);
+      var mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+      V.rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      var rec = V.rec;
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) V.chunks.push(e.data); };
+      rec.onstop = function () { upload(rec.mimeType || mime || 'audio/webm'); };
+      rec.start(250); btn('rec'); loop();
+    }).catch(function () { App.toast(T('اجازهٔ دسترسی به میکروفون داده نشد'), true); });
   }
-  function close() {
-    V.on = false; cancelAnimationFrame(V.raf); stopAudio();
-    if (V.rec && V.rec.state === 'recording') { V.rec.onstop = null; V.rec.stop(); }
-    if (V.stream) V.stream.getTracks().forEach(function (t) { t.stop(); });
-    if (V.ctx) V.ctx.close();
-    V.stream = V.ctx = V.an = V.rec = null; setState('idle');
-    $('voiceOv').classList.remove('open');
+  function stop(send) {
+    if (!V.rec) return;
+    V.send = !!send;
+    var rec = V.rec; V.rec = null;
+    try { rec.stop(); } catch (e) { upload(''); }
+    cleanup();
   }
-  // chat tells us when a reply finished; speak it only for turns started by voice
-  var prev = Chat.onReply;
-  Chat.onReply = function (full, err) {
-    if (prev) prev(full, err);
-    if (!V.on) return;
-    if (err) { setState('listening'); return; }
-    speak(full);
+  function upload(mime) {
+    if (!V.send || !V.heard || !V.chunks.length) { btn('idle'); if (V.send && !V.heard) App.toast(T('صدایی شنیده نشد'), true); return; }
+    var blob = new Blob(V.chunks, { type: mime || 'audio/webm' }), ext = /mp4/.test(mime) ? 'm4a' : 'webm';
+    var fd = new FormData(); fd.append('audio', blob, 'voice.' + ext); fd.append('lang', (window.I18N && I18N.lang) || 'fa');
+    btn('wait'); V.busy = true;
+    fetch('/chat/stt', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (r) {
+      V.busy = false; btn('idle');
+      if (!r.ok) { App.toast(r.error || T('تبدیل صدا به متن ناموفق بود'), true); return; }
+      if (r.balance != null) App.setBalance(r.balance);
+      var text = (r.text || '').trim();
+      if (!text) { App.toast(T('صدایی شنیده نشد'), true); return; }
+      if (window.Chat) Chat.sendText(text, { voice: true });
+    }).catch(function () { V.busy = false; btn('idle'); App.toast(T('ارتباط با سرور برقرار نشد'), true); });
+  }
+  window.Voice = {
+    toggle: function () { if (V.busy) return; if (V.rec) stop(true); else start(); },
+    cancel: function () { stop(false); }
   };
-  window.Voice = { open: open, close: close, tapToTalk: function () { if (V.state === 'hearing') stopRec(); else if (V.state === 'speaking') { stopAudio(); setState('listening'); } } };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && V.rec) stop(false); });
 })();

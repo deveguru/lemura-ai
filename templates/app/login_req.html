@@ -1,7 +1,7 @@
 {% extends "app/base.html" %}
 {% block main %}
 <div class="page"><div class="page-in" style="text-align:center;padding-top:14vh">
-  <div class="auth-logo">🔒</div>
+  <div class="auth-logo">{{ ic('lock', 'ic ie') }}</div>
   <h1>{{ _('برای ادامه وارد شوید') }}</h1>
   <p class="sub">{{ _('در چند ثانیه وارد شوید یا حساب بسازید.') }}</p>
   <button class="btn" onclick="Auth.open()">{{ _('ورود / ثبت‌نام') }}</button>

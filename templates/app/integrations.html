@@ -1,0 +1,89 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('اتصال‌های API') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('اتصال‌های API') }}{% endblock %}
+{% block main %}
+<div class="page"><div class="page-in" data-pf="integrations">
+  <div class="phead">
+    <div>
+      <h1>{{ ic('plug', 'ic ie') }} {{ _('اتصال هوش مصنوعی به هر وب‌سرویس') }}</h1>
+      <p class="sub">{{ _('فایل OpenAPI/Swagger یا مستندات یک سرویس (مثلاً نرم‌افزار حسابداری) را بدهید تا لمورا از روی آن ابزار بسازد. کلید API شما رمزنگاری‌شده در خزانه نگه داشته می‌شود و هیچ‌وقت به مدل نشان داده نمی‌شود. پس از تست موفق، اتصال در چت، ایجنت‌ها و وظایف زمان‌بندی‌شده قابل استفاده است.') }}</p>
+    </div>
+    <div class="pbtns">
+      <a class="btn btn-ghost" href="/library">{{ ic('library', 'ic ie') }} {{ _('کتابخانهٔ کانکتورها') }}</a>
+      <button class="btn" onclick="PF.I.add()">{{ ic('plus', 'ic ie') }} {{ _('اتصال جدید') }}</button>
+    </div>
+  </div>
+  <div class="steps">
+    <div><b>۱</b>{{ _('بارگذاری OpenAPI یا مستندات') }}</div><div><b>۲</b>{{ _('ساخت خودکار ابزارها') }}</div>
+    <div><b>۳</b>{{ _('تست اتصال') }}</div><div><b>۴</b>{{ _('استفاده در چت، ایجنت و وظیفه') }}</div><div><b>۵</b>{{ _('انتشار عمومی (اختیاری)') }}</div>
+  </div>
+  <div id="connList"><div class="panel muted">{{ _('در حال بارگذاری...') }}</div></div>
+</div></div>
+
+<div class="modal-ov" id="connModal"><div class="modal" style="max-width:640px">
+  <button class="ibtn modal-cls" onclick="PF.close('connModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0" id="connTitle">{{ _('اتصال جدید') }}</h3>
+  <form id="connForm" autocomplete="off" onsubmit="return PF.I.save(event)">
+    <input type="hidden" name="id">
+    <div class="seg" id="kindSeg" style="margin-bottom:12px">
+      <button type="button" data-k="openapi" class="on">OpenAPI / Swagger</button>
+      <button type="button" data-k="docs">{{ _('مستندات متنی / PDF') }}</button>
+    </div>
+    <input type="hidden" name="kind" value="openapi">
+    <div class="fg"><label>{{ _('نام سرویس') }}</label><input class="input" name="name" placeholder="{{ _('مثلاً حسابداری سپیدار') }}"></div>
+    <div data-kind="openapi">
+      <div class="seg" id="srcSeg" style="margin-bottom:10px">
+        <button type="button" data-s="url" class="on">{{ _('لینک') }}</button><button type="button" data-s="file">{{ _('فایل') }}</button><button type="button" data-s="paste">{{ _('متن') }}</button>
+      </div>
+      <div class="fg" data-src="url"><label>{{ _('لینک openapi.json یا صفحهٔ Swagger UI') }}</label><input class="input ltr" name="spec_url" placeholder="https://api.example.com/openapi.json"></div>
+      <div class="fg" data-src="file" hidden><label>{{ _('فایل JSON/YAML') }}</label><input class="input" type="file" name="spec_file" accept=".json,.yaml,.yml,.txt"></div>
+      <div class="fg" data-src="paste" hidden><label>{{ _('متن OpenAPI (JSON یا YAML)') }}</label><textarea class="input ltr mono" name="spec_text" rows="7"></textarea></div>
+    </div>
+    <div data-kind="docs" hidden>
+      <div class="fg"><label>{{ _('متن مستندات API') }}</label><textarea class="input ltr" name="docs" rows="7" placeholder="{{ _('مستندات endpointها، پارامترها و نحوهٔ احراز هویت را اینجا بچسبانید') }}"></textarea></div>
+      <div class="fg"><label>{{ _('یا فایل PDF / TXT مستندات') }}</label><input class="input" type="file" name="docs_file" accept=".pdf,.txt,.md"></div>
+      <div class="hint">{{ _('برای سرویس‌های بدون OpenAPI، مدل از روی مستندات یک اسکریپت می‌نویسد که پیش از اجرا به شما نشان داده می‌شود و در سندباکس ایزوله فقط به همین دامنه دسترسی دارد.') }}</div>
+    </div>
+    <div class="fg"><label>{{ _('آدرس پایهٔ API (اختیاری برای OpenAPI)') }}</label><input class="input ltr" name="base_url" placeholder="https://api.example.com/v1"></div>
+    <div class="grid g2" style="gap:10px">
+      <div class="fg"><label>{{ _('نوع احراز هویت') }}</label>
+        <select class="input" name="auth_type">
+          <option value="">{{ _('تشخیص خودکار از OpenAPI') }}</option><option value="bearer">Bearer token</option>
+          <option value="header">{{ _('هدر سفارشی (API Key)') }}</option><option value="query">{{ _('پارامتر URL') }}</option>
+          <option value="basic">Basic (user:pass)</option><option value="none">{{ _('بدون احراز هویت') }}</option>
+        </select></div>
+      <div class="fg" id="authName"><label>{{ _('نام هدر/پارامتر') }}</label><input class="input ltr" name="auth_name" placeholder="X-API-Key"></div>
+    </div>
+    <div class="fg"><label>{{ _('کلید / توکن API') }} <span class="muted">{{ ic('lock', 'ic ie') }} {{ _('رمزنگاری در خزانه') }}</span></label>
+      <input class="input ltr" name="secret" type="password" autocomplete="new-password" placeholder="{{ _('خالی = بدون تغییر') }}"></div>
+    <div class="fg"><label>{{ _('توضیح (اختیاری)') }}</label><input class="input" name="description"></div>
+    <button class="btn" type="submit" style="width:100%" id="connSave">{{ ic('save', 'ic ie') }} {{ _('ذخیره و تست اتصال') }}</button>
+    <div id="connResult" style="margin-top:10px"></div>
+  </form>
+</div></div>
+
+<div class="modal-ov" id="toolsModal"><div class="modal" style="max-width:760px">
+  <button class="ibtn modal-cls" onclick="PF.close('toolsModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0" id="toolsTitle"></h3>
+  <div id="toolsBody"></div>
+</div></div>
+
+<div class="modal-ov" id="pubModal"><div class="modal" style="max-width:520px">
+  <button class="ibtn modal-cls" onclick="PF.close('pubModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0">{{ ic('globe', 'ic ie') }} {{ _('انتشار در کتابخانهٔ عمومی') }}</h3>
+  <p class="hint">{{ _('فقط تعریف فنی (endpointها، اسکیما و نوع احراز هویت) منتشر می‌شود؛ کلید شما هرگز منتشر نمی‌شود و هر کاربر کلید خودش را وارد می‌کند. پیش از انتشار، تیم لمورا آن را بازبینی می‌کند.') }}</p>
+  <form id="pubForm" onsubmit="return PF.I.publish(event)">
+    <input type="hidden" name="id">
+    <div class="fg"><label>{{ _('نام عمومی') }}</label><input class="input" name="name"></div>
+    <div class="fg"><label>{{ _('توضیح') }}</label><textarea class="input" name="description" rows="3"></textarea></div>
+    <div class="grid g2" style="gap:10px">
+      <div class="fg"><label>{{ _('دسته') }}</label><select class="input" name="category">
+        {% for k, v in {"accounting":"حسابداری و مالی","crm":"CRM و فروش","social":"شبکه‌های اجتماعی","ecommerce":"فروشگاه اینترنتی","messaging":"پیام‌رسان و ایمیل","productivity":"بهره‌وری","data":"داده و تحلیل","ai":"هوش مصنوعی","dev":"توسعه‌دهندگان","other":"سایر"}.items() %}<option value="{{ k }}">{{ _(v) }}</option>{% endfor %}
+      </select></div>
+      <div class="fg"><label>{{ _('آیکون (ایموجی یا لینک)') }}</label><input class="input" name="icon" placeholder=""></div>
+    </div>
+    <button class="btn" type="submit" style="width:100%">{{ ic('upload', 'ic ie') }} {{ _('ارسال برای بازبینی') }}</button>
+  </form>
+</div></div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/platform.js') }}"></script>{% endblock %}

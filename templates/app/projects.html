@@ -5,12 +5,12 @@
 <div class="page"><div class="page-in">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
     <div>
-      <h1>🚀 {{ _('پروژه‌ها و وب‌سایت‌های من') }}</h1>
+      <h1>{{ ic('rocket', 'ic ie') }} {{ _('پروژه‌ها و وب‌سایت‌های من') }}</h1>
       <p class="sub">{{ _('سایت‌هایتان را با سی‌پنل، SSH یا وردپرس وصل کنید و کارها را به ایجنت هوشمند لمورا بسپارید: مقاله‌نویسی، تولید محتوا، ساخت افزونه، تست و دیباگ و هر کار دیگر. هر تغییری قبل از اجرا با تأیید شما انجام می‌شود و هزینه از کیف پول کسر می‌شود.') }}</p>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost" onclick="P.newTask()">🤖 {{ _('وظیفه جدید') }}</button>
-      <button class="btn" onclick="P.editSite()">➕ {{ _('افزودن وب‌سایت') }}</button>
+      <button class="btn btn-ghost" onclick="P.newTask()">{{ ic('bot', 'ic ie') }} {{ _('وظیفه جدید') }}</button>
+      <button class="btn" onclick="P.editSite()">{{ ic('plus', 'ic ie') }} {{ _('افزودن وب‌سایت') }}</button>
     </div>
   </div>
 
@@ -30,7 +30,7 @@
 
 <!-- add / edit site -->
 <div class="modal-ov" id="siteModal"><div class="modal" style="max-width:560px">
-  <button class="ibtn modal-cls" onclick="P.close('siteModal')">✕</button>
+  <button class="ibtn modal-cls" onclick="P.close('siteModal')">{{ ic('x', 'ic ie') }}</button>
   <h3 style="margin-top:0" id="siteTitle">{{ _('افزودن وب‌سایت') }}</h3>
   <form id="siteForm" autocomplete="off">
     <input type="hidden" name="id">
@@ -57,22 +57,22 @@
     <div class="amsg" id="siteMsg"></div>
     <div style="display:flex;gap:8px"><button class="btn" style="flex:1" type="submit">{{ _('ذخیره و تست اتصال') }}</button>
       <button class="btn btn-ghost" type="button" onclick="P.close('siteModal')">{{ _('انصراف') }}</button></div>
-    <p class="hint" style="margin-top:10px">🔒 {{ _('اطلاعات ورود رمزنگاری‌شده ذخیره می‌شود و هرگز نمایش داده یا برای کسی ارسال نمی‌شود. پیشنهاد: برای لمورا کاربر/توکن جداگانه با حداقل دسترسی بسازید تا هر زمان بتوانید آن را باطل کنید.') }}</p>
+    <p class="hint" style="margin-top:10px">{{ ic('lock', 'ic ie') }} {{ _('اطلاعات ورود رمزنگاری‌شده ذخیره می‌شود و هرگز نمایش داده یا برای کسی ارسال نمی‌شود. پیشنهاد: برای لمورا کاربر/توکن جداگانه با حداقل دسترسی بسازید تا هر زمان بتوانید آن را باطل کنید.') }}</p>
   </form>
 </div></div>
 
 <!-- new task -->
 <div class="modal-ov" id="taskModal"><div class="modal" style="max-width:600px">
-  <button class="ibtn modal-cls" onclick="P.close('taskModal')">✕</button>
-  <h3 style="margin-top:0">🤖 {{ _('وظیفه جدید برای ایجنت') }}</h3>
+  <button class="ibtn modal-cls" onclick="P.close('taskModal')">{{ ic('x', 'ic ie') }}</button>
+  <h3 style="margin-top:0">{{ ic('bot', 'ic ie') }} {{ _('وظیفه جدید برای ایجنت') }}</h3>
   <div class="fg"><label>{{ _('وب‌سایت') }}</label><select class="input" id="tSite"></select></div>
   <div class="fg"><label>{{ _('چه کاری انجام شود؟') }}</label>
     <textarea class="input" id="tGoal" rows="6" placeholder="{{ _('مثال: یک مقاله ۱۵۰۰ کلمه‌ای سئو شده درباره «بهترین روش‌های نگهداری گل آپارتمانی» بنویس، دسته‌بندی مناسب بساز و به صورت پیش‌نویس منتشر کن.') }}"></textarea></div>
   <div class="tpl" id="tpls">
-    <button type="button" data-t="{{ _('یک مقاله کامل و سئو شده درباره موضوع زیر بنویس و به صورت پیش‌نویس در سایت قرار بده: ') }}">✍️ {{ _('مقاله') }}</button>
-    <button type="button" data-t="{{ _('یک افزونه وردپرس بساز که: ') }}">🔌 {{ _('افزونه') }}</button>
-    <button type="button" data-t="{{ _('سایت را بررسی کن، خطاها و مشکلات سرعت و امنیت را پیدا کن و گزارش بده و موارد قابل رفع را رفع کن: ') }}">🛠 {{ _('تست و دیباگ') }}</button>
-    <button type="button" data-t="{{ _('برای صفحات و محصولات سایت محتوای جدید و جذاب تولید کن: ') }}">📣 {{ _('تولید محتوا') }}</button>
+    <button type="button" data-t="{{ _('یک مقاله کامل و سئو شده درباره موضوع زیر بنویس و به صورت پیش‌نویس در سایت قرار بده: ') }}">{{ ic('pen-line', 'ic ie') }} {{ _('مقاله') }}</button>
+    <button type="button" data-t="{{ _('یک افزونه وردپرس بساز که: ') }}">{{ ic('plug', 'ic ie') }} {{ _('افزونه') }}</button>
+    <button type="button" data-t="{{ _('سایت را بررسی کن، خطاها و مشکلات سرعت و امنیت را پیدا کن و گزارش بده و موارد قابل رفع را رفع کن: ') }}">{{ ic('hammer', 'ic ie') }} {{ _('تست و دیباگ') }}</button>
+    <button type="button" data-t="{{ _('برای صفحات و محصولات سایت محتوای جدید و جذاب تولید کن: ') }}">{{ ic('megaphone', 'ic ie') }} {{ _('تولید محتوا') }}</button>
   </div>
   <div class="cols2">
     <div class="fg"><label>{{ _('مدل هوش مصنوعی') }}</label><select class="input" id="tModel">

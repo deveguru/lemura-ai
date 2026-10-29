@@ -3,7 +3,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var T = function (s) { return window.I18N ? I18N.t(s) : s; };
   var esc = App.esc, id = TASK.id, after = 0, task = null, timer = null;
-  var ICON = { note: '💬', tool: '🔎', action: '⚙️', plan: '🗺', report: '✅', error: '⚠️' };
+  var ICON = { note: App.ic('message-circle'), tool: App.ic('search'), action: App.ic('settings'), plan: App.ic('map'), report: App.ic('circle-check'), error: App.ic('triangle-alert') };
   var TOOL = { list_dir: T('مشاهده پوشه'), read_file: T('خواندن فایل'), write_file: T('نوشتن فایل'), make_dir: T('ساخت پوشه'),
     run_command: T('اجرای دستور'), list_databases: T('فهرست دیتابیس‌ها'), wp_list: T('فهرست وردپرس'), wp_get_post: T('خواندن مطلب'),
     wp_create_post: T('ساخت مطلب'), wp_update_post: T('ویرایش مطلب'), wp_create_term: T('ساخت دسته/برچسب'),
@@ -24,22 +24,22 @@
       var p = s.args;
       body = '<div class="md">' + MD.render(p.summary || '') + '</div><ol class="plist">' + (p.steps || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' +
         ((p.changes || []).length ? '<div class="hint"><b>' + T('تغییراتی که انجام می‌شود') + ':</b><ul>' + p.changes.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
-        (p.risks ? '<div class="note">⚠️ ' + esc(p.risks) + '</div>' : '');
+        (p.risks ? '<div class="note">' + App.ic('triangle-alert') + ' ' + esc(p.risks) + '</div>' : '');
       if (s.status === 'pending' && task && task.status === 'awaiting_plan') body += planForm();
     } else if (s.kind === 'action') {
       body = '<div class="md">' + MD.render(s.preview || '') + '</div>';
       if (s.status === 'pending' && task && task.status === 'awaiting_action') body +=
-        '<div class="appr"><button class="btn btn-sm" data-act="1" data-step="' + s.id + '">✔ ' + T('تأیید و اجرا') + '</button>' +
-        '<button class="btn btn-sm btn-ghost" data-act="all" data-step="' + s.id + '">⏩ ' + T('تأیید این و بقیه تغییرات') + '</button>' +
-        '<button class="btn btn-sm btn-danger" data-act="0" data-step="' + s.id + '">✖ ' + T('رد') + '</button></div>';
+        '<div class="appr"><button class="btn btn-sm" data-act="1" data-step="' + s.id + '">' + App.ic('check') + ' ' + T('تأیید و اجرا') + '</button>' +
+        '<button class="btn btn-sm btn-ghost" data-act="all" data-step="' + s.id + '">' + App.ic('fast-forward') + ' ' + T('تأیید این و بقیه تغییرات') + '</button>' +
+        '<button class="btn btn-sm btn-danger" data-act="0" data-step="' + s.id + '">' + App.ic('x') + ' ' + T('رد') + '</button></div>';
       else if (s.output) body += '<details><summary>' + T('نتیجه') + '</summary><pre class="out">' + esc(s.output) + '</pre></details>';
     } else if (s.kind === 'tool') {
       body = s.output ? '<details><summary>' + T('خروجی') + '</summary><pre class="out">' + esc(s.output) + '</pre></details>' : '';
     } else {
       body = '<div class="md">' + MD.render(s.output || '') + '</div>';
     }
-    if (s.artifact) body += '<a class="btn btn-sm" href="' + esc(s.artifact) + '" download>⬇ ' + T('دانلود فایل') + '</a> ' +
-      '<button class="btn btn-sm btn-ghost" onclick="App.toDrive({url:\'' + esc(s.artifact) + '\'})">☁️ ' + T('ذخیره در درایو') + '</button>';
+    if (s.artifact) body += '<a class="btn btn-sm" href="' + esc(s.artifact) + '" download>' + App.ic('download') + ' ' + T('دانلود فایل') + '</a> ' +
+      '<button class="btn btn-sm btn-ghost" onclick="App.toDrive({url:\'' + esc(s.artifact) + '\'})">' + App.ic('cloud') + ' ' + T('ذخیره در درایو') + '</button>';
     return '<div class="step k-' + s.kind + ' s-' + s.status + '" id="st' + s.id + '">' + head + body + '</div>';
   }
   function planForm() {
@@ -49,16 +49,16 @@
       '<div class="fg"><label>' + T('زمان‌بندی') + '</label><select class="input" id="pSched">' +
       SCHED.map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('') + '</select></div>' +
       '<div class="fg" style="grid-column:1/-1"><label>' + T('توضیح برای ایجنت (اختیاری)') + '</label><input class="input" id="pNote"></div>' +
-      '<div style="grid-column:1/-1;display:flex;gap:8px"><button class="btn" data-plan="1">✔ ' + T('تأیید برنامه و شروع') + '</button>' +
-      '<button class="btn btn-ghost" data-plan="0">↺ ' + T('اصلاح برنامه') + '</button></div></div>';
+      '<div style="grid-column:1/-1;display:flex;gap:8px"><button class="btn" data-plan="1">' + App.ic('check') + ' ' + T('تأیید برنامه و شروع') + '</button>' +
+      '<button class="btn btn-ghost" data-plan="0">' + App.ic('rotate-ccw') + ' ' + T('اصلاح برنامه') + '</button></div></div>';
   }
   function renderTask(t) {
     task = t;
     var cls = t.status === 'done' ? 'badge-green' : (t.status === 'failed' || t.status === 'cancelled') ? 'badge-red'
       : (t.status.indexOf('awaiting') === 0 || t.status === 'need_charge') ? 'badge-warn' : 'badge-purple';
     $('tStatus').innerHTML = '<span class="badge ' + cls + '">' + esc(T(t.status_label)) + '</span>';
-    $('tMode').textContent = '⚙️ ' + (t.mode === 'auto' ? T('اجرای خودکار') : T('تأیید هر تغییر'));
-    $('tCost').textContent = '💰 ' + App.faNum(t.cost) + ' ' + T('تومان');
+    $('tMode').innerHTML = App.ic('settings') + ' ' + (t.mode === 'auto' ? T('اجرای خودکار') : T('تأیید هر تغییر'));
+    $('tCost').innerHTML = App.ic('coins') + ' ' + App.faNum(t.cost) + ' ' + T('تومان');
     var msg = t.status_msg || '';
     if (t.status === 'scheduled') msg = T('اجرای بعدی') + ': ' + (t.next_run || '').slice(0, 16);
     if (t.status === 'need_charge') msg = T('موجودی کیف پول کافی نیست؛ پس از شارژ خودکار ادامه می‌یابد.') + ' <a href="/wallet">' + T('شارژ کیف پول') + '</a>';

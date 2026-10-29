@@ -1,0 +1,83 @@
+{% extends "app/base.html" %}
+{% block title %}{{ _('وب‌سرویس ابزارها') }} — {{ brand.name if lang=='fa' else brand.name_en }}{% endblock %}
+{% block pagetitle %}{{ _('وب‌سرویس ابزارها') }}{% endblock %}
+{% block main %}<!--email_off-->
+<div class="page"><div class="page-in tdocs">
+  <div class="phead">
+    <div>
+      <h1>{{ ic('wrench', 'ic ie') }} {{ _('وب‌سرویس ابزارهای لمورا') }}</h1>
+      <p class="sub">{{ _('همهٔ ابزارهایی که هوش مصنوعی لمورا در چت استفاده می‌کند — ساخت پاورپوینت، Word، Excel و PDF، OCR، تبدیل صوت، حذف پس‌زمینه، نمودار، داده‌های بازار و... — به‌صورت API مستقیم هم در دسترس است. پردازش کامل روی سرورهای لمورا انجام می‌شود و هزینهٔ هر فراخوانی از کیف پول صاحب کلید کسر می‌شود.') }}</p>
+    </div>
+    <div class="pbtns">
+      <a class="btn btn-ghost" href="/public/v1/openapi.json" target="_blank">{{ ic('file-text', 'ic ie') }} OpenAPI JSON</a>
+      <a class="btn" href="/developers">{{ ic('key-round', 'ic ie') }} {{ _('دریافت کلید API') }}</a>
+    </div>
+  </div>
+
+  {% include "app/_docs_nav.html" %}
+  <div class="panel" style="margin-bottom:14px">
+    <h3>{{ ic('rocket', 'ic ie') }} {{ _('شروع سریع') }}</h3>
+    <p class="hint">{{ _('آدرس پایه:') }} <code class="ltr">{{ base }}</code> — {{ _('احراز هویت با هدر') }} <code class="ltr">Authorization: Bearer lsk-...</code> — {{ _('قیمت‌ها برای پلن') }} «{{ _(plan.name) }}»</p>
+<pre class="ltr code"># {{ _('ساخت پاورپوینت') }}
+curl -X POST {{ base }}/tools/pptx_generate \
+  -H "Authorization: Bearer lsk-YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"title":"گزارش فصلی","slides":[{"title":"خلاصه","bullets":["رشد ۲۰٪","۳ محصول جدید"]}]}'
+
+# {{ _('ارسال فایل (multipart): فیلد فایل هم‌نام پارامتر ابزار است') }}
+curl -X POST "{{ base }}/tools/ocr_image?wait=30" -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -F file=@scan.jpg -F 'args={"languages":["fa","en"]}'
+
+# {{ _('کارهای طولانی job_id برمی‌گردانند (HTTP 202)') }}
+curl {{ base }}/jobs/job_xxx -H "Authorization: Bearer lsk-YOUR_KEY"</pre>
+    <div class="grid g3" style="margin-top:10px">
+      <div><b>{{ _('خروجی یکسان') }}</b><div class="hint"><code class="ltr">{ ok, data, files[], error, meta }</code> — {{ _('فایل‌ها با لینک دانلود موقت') }}</div></div>
+      <div><b>{{ _('هزینه') }}</b><div class="hint">{{ _('پایه + وزن پردازش × واحد پردازش واقعی؛ مبلغ دقیق در meta.cost') }}</div></div>
+      <div><b>{{ _('خطاها') }}</b><div class="hint">400 {{ _('ورودی') }} · 401 {{ _('کلید') }} · 402 {{ _('موجودی') }} · 403 {{ _('دسترسی') }} · 428 {{ _('تأیید') }} · 429 {{ _('سقف') }}</div></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px" data-doc-title="{{ _('قواعد مشترک هر دو وب‌سرویس') }}">
+    <h3>{{ ic('badge-check', 'ic ie') }} {{ _('قواعد مشترک هر دو وب‌سرویس') }}</h3>
+    {% include "app/_api_common.html" %}
+  </div>
+  <div class="tdnav">{% for g in groups %}<a href="#g{{ loop.index }}">{{ _(g) }} <span>{{ groups[g]|length }}</span></a>{% endfor %}</div>
+
+  {% for g, items in groups.items() %}
+  <h2 class="sect" id="g{{ loop.index }}">{{ _(g) }}</h2>
+  {% for d in items %}
+  <div class="panel tdoc" id="{{ d.tool_id }}">
+    <div class="tdh">
+      <div><b>{{ d.name if lang=='fa' else (d.name_en or d.name) }}</b> <code class="ltr">{{ d.tool_id }}</code>
+        {% if d.is_async %}<span class="badge badge-warn">async</span>{% endif %}
+        <span class="badge badge-purple">v{{ d.version }}</span></div>
+      <div class="tdp">~{{ '{:,}'.format(d.price.estimate) }} {{ _('تومان') }} / {{ _('فراخوانی') }}</div>
+    </div>
+    <p class="hint">{{ d.description }}</p>
+    <div class="treq ltr"><b>POST</b> {{ d.endpoint }}</div>
+    <details><summary>{{ _('پارامترها، نمونه و محدودیت‌ها') }}</summary>
+      <div class="tw"><table class="tbl"><thead><tr><th>{{ _('پارامتر') }}</th><th>{{ _('نوع') }}</th><th>{{ _('الزامی') }}</th><th>{{ _('توضیح') }}</th></tr></thead><tbody>
+      {% for k, v in (d.parameters.properties or {}).items() %}
+        <tr><td class="ltr mono">{{ k }}</td><td class="ltr">{{ v.type or ('enum' if v.enum else 'any') }}{% if v.enum %}<div class="muted" style="font-size:.7rem">{{ v.enum|join(' | ') }}</div>{% endif %}</td>
+          <td>{{ ic('check', 'ic ie') if k in (d.parameters.required or []) else '' }}</td><td>{{ v.description or '' }}{% if k in d.file_fields %} <span class="badge">{{ _('فایل') }}</span>{% endif %}</td></tr>
+      {% endfor %}</tbody></table></div>
+      <pre class="ltr code">curl -X POST {{ d.endpoint }} -H "Authorization: Bearer lsk-YOUR_KEY" \
+  -H "Content-Type: application/json" -d '{{ d.example|tojson }}'</pre>
+      <div class="hint">{{ _('حداکثر زمان اجرا') }}: {{ d.timeout_sec }}s · {{ _('حداکثر حجم فایل ورودی') }}: {{ d.max_file_mb }}MB ·
+        {{ _('تعرفه') }}: {{ _('پایه') }} {{ d.price.base_cost }} + {{ _('وزن پردازش') }} {{ d.price.compute_weight }} × {{ _('واحد پردازش') }}{% if d.price.multiplier != 1 %} × {{ d.price.multiplier }}{% endif %}</div>
+    </details>
+  </div>
+  {% endfor %}
+  {% endfor %}
+
+  <div class="panel" style="margin-top:18px">
+    <h3>{{ ic('alarm-clock', 'ic ie') }} {{ _('API مدیریت وظایف و اعلان') }}</h3>
+<pre class="ltr code">GET  {{ base }}/tasks                     # list
+POST {{ base }}/tasks                     # {"name","tool_id","payload","trigger":{"type":"cron","expr":"0 8 * * *"},"post_action":{"channels":["email"]}}
+POST {{ base }}/tasks/&lt;id&gt;/approve         # confirm the exact payload + schedule
+POST {{ base }}/tasks/&lt;id&gt;/run | pause | activate
+DELETE {{ base }}/tasks/&lt;id&gt;
+POST {{ base }}/notifications             # {"title","body","channels":["inapp","push","email","sms"]}</pre>
+  </div>
+</div></div>
+<!--/email_off-->{% endblock %}
+{% block scripts %}<script src="{{ asset('/static/js/docs.js') }}"></script>{% endblock %}

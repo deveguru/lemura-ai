@@ -11,39 +11,49 @@
 {% block main %}
 <div class="thread" id="thread">
   <div class="hero" id="hero">
-    {% if brand.logo %}<img class="hero-logo" src="{{ brand.logo }}" alt="{{ brand.name }}">{% else %}<div class="auth-logo">⚡</div>{% endif %}
+    {% if agent %}
+    <div class="agent-hero"><div class="agent-ic">{% if agent.icon %}{{ agent.icon }}{% else %}{{ ic('bot', 'ic') }}{% endif %}</div>
+      <h1>{{ agent.name }}</h1><p>{{ agent.description or _('ایجنت سفارشی') }}</p>
+      {% if missing %}<div class="hint" style="color:var(--warn)">{{ _('بعضی مهارت‌های این ایجنت برای شما فعال نیست (کانکتور را از کتابخانه فعال کنید):') }} {{ missing|join('، ') }}</div>{% endif %}
+      <div class="sugs">{% for st in agent.starters %}<button class="sug" data-q="{{ st }}"><b>{{ ic('message-circle', 'ic ie') }}</b>{{ st }}</button>{% endfor %}</div>
+    </div>
+    {% else %}
+    {% if brand.logo %}<img class="hero-logo" src="{{ brand.logo }}" alt="{{ brand.name }}">{% else %}<div class="auth-logo">{{ ic('zap', 'ic ie') }}</div>{% endif %}
     <h1>{% if user %}{{ _('سلام {name}، امروز چطور کمکتان کنم؟', name=user.display_name.split(' ')[0]) }}{% else %}{{ _('امروز چطور کمکتان کنم؟') }}{% endif %}</h1>
     <p>{{ _('گفتگو با بهترین مدل‌های هوش مصنوعی دنیا — بنویسید «یک تصویر بساز از ...» تا تصویر بسازم.') }}</p>
     <div class="sugs">
-      <button class="sug" data-q="{{ _('یک ایمیل رسمی برای درخواست مرخصی سه روزه بنویس') }}"><b>✍️ {{ _('نوشتن') }}</b>{{ _('یک ایمیل رسمی برای درخواست مرخصی') }}</button>
-      <button class="sug" data-q="{{ _('یک تصویر بساز از گربه فضانورد روی ماه با سبک سینمایی') }}"><b>🎨 {{ _('تولید تصویر') }}</b>{{ _('گربه فضانورد روی ماه، سبک سینمایی') }}</button>
-      <button class="sug" data-q="{{ _('یک تابع پایتون بنویس که اعداد اول تا n را برگرداند و توضیح بده') }}"><b>💻 {{ _('برنامه‌نویسی') }}</b>{{ _('تابع پایتون برای اعداد اول') }}</button>
-      <button class="sug" data-q="{{ _('مفهوم یادگیری ماشین را به زبان ساده با مثال توضیح بده') }}"><b>🎓 {{ _('یادگیری') }}</b>{{ _('یادگیری ماشین به زبان ساده') }}</button>
+      <button class="sug" data-q="{{ _('یک ایمیل رسمی برای درخواست مرخصی سه روزه بنویس') }}"><b>{{ ic('pen-line', 'ic ie') }} {{ _('نوشتن') }}</b>{{ _('یک ایمیل رسمی برای درخواست مرخصی') }}</button>
+      <button class="sug" data-q="{{ _('یک تصویر بساز از گربه فضانورد روی ماه با سبک سینمایی') }}"><b>{{ ic('palette', 'ic ie') }} {{ _('تولید تصویر') }}</b>{{ _('گربه فضانورد روی ماه، سبک سینمایی') }}</button>
+      <button class="sug" data-q="{{ _('یک تابع پایتون بنویس که اعداد اول تا n را برگرداند و توضیح بده') }}"><b>{{ ic('laptop', 'ic ie') }} {{ _('برنامه‌نویسی') }}</b>{{ _('تابع پایتون برای اعداد اول') }}</button>
+      <button class="sug" data-q="{{ _('مفهوم یادگیری ماشین را به زبان ساده با مثال توضیح بده') }}"><b>{{ ic('graduation-cap', 'ic ie') }} {{ _('یادگیری') }}</b>{{ _('یادگیری ماشین به زبان ساده') }}</button>
     </div>
+    {% endif %}
   </div>
   <div class="msgs" id="msgs"></div>
 </div>
 <div class="composer-wrap">
-  <div class="vbar" id="voiceOv" data-state="idle" role="status" aria-live="polite">
-    <div class="vorb" id="voiceOrb" onclick="Voice.tapToTalk()" title="{{ _('برای پایان صحبت یا قطع پاسخ ضربه بزنید') }}">{% if brand.logo %}<img src="{{ brand.logo }}" alt="">{% else %}⚡{% endif %}</div>
-    <div class="vtext"><div class="vstatus" id="voiceStatus"></div><div class="vheard" id="voiceHeard"></div></div>
-    <div class="vbars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-    <button class="vstop" type="button" onclick="Voice.close()">✕ <span>{{ _('پایان') }}</span></button>
-  </div>
   <div class="composer" id="composer">
+    <div class="chips" id="modeChips" hidden></div>
     <div class="atts" id="atts" style="display:none"></div>
     <textarea id="inp" rows="1" placeholder="{{ _('پیام خود را بنویسید...') }}" autofocus></textarea>
     <div class="crow">
       <input type="file" id="fileIn" multiple hidden
-        accept="image/*,.pdf,.docx,.xlsx,.pptx,.txt,.md,.csv,.json,.xml,.yaml,.yml,.html,.css,.js,.ts,.py,.php,.java,.go,.rs,.c,.cpp,.cs,.rb,.sh,.sql,.log">
-      <button class="ibtn" type="button" title="{{ _('پیوست فایل یا تصویر') }}" onclick="document.getElementById('fileIn').click()">{{ ic('clip') }}</button>
-      <button class="chip" id="webChip" style="display:none" onclick="Chat.toggleWeb()">{{ ic('globe') }} <span>{{ _('جستجوی وب') }}</span></button>
+        accept="image/*,audio/*,.zip,.7z,.mp3,.wav,.m4a,.ogg,.webm,.mp4,.pdf,.docx,.xlsx,.pptx,.txt,.md,.csv,.json,.xml,.yaml,.yml,.html,.css,.js,.ts,.py,.php,.java,.go,.rs,.c,.cpp,.cs,.rb,.sh,.sql,.log">
+      <button class="ibtn plusbtn" id="plusBtn" type="button" title="{{ _('افزودن فایل، جستجوی وب، تصویر و انیمیشن و ابزارها') }}" onclick="Chat.plus(event)">{{ ic('plus') }}</button>
       <span class="quota" id="quota"></span>
-      <button class="ibtn voicebtn" type="button" title="{{ _('گفتگوی صوتی زنده') }}" onclick="Voice.open()">{{ ic('mic') }}</button>
+      <button class="ibtn micbtn" id="micBtn" type="button" title="{{ _('ورودی صوتی: صحبت کنید تا به متن تبدیل و ارسال شود') }}" onclick="Voice.toggle()">{{ ic('mic') }}<span class="mictime" id="micTime"></span></button>
       <button class="send" id="send" disabled onclick="Chat.send()" aria-label="{{ _('ارسال') }}">{{ ic('send') }}</button>
     </div>
   </div>
   <div class="foot-note">{{ _('لمورا ممکن است اشتباه کند؛ اطلاعات مهم را بررسی کنید.') }}</div>
+</div>
+<div class="menu plusm" id="plusMenu">
+  <button type="button" data-act="file">{{ ic('paperclip') }} <span><b>{{ _('بارگذاری فایل یا عکس') }}</b><small>{{ _('PDF، Word، Excel، تصویر، صوت و...') }}</small></span></button>
+  <button type="button" data-act="web" id="pmWeb" hidden>{{ ic('globe') }} <span><b>{{ _('جستجوی وب') }}</b><small>{{ _('پاسخ با اطلاعات به‌روز اینترنت') }}</small></span><i class="pmck"></i></button>
+  <button type="button" data-act="creative">{{ ic('palette') }} <span><b>{{ _('تولید تصویر و انیمیشن') }}</b><small>{{ _('هوش مصنوعی تصویر یا ویدیو می‌سازد') }}</small></span><i class="pmck"></i></button>
+  <div class="pmsec">{{ ic('wrench', 'ic ie') }} {{ _('ابزارها') }}</div>
+  <input class="input pmq" id="pmQ" placeholder="{{ _('جستجوی ابزار...') }}">
+  <div class="pmtools" id="pmTools"><div class="muted" style="padding:8px">{{ _('در حال بارگذاری...') }}</div></div>
 </div>
 <div class="menu mlist" id="mlist">
   <input class="input" id="mq" placeholder="{{ _('جستجوی مدل...') }}">
@@ -54,7 +64,8 @@
 <script src="{{ asset('/static/vendor/marked.min.js') }}"></script>
 <script src="{{ asset('/static/vendor/highlight.min.js') }}"></script>
 <script src="{{ asset('/static/js/md.js') }}"></script>
-<script>window.CHAT_INIT={{ {"conv": conv_id or ""}|tojson }};</script>
+<script>window.CHAT_INIT={{ {"conv": conv_id or "", "agent": ({"id": agent.id, "name": agent.name, "icon": agent.icon} if agent else None)}|tojson }};</script>
+<script src="{{ asset('/static/js/chat-tools.js') }}"></script>
 <script src="{{ asset('/static/js/app-chat.js') }}"></script>
 <script src="{{ asset('/static/js/voice.js') }}"></script>
 <script>
